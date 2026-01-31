@@ -14,7 +14,7 @@ interface ThemeToggleProps {
 export function ThemeToggle({ size = "default", className }: ThemeToggleProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
-  const [currentTheme, setCurrentTheme] = React.useState<string>("dark")
+  const [currentTheme, setCurrentTheme] = React.useState<string>("light")
 
   React.useEffect(() => {
     setMounted(true)
