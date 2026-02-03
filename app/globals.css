@@ -5,7 +5,7 @@
 
 /* Healthcare Analytics Theme - Light Mode (Punchy & Professional) */
 :root {
-  --background: oklch(0.88 0.01 250);
+  --background: oklch(94.007% 0.00011 271.152);
   --foreground: oklch(0.18 0.02 250);
   --card: oklch(1.0 0 0);
   --card-foreground: oklch(0.18 0.02 250);
@@ -22,7 +22,7 @@
   --destructive: oklch(0.55 0.25 25);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.85 0.025 250);
-  --input: oklch(0.96 0.01 250);
+  --input: oklch(1.0 0 0);
   --ring: oklch(0.50 0.22 240);
   --chart-1: oklch(0.50 0.22 240);
   --chart-2: oklch(0.55 0.22 155);

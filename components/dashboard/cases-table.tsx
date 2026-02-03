@@ -251,7 +251,7 @@ const sortedCases = sortCases(cases || [], sortField, sortDirection)
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Rows per page:</span>
             <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-              <SelectTrigger className="h-8 w-[70px] border-border bg-input text-xs">
+              <SelectTrigger className="h-8 w-[70px] border-border bg-white text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -271,7 +271,7 @@ const sortedCases = sortCases(cases || [], sortField, sortDirection)
               size="sm"
               onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
               disabled={currentPage === 0}
-              className="h-8 border-border bg-input text-foreground hover:bg-accent"
+              className="h-8 border-border bg-white text-foreground hover:bg-accent"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -283,7 +283,7 @@ const sortedCases = sortCases(cases || [], sortField, sortDirection)
               size="sm"
               onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={currentPage >= totalPages - 1}
-              className="h-8 border-border bg-input text-foreground hover:bg-accent"
+              className="h-8 border-border bg-white text-foreground hover:bg-accent"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

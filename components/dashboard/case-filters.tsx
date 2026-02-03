@@ -59,7 +59,7 @@ export function CaseFiltersComponent({
             placeholder="Search cases..."
             value={filters.search || ""}
             onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-            className="pl-9 bg-input border-border text-foreground placeholder:text-muted-foreground"
+            className="pl-9 bg-white border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
       )}
@@ -70,7 +70,7 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, type: value as CaseFilters["type"] })
         }
       >
-        <SelectTrigger className="w-[130px] bg-input border-border text-foreground">
+        <SelectTrigger className="w-[130px] bg-white border-border text-foreground">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -86,7 +86,7 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, specialty: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className="w-[140px] bg-input border-border text-foreground">
+        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
           <SelectValue placeholder="Specialty" />
         </SelectTrigger>
         <SelectContent>
@@ -105,7 +105,7 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, tty: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className="w-[140px] bg-input border-border text-foreground">
+        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
           <SelectValue placeholder="Territory" />
         </SelectTrigger>
         <SelectContent>
@@ -124,7 +124,7 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, surgeon: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className="w-[140px] bg-input border-border text-foreground">
+        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
           <SelectValue placeholder="Surgeon" />
         </SelectTrigger>
         <SelectContent>
@@ -143,7 +143,7 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, ueOrLe: value as CaseFilters["ueOrLe"] })
         }
       >
-        <SelectTrigger className="w-[120px] bg-input border-border text-foreground">
+        <SelectTrigger className="w-[120px] bg-white border-border text-foreground">
           <SelectValue placeholder="Extremity" />
         </SelectTrigger>
         <SelectContent>
@@ -159,7 +159,7 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, userStatus: value as CaseFilters["userStatus"] })
         }
       >
-        <SelectTrigger className="w-[120px] bg-input border-border text-foreground">
+        <SelectTrigger className="w-[120px] bg-white border-border text-foreground">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>

@@ -92,7 +92,7 @@ export default function SelectDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/80">
+    <div className="min-h-screen bg-muted/10">
       {/* Header */}
       <header className="border-b border-border/50 bg-white backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
