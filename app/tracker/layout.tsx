@@ -187,7 +187,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
               <div className="flex items-center justify-between rounded-lg bg-muted/30 px-2 py-1.5">
                 <span className="text-xs text-muted-foreground">Cases: {cases.length}</span>
                 <div className="flex items-center gap-1">
-                  <ThemeToggle size="sm" />
+                  {/* <ThemeToggle size="sm" /> */}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -217,7 +217,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
             </div>
           ) : (
             <div className="space-y-2">
-              <ThemeToggle />
+              {/* <ThemeToggle /> */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -264,7 +264,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
           >
             {user?.role?.toUpperCase()}
           </Badge>
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={logout}>
             <LogOut className="h-4 w-4" />
           </Button>

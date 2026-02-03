@@ -40,6 +40,15 @@ export function CasesTable({ cases }: CasesTableProps) {
   const [selectedCase, setSelectedCase] = useState<Case | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  // Early return if cases is not available
+  if (!cases || !Array.isArray(cases)) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
   const handlePageSizeChange = (value: string) => {
     setPageSize(Number(value))
     setCurrentPage(0)
@@ -64,7 +73,7 @@ export function CasesTable({ cases }: CasesTableProps) {
     setCurrentPage(0)
   }
 
-const sortedCases = sortCases(cases, sortField, sortDirection)
+const sortedCases = sortCases(cases || [], sortField, sortDirection)
   const totalPages = Math.ceil(sortedCases.length / pageSize)
   const paginatedCases = sortedCases.slice(
     currentPage * pageSize,

@@ -94,7 +94,7 @@ export default function SelectDashboardPage() {
   return (
     <div className="min-h-screen bg-muted/80">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <header className="border-b border-border/50 bg-white backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <div
@@ -106,7 +106,7 @@ export default function SelectDashboardPage() {
             <span className="font-semibold text-foreground">Analytics Platform</span>
           </div>
           <div className="flex items-center gap-3">
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
             <div className="text-right">
               <p className="text-sm font-medium text-foreground">{user?.name}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
@@ -141,7 +141,7 @@ export default function SelectDashboardPage() {
                 className={`group relative overflow-hidden border-border/60 bg-card transition-all duration-300 ${
                   dashboard.available
                     ? "cursor-pointer hover:border-border hover:shadow-xl hover:-translate-y-1"
-                    : "opacity-50 grayscale-[30%]"
+                    : "opacity-70 grayscale-[15%]"
                 } ${isSelected ? "scale-95 opacity-70" : ""}`}
                 style={{
                   borderLeftWidth: "4px",
@@ -214,7 +214,7 @@ export default function SelectDashboardPage() {
         </div>
 
         {/* Quick stats */}
-        <div className="mt-12 rounded-xl border border-border/50 bg-card/50 p-6">
+        <div className="mt-12 rounded-xl border border-border/50 bg-white p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
               Platform Overview

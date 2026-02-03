@@ -91,7 +91,7 @@ export function CaseFiltersComponent({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Specialties</SelectItem>
-          {specialties.map((s) => (
+          {(specialties || []).map((s) => (
             <SelectItem key={s} value={s}>
               {s}
             </SelectItem>
@@ -110,7 +110,7 @@ export function CaseFiltersComponent({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Territories</SelectItem>
-          {territories.map((t, index) => (
+          {(territories || []).map((t, index) => (
             <SelectItem key={`${t}-${index}`} value={t}>
               {t}
             </SelectItem>
@@ -129,7 +129,7 @@ export function CaseFiltersComponent({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Surgeons</SelectItem>
-          {surgeons.map((s, index) => (
+          {(surgeons || []).map((s, index) => (
             <SelectItem key={`${s}-${index}`} value={s}>
               {s}
             </SelectItem>

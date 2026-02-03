@@ -9,7 +9,7 @@ import type { CaseFilters } from "@/types/case"
 
 export default function CasesPage() {
   const { cases, isLoaded } = useCases()
-  const { specialties, territories } = useCaseStats()
+  const { specialties, territories, surgeons } = useCaseStats()
 
   const [filters, setFilters] = useState<CaseFilters>({
     type: "all",
@@ -18,7 +18,10 @@ export default function CasesPage() {
     search: "",
   })
 
-  const filteredCases = useMemo(() => filterCases(cases, filters), [cases, filters])
+  const filteredCases = useMemo(() => {
+    if (!cases || !Array.isArray(cases)) return []
+    return filterCases(cases, filters)
+  }, [cases, filters])
 
   if (!isLoaded) {
     return (
@@ -41,8 +44,9 @@ export default function CasesPage() {
       <CaseFiltersComponent
         filters={filters}
         onFiltersChange={setFilters}
-        specialties={specialties}
-        territories={territories}
+        specialties={specialties || []}
+        territories={territories || []}
+        surgeons={surgeons || []}
       />
 
       <div className="mt-4">
