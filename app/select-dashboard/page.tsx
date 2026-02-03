@@ -25,7 +25,7 @@ interface DashboardOption {
 const dashboards: DashboardOption[] = [
   {
     id: "case-tracker",
-    name: "Analytics Platform",
+    name: "Case Tracker",
     description: "Surgical case tracking and analytics dashboard with real-time insights",
     icon: Activity,
     href: "/tracker/overview",

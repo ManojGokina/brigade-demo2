@@ -121,7 +121,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
               >
                 <Activity className="h-4 w-4" style={{ color: "#3b82f6" }} />
               </div>
-              <span className="font-semibold text-foreground">Analytics Platform</span>
+              <span className="font-semibold text-foreground">Case Tracker</span>
             </Link>
           )}
           <Button
