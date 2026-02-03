@@ -17,6 +17,7 @@ interface CaseFiltersComponentProps {
   onFiltersChange: (filters: CaseFilters) => void
   specialties: string[]
   territories: string[]
+  surgeons: string[]
   showSearch?: boolean
 }
 
@@ -25,6 +26,7 @@ export function CaseFiltersComponent({
   onFiltersChange,
   specialties,
   territories,
+  surgeons,
   showSearch = true,
 }: CaseFiltersComponentProps) {
   const hasActiveFilters =
@@ -33,6 +35,7 @@ export function CaseFiltersComponent({
     filters.tty ||
     filters.ueOrLe !== "all" ||
     filters.userStatus !== "all" ||
+    filters.surgeon ||
     filters.search
 
   const clearFilters = () => {
@@ -42,6 +45,7 @@ export function CaseFiltersComponent({
       tty: undefined,
       ueOrLe: "all",
       userStatus: "all",
+      surgeon: undefined,
       search: "",
     })
   }
@@ -109,6 +113,25 @@ export function CaseFiltersComponent({
           {territories.map((t, index) => (
             <SelectItem key={`${t}-${index}`} value={t}>
               {t}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={filters.surgeon || "all"}
+        onValueChange={(value) =>
+          onFiltersChange({ ...filters, surgeon: value === "all" ? undefined : value })
+        }
+      >
+        <SelectTrigger className="w-[140px] bg-input border-border text-foreground">
+          <SelectValue placeholder="Surgeon" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Surgeons</SelectItem>
+          {surgeons.map((s, index) => (
+            <SelectItem key={`${s}-${index}`} value={s}>
+              {s}
             </SelectItem>
           ))}
         </SelectContent>

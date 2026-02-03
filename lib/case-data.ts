@@ -26,6 +26,9 @@ export function filterCases(cases: Case[], filters: CaseFilters): Case[] {
     if (filters.ueOrLe && filters.ueOrLe !== "all" && c.ueOrLe !== filters.ueOrLe) {
       return false
     }
+    if (filters.surgeon && c.surgeon !== filters.surgeon) {
+      return false
+    }
     if (filters.userStatus && filters.userStatus !== "all" && c.userStatus !== filters.userStatus) {
       return false
     }

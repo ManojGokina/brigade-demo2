@@ -157,6 +157,7 @@ export function useCaseStats(filters?: CaseFilters) {
         bySpecialty: [],
         byTerritory: [],
         byExtremity: [],
+        bySurgeon: [],
         byMonth: [],
         specialties: [],
         territories: [],
@@ -218,6 +219,22 @@ export function useCaseStats(filters?: CaseFilters) {
       { name: "Lower (LE)", value: filteredCases.filter((c) => c.ueOrLe === "LE").length },
     ]
 
+    // Surgeon productivity data
+    const surgeonCounts: Record<string, { cases: number; nerves: number; primary: number; revision: number }> = {}
+    filteredCases.forEach((c) => {
+      if (!surgeonCounts[c.surgeon]) {
+        surgeonCounts[c.surgeon] = { cases: 0, nerves: 0, primary: 0, revision: 0 }
+      }
+      surgeonCounts[c.surgeon].cases += 1
+      surgeonCounts[c.surgeon].nerves += c.nervesTreated
+      if (c.type === "Primary") surgeonCounts[c.surgeon].primary += 1
+      else surgeonCounts[c.surgeon].revision += 1
+    })
+
+    const bySurgeon = Object.entries(surgeonCounts)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.cases - a.cases)
+
     // Cases by month
     const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const monthCounts: Record<string, { cases: number; nerves: number }> = {}
@@ -245,6 +262,7 @@ export function useCaseStats(filters?: CaseFilters) {
       bySpecialty,
       byTerritory,
       byExtremity,
+      bySurgeon,
       byMonth,
       specialties: allSpecialties,
       territories: allTerritories,

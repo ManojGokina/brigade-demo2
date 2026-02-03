@@ -13,7 +13,22 @@ import {
   AreaChart,
   Area,
   ResponsiveContainer,
+  LineChart,
+  Line,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
 } from "recharts"
+
+interface SurgeonData {
+  name: string
+  cases: number
+  nerves: number
+  primary: number
+  revision: number
+}
 
 interface ChartData {
   name: string
@@ -34,7 +49,15 @@ const COLORS = [
   "#8b5cf6", // violet
   "#06b6d4", // cyan
   "#f43f5e", // rose
+  "#84cc16", // lime
+  "#f97316", // orange
+  "#6366f1", // indigo
 ]
+
+function getSurgeonColor(surgeonName: string, allSurgeons: string[]): string {
+  const index = allSurgeons.indexOf(surgeonName)
+  return COLORS[index % COLORS.length]
+}
 
 interface CasesByTypeChartProps {
   data: ChartData[]
@@ -365,6 +388,156 @@ export function ExtremityChart({ data }: ExtremityChartProps) {
               </div>
             )
           })}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+interface SurgeonProductivityChartProps {
+  data: SurgeonData[]
+  allSurgeons: string[]
+}
+
+export function SurgeonProductivityChart({ data, allSurgeons }: SurgeonProductivityChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className="border-border/50 bg-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-foreground">Surgeon Productivity</CardTitle>
+        </CardHeader>
+        <CardContent className="flex h-[300px] items-center justify-center">
+          <span className="text-sm text-muted-foreground">No data available</span>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const chartConfig = {
+    cases: { label: "Cases", color: "#3b82f6" },
+    nerves: { label: "Nerves", color: "#10b981" },
+  }
+
+  return (
+    <Card className="border-border/50 bg-card">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-foreground">Surgeon Productivity</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {data.slice(0, 6).map((surgeon, index) => {
+            const maxCases = Math.max(...data.map(d => d.cases))
+            const percentage = Math.round((surgeon.cases / maxCases) * 100)
+            return (
+              <div key={surgeon.name}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="font-medium text-foreground">{surgeon.name}</span>
+                  <span className="text-muted-foreground">
+                    {surgeon.cases} cases • {surgeon.nerves} nerves
+                  </span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${percentage}%`,
+                      backgroundColor: getSurgeonColor(surgeon.name, allSurgeons),
+                    }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+interface TopPerformingSurgeonsProps {
+  data: SurgeonData[]
+  allSurgeons: string[]
+}
+
+export function TopPerformingSurgeons({ data, allSurgeons }: TopPerformingSurgeonsProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className="border-border/50 bg-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-foreground">Top Performing Surgeons</CardTitle>
+        </CardHeader>
+        <CardContent className="flex h-[200px] items-center justify-center">
+          <span className="text-sm text-muted-foreground">No data available</span>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const topSurgeons = data.slice(0, 5)
+  const pieData = topSurgeons.map(surgeon => ({ name: surgeon.name, value: surgeon.cases }))
+
+  return (
+    <Card className="border-border/50 bg-card">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-foreground">Top Performing Surgeons</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <ChartContainer config={{}} className="h-[200px] w-[200px]">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={80}
+                  paddingAngle={3}
+                  dataKey="value"
+                  nameKey="name"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={getSurgeonColor(entry.name, allSurgeons)}
+                      stroke="var(--color-background)"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Pie>
+                <ChartTooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const surgeonData = topSurgeons.find(s => s.name === payload[0].name)
+                      return (
+                        <div className="rounded-lg border bg-background p-2 shadow-sm">
+                          <p className="font-medium">{payload[0].name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {surgeonData?.cases} cases • {surgeonData?.nerves} nerves
+                          </p>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+              </PieChart>
+            </ChartContainer>
+          </div>
+          <div className="ml-4 space-y-2">
+            {topSurgeons.map((surgeon, index) => (
+              <div key={surgeon.name} className="flex items-center gap-2">
+                <div 
+                  className="h-3 w-3 rounded-full" 
+                  style={{ backgroundColor: getSurgeonColor(surgeon.name, allSurgeons) }}
+                />
+                <div className="text-xs">
+                  <p className="font-medium text-foreground">{surgeon.name}</p>
+                  <p className="text-muted-foreground">{surgeon.cases} cases</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

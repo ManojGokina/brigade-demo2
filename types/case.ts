@@ -24,6 +24,7 @@ export interface CaseFilters {
   tty?: string
   ueOrLe?: "UE" | "LE" | "all"
   userStatus?: "EST" | "IN" | "VAL" | "all"
+  surgeon?: string
   search?: string
 }
 

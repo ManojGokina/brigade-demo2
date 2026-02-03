@@ -8,6 +8,8 @@ import {
   CasesByTerritoryChart,
   CasesOverTimeChart,
   ExtremityChart,
+  SurgeonProductivityChart,
+  TopPerformingSurgeons,
 } from "@/components/dashboard/case-charts"
 import { CaseFiltersComponent } from "@/components/dashboard/case-filters"
 import { useCaseStats } from "@/lib/case-context"
@@ -18,7 +20,7 @@ import type { CaseFilters } from "@/types/case"
 export default function OverviewPage() {
   const [filters, setFilters] = useState<CaseFilters>({
     type: "all",
-    extremity: "all",
+    ueOrLe: "all",
     userStatus: "all",
     search: "",
   })
@@ -30,9 +32,11 @@ export default function OverviewPage() {
     bySpecialty,
     byTerritory,
     byExtremity,
+    bySurgeon,
     byMonth,
     specialties,
     territories,
+    surgeons,
     totalCases,
     filteredCount,
   } = useCaseStats(filters)
@@ -40,9 +44,10 @@ export default function OverviewPage() {
   const hasActiveFilters =
     filters.type !== "all" ||
     filters.specialty ||
-    filters.territory ||
-    filters.extremity !== "all" ||
+    filters.tty ||
+    filters.ueOrLe !== "all" ||
     filters.userStatus !== "all" ||
+    filters.surgeon ||
     filters.search
 
   if (!isLoaded || !stats) {
@@ -77,20 +82,29 @@ export default function OverviewPage() {
           onFiltersChange={setFilters}
           specialties={specialties}
           territories={territories}
+          surgeons={surgeons}
           showSearch={false}
         />
       </div>
 
       <StatsCards stats={stats} />
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <CasesByTypeChart data={byType} />
+      {/* Top Row - Surgeon Focus */}
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <SurgeonProductivityChart data={bySurgeon} allSurgeons={surgeons} />
         <CasesBySpecialtyChart data={bySpecialty} />
-        <CasesOverTimeChart data={byMonth} />
+      </div>
+
+      {/* Middle Row - Case Analytics */}
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <TopPerformingSurgeons data={bySurgeon} allSurgeons={surgeons} />
+        <CasesByTypeChart data={byType} />
         <ExtremityChart data={byExtremity} />
       </div>
 
-      <div className="mt-6">
+      {/* Bottom Row - Time & Territory */}
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <CasesOverTimeChart data={byMonth} />
         <CasesByTerritoryChart data={byTerritory} />
       </div>
     </div>
