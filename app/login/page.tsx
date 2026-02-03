@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Activity, ArrowRight, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,10 +16,11 @@ export default function LoginPage() {
   const router = useRouter()
 
   // Redirect if already authenticated
-  if (isAuthenticated) {
-    router.push("/select-dashboard")
-    return null
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/select-dashboard")
+    }
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

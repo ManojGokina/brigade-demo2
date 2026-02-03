@@ -6,7 +6,7 @@ import type { Case, CaseFilters } from "@/types/case"
 import { filterCases } from "@/lib/case-data"
 
 const STORAGE_KEY = "case-tracker-data"
-const STORAGE_VERSION = "1.0"
+const STORAGE_VERSION = "2.0"
 
 interface CaseContextValue {
   cases: Case[]
@@ -169,7 +169,7 @@ export function useCaseStats(filters?: CaseFilters) {
 
     // Get all unique values from ALL cases (not filtered) for filter dropdowns
     const allSpecialties = [...new Set(cases.map((c) => c.specialty))].sort()
-    const allTerritories = [...new Set(cases.map((c) => c.territory))].sort()
+    const allTerritories = [...new Set(cases.map((c) => c.tty))].sort()
     const allSurgeons = [...new Set(cases.map((c) => c.surgeon))].sort()
     const allSites = [...new Set(cases.map((c) => c.site))].sort()
 
@@ -202,7 +202,7 @@ export function useCaseStats(filters?: CaseFilters) {
     const territoryCounts: Record<string, number> = {}
     filteredCases.forEach((c) => {
       specialtyCounts[c.specialty] = (specialtyCounts[c.specialty] || 0) + 1
-      territoryCounts[c.territory] = (territoryCounts[c.territory] || 0) + 1
+      territoryCounts[c.tty] = (territoryCounts[c.tty] || 0) + 1
     })
 
     const bySpecialty = Object.entries(specialtyCounts)
@@ -214,8 +214,8 @@ export function useCaseStats(filters?: CaseFilters) {
       .sort((a, b) => b.value - a.value)
 
     const byExtremity = [
-      { name: "Upper (UE)", value: filteredCases.filter((c) => c.extremity === "UE").length },
-      { name: "Lower (LE)", value: filteredCases.filter((c) => c.extremity === "LE").length },
+      { name: "Upper (UE)", value: filteredCases.filter((c) => c.ueOrLe === "UE").length },
+      { name: "Lower (LE)", value: filteredCases.filter((c) => c.ueOrLe === "LE").length },
     ]
 
     // Cases by month

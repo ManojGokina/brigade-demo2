@@ -120,7 +120,7 @@ const sortedCases = sortCases(cases, sortField, sortDirection)
               <TableHead className="min-w-[200px]">
                 <span className="text-xs font-medium text-muted-foreground">Surgery</span>
               </TableHead>
-              <SortableHeader field="extremity" className="w-[60px]">
+              <SortableHeader field="ueOrLe" className="w-[60px]">
                 Ext
               </SortableHeader>
               <SortableHeader field="nervesTreated" className="w-[70px]">
@@ -132,7 +132,7 @@ const sortedCases = sortCases(cases, sortField, sortDirection)
               <TableHead className="w-[100px]">
                 <span className="text-xs font-medium text-muted-foreground">Flags</span>
               </TableHead>
-              <SortableHeader field="territory" className="w-[100px]">
+              <SortableHeader field="tty" className="w-[100px]">
                 Territory
               </SortableHeader>
             </TableRow>
@@ -178,12 +178,12 @@ const sortedCases = sortCases(cases, sortField, sortDirection)
                   <Badge
                     variant="outline"
                     className={
-                      c.extremity === "UE"
+                      c.ueOrLe === "UE"
                         ? "border-chart-3/50 text-chart-3"
                         : "border-chart-4/50 text-chart-4"
                     }
                   >
-                    {c.extremity}
+                    {c.ueOrLe}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-center font-mono text-sm text-foreground">
@@ -224,7 +224,7 @@ const sortedCases = sortCases(cases, sortField, sortDirection)
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {c.territory}
+                  {c.tty}
                 </TableCell>
               </TableRow>
             ))}

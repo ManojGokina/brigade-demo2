@@ -20,10 +20,10 @@ export function filterCases(cases: Case[], filters: CaseFilters): Case[] {
     if (filters.specialty && c.specialty !== filters.specialty) {
       return false
     }
-    if (filters.territory && c.territory !== filters.territory) {
+    if (filters.tty && c.tty !== filters.tty) {
       return false
     }
-    if (filters.extremity && filters.extremity !== "all" && c.extremity !== filters.extremity) {
+    if (filters.ueOrLe && filters.ueOrLe !== "all" && c.ueOrLe !== filters.ueOrLe) {
       return false
     }
     if (filters.userStatus && filters.userStatus !== "all" && c.userStatus !== filters.userStatus) {
@@ -109,7 +109,7 @@ export function getCasesBySpecialty(cases: Case[]): { name: string; value: numbe
 export function getCasesByTerritory(cases: Case[]): { name: string; value: number }[] {
   const counts: Record<string, number> = {}
   cases.forEach((c) => {
-    counts[c.territory] = (counts[c.territory] || 0) + 1
+    counts[c.tty] = (counts[c.tty] || 0) + 1
   })
   return Object.entries(counts)
     .map(([name, value]) => ({ name, value }))
@@ -117,8 +117,8 @@ export function getCasesByTerritory(cases: Case[]): { name: string; value: numbe
 }
 
 export function getCasesByExtremity(cases: Case[]): { name: string; value: number }[] {
-  const ue = cases.filter((c) => c.extremity === "UE").length
-  const le = cases.filter((c) => c.extremity === "LE").length
+  const ue = cases.filter((c) => c.ueOrLe === "UE").length
+  const le = cases.filter((c) => c.ueOrLe === "LE").length
   return [
     { name: "Upper (UE)", value: ue },
     { name: "Lower (LE)", value: le },
@@ -164,7 +164,7 @@ export function getUniqueSpecialties(cases: Case[]): string[] {
 }
 
 export function getUniqueTerritories(cases: Case[]): string[] {
-  return [...new Set(cases.map((c) => c.territory))].sort()
+  return [...new Set(cases.map((c) => c.tty))].sort()
 }
 
 export function getUniqueSurgeons(cases: Case[]): string[] {

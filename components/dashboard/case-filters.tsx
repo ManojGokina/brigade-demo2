@@ -30,8 +30,8 @@ export function CaseFiltersComponent({
   const hasActiveFilters =
     filters.type !== "all" ||
     filters.specialty ||
-    filters.territory ||
-    filters.extremity !== "all" ||
+    filters.tty ||
+    filters.ueOrLe !== "all" ||
     filters.userStatus !== "all" ||
     filters.search
 
@@ -39,8 +39,8 @@ export function CaseFiltersComponent({
     onFiltersChange({
       type: "all",
       specialty: undefined,
-      territory: undefined,
-      extremity: "all",
+      tty: undefined,
+      ueOrLe: "all",
       userStatus: "all",
       search: "",
     })
@@ -96,9 +96,9 @@ export function CaseFiltersComponent({
       </Select>
 
       <Select
-        value={filters.territory || "all"}
+        value={filters.tty || "all"}
         onValueChange={(value) =>
-          onFiltersChange({ ...filters, territory: value === "all" ? undefined : value })
+          onFiltersChange({ ...filters, tty: value === "all" ? undefined : value })
         }
       >
         <SelectTrigger className="w-[140px] bg-input border-border text-foreground">
@@ -106,8 +106,8 @@ export function CaseFiltersComponent({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Territories</SelectItem>
-          {territories.map((t) => (
-            <SelectItem key={t} value={t}>
+          {territories.map((t, index) => (
+            <SelectItem key={`${t}-${index}`} value={t}>
               {t}
             </SelectItem>
           ))}
@@ -115,9 +115,9 @@ export function CaseFiltersComponent({
       </Select>
 
       <Select
-        value={filters.extremity || "all"}
+        value={filters.ueOrLe || "all"}
         onValueChange={(value) =>
-          onFiltersChange({ ...filters, extremity: value as CaseFilters["extremity"] })
+          onFiltersChange({ ...filters, ueOrLe: value as CaseFilters["ueOrLe"] })
         }
       >
         <SelectTrigger className="w-[120px] bg-input border-border text-foreground">

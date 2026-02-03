@@ -9,20 +9,20 @@ export interface Case {
   userStatus: "EST" | "IN" | "VAL"
   specialty: string
   training: string
-  extremity: "UE" | "LE"
+  ueOrLe: "UE" | "LE"
   surgeryPerformed: string
   neuromaCase: boolean
   caseStudy: boolean
   survivalDays: number
   survivalWeeks: number
-  territory: string
+  tty: string
 }
 
 export interface CaseFilters {
   type?: "Primary" | "Revision" | "all"
   specialty?: string
-  territory?: string
-  extremity?: "UE" | "LE" | "all"
+  tty?: string
+  ueOrLe?: "UE" | "LE" | "all"
   userStatus?: "EST" | "IN" | "VAL" | "all"
   search?: string
 }

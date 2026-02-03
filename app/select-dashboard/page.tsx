@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Activity, BarChart3, ArrowRight, Lock, Sparkles, FileText, Settings } from "lucide-react"
+import { Activity, BarChart3, ArrowRight, Lock, Sparkles, FileText, Settings, Package } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,17 @@ const dashboards: DashboardOption[] = [
     available: false,
     badge: "Coming Soon",
   },
+  {
+    id: "inventory-management",
+    name: "Inventory Management",
+    description: "Manage medical supplies, equipment tracking, and stock levels",
+    icon: Package,
+    href: "/inventory",
+    color: "#f59e0b",
+    bgColor: "rgba(245, 158, 11, 0.1)",
+    available: false,
+    badge: "Coming Soon",
+  },
 ]
 
 export default function SelectDashboardPage() {
@@ -81,7 +92,7 @@ export default function SelectDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/80">
       {/* Header */}
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
