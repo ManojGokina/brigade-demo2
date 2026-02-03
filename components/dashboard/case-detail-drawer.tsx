@@ -63,11 +63,11 @@ export function CaseDetailDrawer({ caseData, open, onClose }: CaseDetailDrawerPr
             </Badge>
             <Badge
               style={{
-                backgroundColor: caseData.extremity === "UE" ? "#f59e0b20" : "#ec489920",
-                color: caseData.extremity === "UE" ? "#f59e0b" : "#ec4899",
+                backgroundColor: caseData.ueOrLe === "UE" ? "#f59e0b20" : "#ec489920",
+                color: caseData.ueOrLe === "UE" ? "#f59e0b" : "#ec4899",
               }}
             >
-              {caseData.extremity === "UE" ? "Upper Extremity" : "Lower Extremity"}
+              {caseData.ueOrLe === "UE" ? "Upper Extremity" : "Lower Extremity"}
             </Badge>
             {caseData.neuromaCase && (
               <Badge style={{ backgroundColor: "#8b5cf620", color: "#8b5cf6" }}>
@@ -153,7 +153,7 @@ export function CaseDetailDrawer({ caseData, open, onClose }: CaseDetailDrawerPr
               <DetailItem
                 icon={Globe}
                 label="Territory"
-                value={caseData.territory}
+                value={caseData.tty}
               />
               <DetailItem
                 icon={Activity}
