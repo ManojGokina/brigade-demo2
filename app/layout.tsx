@@ -11,7 +11,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Case Tracker - Surgical Analytics Dashboard",
+  title: "Analytics Platform - Surgical Analytics Dashboard",
   description: "Enterprise healthcare analytics dashboard for tracking surgical cases",
   generator: "v0.app",
   icons: {

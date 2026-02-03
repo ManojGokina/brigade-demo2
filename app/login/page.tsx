@@ -62,7 +62,7 @@ export default function LoginPage() {
           >
             <Activity className="h-7 w-7" style={{ color: "#3b82f6" }} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Case Tracker</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Analytics Platform</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Surgical Analytics Platform
           </p>

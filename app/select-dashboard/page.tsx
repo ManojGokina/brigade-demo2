@@ -25,7 +25,7 @@ interface DashboardOption {
 const dashboards: DashboardOption[] = [
   {
     id: "case-tracker",
-    name: "Case Tracker",
+    name: "Analytics Platform",
     description: "Surgical case tracking and analytics dashboard with real-time insights",
     icon: Activity,
     href: "/tracker/overview",
@@ -103,7 +103,7 @@ export default function SelectDashboardPage() {
             >
               <Activity className="h-5 w-5" style={{ color: "#3b82f6" }} />
             </div>
-            <span className="font-semibold text-foreground">Case Tracker</span>
+            <span className="font-semibold text-foreground">Analytics Platform</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />

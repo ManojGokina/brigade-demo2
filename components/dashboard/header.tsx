@@ -11,7 +11,7 @@ export function Header() {
             <Activity className="h-4 w-4 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-foreground">Case Tracker</h1>
+            <h1 className="text-sm font-semibold text-foreground">Analytics Platform</h1>
             <p className="text-xs text-muted-foreground">Surgical Analytics Dashboard</p>
           </div>
         </div>
