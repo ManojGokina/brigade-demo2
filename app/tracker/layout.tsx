@@ -114,14 +114,12 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
         {/* Logo */}
         <div className="flex h-16 items-center justify-between border-b border-border/50 px-4">
           {!sidebarCollapsed && (
-            <Link href="/select-dashboard" className="flex items-center gap-2">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-lg"
-                style={{ backgroundColor: "rgba(59, 130, 246, 0.15)" }}
-              >
-                <Activity className="h-4 w-4" style={{ color: "#3b82f6" }} />
-              </div>
-              <span className="font-semibold text-foreground">Case Tracker</span>
+            <Link href="/select-dashboard" className="flex items-center justify-center flex-1">
+              <img 
+                src="https://tulavi.com/wp-content/uploads/2024/01/Tulavi-logo-turquoise-rgb-2.svg" 
+                alt="Tulavi Logo" 
+                className="h-8 w-auto"
+              />
             </Link>
           )}
           <Button

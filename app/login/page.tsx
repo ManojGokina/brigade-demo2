@@ -56,16 +56,17 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center text-center">
-          <div 
-            className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl"
-            style={{ backgroundColor: "rgba(59, 130, 246, 0.15)" }}
-          >
-            <Activity className="h-7 w-7" style={{ color: "#3b82f6" }} />
+          <div className="mb-4">
+            <img 
+              src="https://tulavi.com/wp-content/uploads/2024/01/Tulavi-logo-turquoise-rgb-2.svg" 
+              alt="Tulavi Logo" 
+              className="h-16 w-auto"
+            />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Analytics Platform</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Tulavi Analytics Dashboard</h1>
+          {/* <p className="mt-1 text-sm text-muted-foreground">
             Surgical Analytics Platform
-          </p>
+          </p> */}
         </div>
 
         {/* Login Card */}

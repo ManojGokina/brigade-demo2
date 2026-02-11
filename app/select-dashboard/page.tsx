@@ -25,10 +25,10 @@ interface DashboardOption {
 const dashboards: DashboardOption[] = [
   {
     id: "case-tracker",
-    name: "Case Tracker",
+    name: "Case Tracking Dashboard",
     description: "Surgical case tracking and analytics dashboard with real-time insights",
     icon: Activity,
-    href: "/tracker/overview",
+    href: "/tracker/cases/new",
     color: "#3b82f6",
     bgColor: "rgba(59, 130, 246, 0.1)",
     available: true,
@@ -42,8 +42,8 @@ const dashboards: DashboardOption[] = [
     href: "/sales",
     color: "#10b981",
     bgColor: "rgba(16, 185, 129, 0.1)",
-    available: false,
-    badge: "Coming Soon",
+    available: true,
+    badge: "Active",
   },
   {
     id: "inventory-management",
@@ -53,8 +53,8 @@ const dashboards: DashboardOption[] = [
     href: "/inventory",
     color: "#f59e0b",
     bgColor: "rgba(245, 158, 11, 0.1)",
-    available: false,
-    badge: "Coming Soon",
+    available: true,
+    badge: "Active",
   },
 ]
 
@@ -97,13 +97,12 @@ export default function SelectDashboardPage() {
       <header className="border-b border-border/50 bg-white backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-lg"
-              style={{ backgroundColor: "rgba(59, 130, 246, 0.15)" }}
-            >
-              <Activity className="h-5 w-5" style={{ color: "#3b82f6" }} />
-            </div>
-            <span className="font-semibold text-foreground">Analytics Platform</span>
+            <img 
+              src="https://tulavi.com/wp-content/uploads/2024/01/Tulavi-logo-turquoise-rgb-2.svg" 
+              alt="Tulavi Logo" 
+              className="h-8 w-auto"
+            />
+            <span className="font-semibold text-foreground">Tulavi Analytics Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
             {/* <ThemeToggle /> */}

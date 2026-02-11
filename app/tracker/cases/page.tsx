@@ -13,7 +13,7 @@ export default function CasesPage() {
 
   const [filters, setFilters] = useState<CaseFilters>({
     type: "all",
-    extremity: "all",
+    ueOrLe: "all",
     userStatus: "all",
     search: "",
   })
