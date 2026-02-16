@@ -2,37 +2,49 @@
 
 import { useState, useEffect, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
-import { Activity, ArrowRight, Mail } from "lucide-react"
+import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAuth } from "@/lib/auth-context"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuthStore } from "@/store/auth.store"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const { login, isAuthenticated } = useAuth()
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const { user, login, isLoading, error, clearError } = useAuthStore()
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
 
-  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    setMounted(true)
+    // Clear any stale errors on mount
+    clearError()
+  }, [])
+
+  // Redirect if already authenticated - only after successful login
+  useEffect(() => {
+    if (mounted && user && !isLoading && !error) {
       router.push("/select-dashboard")
     }
-  }, [isAuthenticated, router])
+  }, [user, isLoading, error, router, mounted])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!email.trim()) return
+    if (!email.trim() || !password.trim()) return
 
-    setIsSubmitting(true)
-    // Simulate network delay for realistic feel
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    login(email.trim())
+    try {
+      await login(email.trim(), password.trim())
+    } catch (err) {
+      // Error is already set in store, don't navigate
+      return
+    }
   }
 
   const isValidEmail = email.includes("@") && email.includes(".")
+  const isFormValid = isValidEmail && password.length >= 6
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -78,6 +90,13 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <div className="relative">
@@ -86,70 +105,69 @@ export default function LoginPage() {
                     type="email"
                     placeholder="name@hospital.org"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (error) clearError()
+                    }}
                     className="h-11 bg-background/50 pl-10"
                     autoFocus
                     autoComplete="email"
+                    disabled={isLoading}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Demo mode: Any valid email format will work
-                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (error) clearError()
+                    }}
+                    className="h-11 bg-background/50 pl-10 pr-10"
+                    autoComplete="current-password"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <Button
                 type="submit"
                 className="h-11 w-full"
-                disabled={!isValidEmail || isSubmitting}
+                disabled={!isFormValid || isLoading}
                 style={{ 
-                  backgroundColor: isValidEmail ? "#3b82f6" : undefined,
+                  backgroundColor: isFormValid ? "#3b82f6" : undefined,
                 }}
               >
-                {isSubmitting ? (
+                {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     Signing in...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Continue
+                    Sign In
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 )}
               </Button>
             </form>
-
-            {/* Demo credentials hint */}
-            <div className="mt-6 rounded-lg border border-border/50 bg-muted/30 p-3">
-              <p className="text-xs font-medium text-muted-foreground">
-                Quick access demo accounts:
-              </p>
-              <div className="mt-2 space-y-2">
-                {[
-                  { email: "admin@hospital.org", role: "Admin", color: "#ef4444", desc: "Full access" },
-                  { email: "analyst@clinic.com", role: "Analyst", color: "#3b82f6", desc: "Read/Write cases" },
-                  { email: "dr.smith@medical.net", role: "Viewer", color: "#6b7280", desc: "Read only" },
-                ].map((demo) => (
-                  <button
-                    key={demo.email}
-                    type="button"
-                    onClick={() => setEmail(demo.email)}
-                    className="flex w-full items-center justify-between rounded-md border border-border/50 bg-background/50 px-3 py-2 text-left transition-colors hover:border-primary/50"
-                  >
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{demo.email}</p>
-                      <p className="text-[10px] text-muted-foreground">{demo.desc}</p>
-                    </div>
-                    <span
-                      className="rounded px-1.5 py-0.5 text-[10px] font-medium"
-                      style={{ backgroundColor: `${demo.color}20`, color: demo.color }}
-                    >
-                      {demo.role}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </CardContent>
         </Card>
 

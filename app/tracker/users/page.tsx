@@ -60,6 +60,7 @@ import {
   Edit3,
   Search,
 } from "lucide-react"
+import { ProtectedRoute } from "@/components/protected-route"
 
 const TAB_IDS: TabId[] = ["add-case", "all-cases", "overview", "user-management"]
 
@@ -306,6 +307,7 @@ export default function UserManagementPage() {
   )
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen p-6">
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Header */}
@@ -524,5 +526,6 @@ export default function UserManagementPage() {
         </Card>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

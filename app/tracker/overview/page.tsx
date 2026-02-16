@@ -16,6 +16,7 @@ import { useCaseStats } from "@/lib/case-context"
 import { Badge } from "@/components/ui/badge"
 import { Filter } from "lucide-react"
 import type { CaseFilters } from "@/types/case"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function OverviewPage() {
   const [filters, setFilters] = useState<CaseFilters>({
@@ -59,6 +60,7 @@ export default function OverviewPage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="p-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -108,5 +110,6 @@ export default function OverviewPage() {
         <CasesByTerritoryChart data={byTerritory} />
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

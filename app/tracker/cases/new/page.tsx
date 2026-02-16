@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { useCases, useCaseStats } from "@/lib/case-context"
 import type { Case } from "@/types/case"
+import { ProtectedRoute } from "@/components/protected-route"
 
 interface FormData {
   caseType: "Primary" | "Revision" | ""
@@ -207,6 +208,7 @@ export default function AddCasePage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="p-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
@@ -596,5 +598,6 @@ export default function AddCasePage() {
         </div>
       </form>
     </div>
+    </ProtectedRoute>
   )
 }

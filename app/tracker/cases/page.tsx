@@ -6,6 +6,7 @@ import { CasesTable } from "@/components/dashboard/cases-table"
 import { filterCases } from "@/lib/case-data"
 import { useCases, useCaseStats } from "@/lib/case-context"
 import type { CaseFilters } from "@/types/case"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function CasesPage() {
   const { cases, isLoaded } = useCases()
@@ -32,6 +33,7 @@ export default function CasesPage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">All Cases</h1>
@@ -53,5 +55,6 @@ export default function CasesPage() {
         <CasesTable cases={filteredCases} />
       </div>
     </div>
+    </ProtectedRoute>
   )
 }
