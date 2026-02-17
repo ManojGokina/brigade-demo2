@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, Users, Shield, Lock, Activity } from "lucide-react"
 import { useAuthStore } from "@/store/auth.store"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -11,12 +11,12 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-// Map module names to routes for the User Management dashboard (dashboard_id: 104)
-const MODULE_ROUTES: Record<string, string> = {
-  Users: "/user-management/users",
-  Roles: "/user-management/roles",
-  Permissions: "/user-management/permissions",
-  "User Activity": "/user-management/activity",
+// Map module names to routes and icons for the User Management dashboard (dashboard_id: 104)
+const MODULE_CONFIG: Record<string, { route: string; icon: typeof Users }> = {
+  Users: { route: "/user-management/users", icon: Users },
+  Roles: { route: "/user-management/roles", icon: Shield },
+  Permissions: { route: "/user-management/permissions", icon: Lock },
+  "User Activity": { route: "/user-management/activity", icon: Activity },
 }
 
 export default function UserManagementLayout({
@@ -29,7 +29,7 @@ export default function UserManagementLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const modules =
-    currentDashboardModules?.filter((m) => MODULE_ROUTES[m.moduleName]) || []
+    currentDashboardModules?.filter((m) => MODULE_CONFIG[m.moduleName]) || []
 
   const showSkeleton = isLoading && modules.length === 0
 
@@ -79,7 +79,9 @@ export default function UserManagementLayout({
                   />
                 ))
               : modules.map((module) => {
-                  const href = MODULE_ROUTES[module.moduleName]
+                  const config = MODULE_CONFIG[module.moduleName]
+                  const href = config.route
+                  const Icon = config.icon
                   const active = pathname.startsWith(href)
 
                   return (
@@ -95,7 +97,13 @@ export default function UserManagementLayout({
                       )}
                       title={sidebarCollapsed ? module.moduleName : undefined}
                     >
-                      <span className="flex-1 truncate">{module.moduleName}</span>
+                      <Icon
+                        className="h-4 w-4 flex-shrink-0"
+                        style={active ? { color: "#3b82f6" } : undefined}
+                      />
+                      {!sidebarCollapsed && (
+                        <span className="flex-1 truncate">{module.moduleName}</span>
+                      )}
                     </Link>
                   )
                 })}
