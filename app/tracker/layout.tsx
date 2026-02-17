@@ -269,39 +269,6 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
             )
           })}
         </nav>
-
-        {/* Footer section - Only Cases count and Reset button */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-border/50 p-3">
-          {!sidebarCollapsed ? (
-            <div className="flex items-center justify-between rounded-lg bg-muted/30 px-2 py-1.5">
-              <span className="text-xs text-muted-foreground">Cases: {cases.length}</span>
-              <div className="flex items-center gap-1">
-                {/* <ThemeToggle size="sm" /> */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={handleReset}
-                  title="Reset to initial data"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 cursor-pointer hover:bg-accent/50 transition-colors"
-                onClick={handleReset}
-                title="Reset data"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
       </aside>
 
       {/* Mobile header */}

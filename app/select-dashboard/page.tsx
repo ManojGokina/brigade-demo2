@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Activity, BarChart3, ArrowRight, Lock, Sparkles, Package, ShieldAlert } from "lucide-react"
+import { Activity, BarChart3, ArrowRight, Lock, Sparkles, Package, ShieldAlert, Users, LogOut } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -29,12 +29,14 @@ const DASHBOARD_ICONS: Record<string, typeof Activity> = {
   "Case Tracking Dashboard": Activity,
   "Sales Dashboard": BarChart3,
   "Inventory Management": Package,
+  "User Management": Users,
 }
 
 const DASHBOARD_COLORS: Record<string, { color: string; bgColor: string }> = {
   "Case Tracking Dashboard": { color: "#3b82f6", bgColor: "rgba(59, 130, 246, 0.1)" },
   "Sales Dashboard": { color: "#10b981", bgColor: "rgba(16, 185, 129, 0.1)" },
   "Inventory Management": { color: "#f59e0b", bgColor: "rgba(245, 158, 11, 0.1)" },
+  "User Management": { color: "#8b5cf6", bgColor: "rgba(139, 92, 246, 0.1)" },
 }
 
 // Dashboard route mapping by ID from the database
@@ -117,9 +119,9 @@ export default function SelectDashboardPage() {
 
   return (
     <ProtectedRoute>
-    <div className="min-h-screen bg-muted/10">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b border-border/50 bg-white backdrop-blur-sm">
+      <header className="border-b border-border/50 bg-white shadow-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <img 
@@ -135,8 +137,9 @@ export default function SelectDashboardPage() {
               <p className="text-sm font-medium text-foreground">{user?.username}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
-            <Button variant="outline" size="sm" onClick={logout}>
-              Sign out
+            <Button variant="outline" size="sm" onClick={logout} className="flex items-center gap-2 bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20 transition-all cursor-pointer">
+              <LogOut className="h-4 w-4" />
+              Logout
             </Button>
           </div>
         </div>
@@ -162,6 +165,40 @@ export default function SelectDashboardPage() {
               <p className="mt-2 text-muted-foreground">
                 {hasAccess ? "Select a module to access your healthcare analytics workspace" : "Contact your administrator for dashboard access"}
               </p>
+              
+              {/* Platform Overview as chips */}
+              {hasAccess && (
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+                    <span className="text-sm font-semibold" style={{ color: "#3b82f6" }}>
+                      {caseDataLoaded && stats ? stats.totalCases : "..."}
+                    </span>
+                    <span className="text-xs text-muted-foreground">Total Cases</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#10b981" }} />
+                    <span className="text-sm font-semibold" style={{ color: "#10b981" }}>
+                      {caseDataLoaded && stats ? stats.uniqueSurgeons : "..."}
+                    </span>
+                    <span className="text-xs text-muted-foreground">Active Surgeons</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
+                    <span className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
+                      {caseDataLoaded && stats ? stats.uniqueSites : "..."}
+                    </span>
+                    <span className="text-xs text-muted-foreground">Active Sites</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#8b5cf6" }} />
+                    <span className="text-sm font-semibold" style={{ color: "#8b5cf6" }}>
+                      {caseDataLoaded && stats ? stats.totalNervesTreated : "..."}
+                    </span>
+                    <span className="text-xs text-muted-foreground">Nerves Treated</span>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -214,7 +251,7 @@ export default function SelectDashboardPage() {
             return (
               <Card
                 key={dashboard.id}
-                className={`group relative overflow-hidden border-border/60 bg-card transition-all duration-300 ${isSelected && isLoading ? "opacity-50 cursor-wait" : "cursor-pointer hover:border-border hover:shadow-xl hover:-translate-y-1"} ${isSelected && !isLoading ? "scale-95 opacity-70" : ""}`}
+                className={`group relative overflow-hidden border-border/60 bg-white shadow-md transition-all duration-300 ${isSelected && isLoading ? "opacity-50 cursor-wait" : "cursor-pointer hover:border-border hover:shadow-xl hover:-translate-y-1"} ${isSelected && !isLoading ? "scale-95 opacity-70" : ""}`}
                 style={{
                   borderLeftWidth: "4px",
                   borderLeftColor: colors.color,
@@ -275,85 +312,6 @@ export default function SelectDashboardPage() {
             )
           })}
         </div>
-        )}
-
-        {hasAccess && (
-        <>
-        {/* Quick stats */}
-        <div className="mt-12 rounded-xl border border-border/50 bg-white p-6">
-          <div className="flex items-center justify-between">
-            {showSkeleton ? (
-              <>
-                <Skeleton className="h-4 w-32 rounded-full" />
-                <Skeleton className="h-6 w-16 rounded-full" />
-              </>
-            ) : (
-              <>
-                <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                  Platform Overview
-                </h2>
-                <Badge variant="outline" className="text-xs">
-                  Live Data
-                </Badge>
-              </>
-            )}
-          </div>
-          <div className="mt-6 grid gap-8 sm:grid-cols-4">
-            {showSkeleton ? (
-              [0, 1, 2, 3].map((i) => (
-                <div className="relative space-y-2" key={i}>
-                  <Skeleton className="absolute -left-3 top-0 h-full w-1 rounded-full" />
-                  <Skeleton className="h-8 w-16 rounded-lg" />
-                  <Skeleton className="h-4 w-24 rounded-full" />
-                </div>
-              ))
-            ) : (
-              <>
-                <div className="relative">
-                  <div
-                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                    style={{ backgroundColor: "#3b82f6" }}
-                  />
-                  <p className="text-3xl font-bold" style={{ color: "#3b82f6" }}>
-                    {caseDataLoaded && stats ? stats.totalCases : "..."}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">Total Cases</p>
-                </div>
-                <div className="relative">
-                  <div
-                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                    style={{ backgroundColor: "#10b981" }}
-                  />
-                  <p className="text-3xl font-bold" style={{ color: "#10b981" }}>
-                    {caseDataLoaded && stats ? stats.uniqueSurgeons : "..."}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">Active Surgeons</p>
-                </div>
-                <div className="relative">
-                  <div
-                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                    style={{ backgroundColor: "#f59e0b" }}
-                  />
-                  <p className="text-3xl font-bold" style={{ color: "#f59e0b" }}>
-                    {caseDataLoaded && stats ? stats.uniqueSites : "..."}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">Active Sites</p>
-                </div>
-                <div className="relative">
-                  <div
-                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                    style={{ backgroundColor: "#8b5cf6" }}
-                  />
-                  <p className="text-3xl font-bold" style={{ color: "#8b5cf6" }}>
-                    {caseDataLoaded && stats ? stats.totalNervesTreated : "..."}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">Nerves Treated</p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        </>
         )}
       </main>
     </div>
