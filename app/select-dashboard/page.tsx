@@ -37,14 +37,17 @@ const DASHBOARD_COLORS: Record<string, { color: string; bgColor: string }> = {
   "Inventory Management": { color: "#f59e0b", bgColor: "rgba(245, 158, 11, 0.1)" },
 }
 
-const DASHBOARD_ROUTES: Record<string, string> = {
-  "Case Tracking Dashboard": "/tracker/cases/new",
-  "Sales Dashboard": "/sales",
-  "Inventory Management": "/inventory",
+// Dashboard route mapping by ID from the database
+// 101 -> Case Tracking, 102 -> Sales, 103 -> Inventory, 104 -> User Management
+const DASHBOARD_ROUTES_BY_ID: Record<number, string> = {
+  101: "/tracker/cases/new",
+  102: "/sales/overview",
+  103: "/inventory/add-inventory",
+  104: "/user-management/users",
 }
 
 export default function SelectDashboardPage() {
-  const { user, logout, dashboardAccess, fetchDashboardModules, isLoading } = useAuthStore()
+  const { user, logout, dashboardAccess, fetchDashboardAccess, fetchDashboardModules, isLoading } = useAuthStore()
   const { stats, isLoaded: caseDataLoaded } = useCaseStats()
   const router = useRouter()
   const [selectedDashboard, setSelectedDashboard] = useState<string | null>(null)
@@ -53,6 +56,22 @@ export default function SelectDashboardPage() {
   const userDashboards = dashboardAccess?.dashboards || []
   const hasAccess = userDashboards.length > 0
   const showSkeleton = isLoading && !dashboardAccess
+
+  // Always ensure dashboard access is loaded when this page mounts / refreshes
+  useEffect(() => {
+    if (!user) return
+
+    // Call backend to get fresh dashboard access on every visit/refresh
+    fetchDashboardAccess().catch((error: any) => {
+      console.error("Failed to fetch dashboard access on select-dashboard:", error)
+      toast({
+        variant: "destructive",
+        title: "Failed to load dashboards",
+        description: error?.response?.data?.message || "Please try again or contact support.",
+      })
+    })
+  // we intentionally don't include dashboardAccess to avoid refetch loops
+  }, [user, fetchDashboardAccess, toast])
 
   const handleDashboardSelect = async (dashboardId: number, name: string) => {
     setSelectedDashboard(dashboardId.toString())
@@ -71,7 +90,7 @@ export default function SelectDashboardPage() {
         title: "Dashboard selected",
         description: name,
       })
-      const route = DASHBOARD_ROUTES[name] || "/tracker/cases/new"
+      const route = DASHBOARD_ROUTES_BY_ID[dashboardId] || "/tracker/cases/new"
       console.log('Modules fetched, navigating to:', route)
       // Use router.push for client-side navigation to avoid page reload
       await router.push(route)

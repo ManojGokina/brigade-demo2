@@ -15,10 +15,13 @@ import {
 import { useAuthStore } from "@/store/auth.store"
 import { cn } from "@/lib/utils"
 
-const DASHBOARD_ROUTES: Record<string, string> = {
-  "Case Tracking Dashboard": "/tracker/cases/new",
-  "Sales Dashboard": "/sales",
-  "Inventory Management": "/inventory",
+// Route mapping by dashboard ID
+// 101 -> Case Tracking, 102 -> Sales, 103 -> Inventory, 104 -> User Management
+const DASHBOARD_ROUTES_BY_ID: Record<number, string> = {
+  101: "/tracker/cases/new",
+  102: "/sales/overview",
+  103: "/inventory/add-inventory",
+  104: "/user-management/users",
 }
 
 interface DashboardHeaderProps {
@@ -97,8 +100,8 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
       // Fetch modules for the selected dashboard
       await fetchDashboardModules(Number(dashboardId))
       
-      // Navigate to the appropriate route
-      const route = DASHBOARD_ROUTES[selectedDashboard.name] || "/tracker/cases/new"
+      // Navigate to the appropriate route based on dashboard ID
+      const route = DASHBOARD_ROUTES_BY_ID[selectedDashboard.id] || "/tracker/cases/new"
       router.push(route)
     } catch (error: any) {
       console.error('Failed to switch dashboard:', error)
