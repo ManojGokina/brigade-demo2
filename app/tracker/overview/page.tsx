@@ -15,6 +15,7 @@ import { CaseFiltersComponent } from "@/components/dashboard/case-filters"
 import { useCaseStats } from "@/lib/case-context"
 import { Badge } from "@/components/ui/badge"
 import { Filter } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { CaseFilters } from "@/types/case"
 import { ProtectedRoute } from "@/components/protected-route"
 
@@ -51,11 +52,63 @@ export default function OverviewPage() {
     filters.surgeon ||
     filters.search
 
-  if (!isLoaded || !stats) {
+  const showSkeleton = !isLoaded || !stats
+
+  if (showSkeleton) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <ProtectedRoute>
+      <div className="p-6 space-y-6">
+        {/* Header skeleton */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-56 rounded-lg" />
+            <Skeleton className="h-4 w-72 rounded-full" />
+          </div>
+          <Skeleton className="h-8 w-40 rounded-full" />
+        </div>
+
+        {/* Filters skeleton */}
+        <div className="rounded-lg border border-border/50 bg-card/50 p-4 space-y-3">
+          <div className="flex flex-wrap gap-3">
+            <Skeleton className="h-9 w-32 rounded-md" />
+            <Skeleton className="h-9 w-32 rounded-md" />
+            <Skeleton className="h-9 w-40 rounded-md" />
+            <Skeleton className="h-9 w-48 rounded-md" />
+          </div>
+        </div>
+
+        {/* Stats cards skeleton */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="relative overflow-hidden rounded-lg border border-border/60 bg-card p-4"
+            >
+              <Skeleton className="mb-3 h-4 w-16 rounded-full" />
+              <Skeleton className="h-7 w-20 rounded-lg" />
+              <Skeleton className="mt-2 h-3 w-24 rounded-full" />
+            </div>
+          ))}
+        </div>
+
+        {/* Charts skeleton */}
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
       </div>
+      </ProtectedRoute>
     )
   }
 

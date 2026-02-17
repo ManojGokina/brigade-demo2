@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   FileText,
   PlusCircle,
-  LogOut,
   ChevronLeft,
   Menu,
   RotateCcw,
@@ -18,9 +17,11 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useAuth, type TabId } from "@/lib/auth-context"
+import { useAuthStore } from "@/store/auth.store"
+import type { TabId } from "@/lib/auth-context"
 import { useCases } from "@/lib/case-context"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { cn } from "@/lib/utils"
 
 interface NavItem {
@@ -37,35 +38,137 @@ const allNavItems: NavItem[] = [
   { id: "user-management", label: "User Management", href: "/tracker/users", icon: Users },
 ]
 
+// Map module names from API to tab IDs
+const MODULE_NAME_TO_TAB_ID: Record<string, TabId> = {
+  "Add New Case": "add-case",
+  "All Cases": "all-cases",
+  "Overview": "overview",
+  "User Management": "user-management",
+}
+
 export default function TrackerLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading, logout, canAccessTab, getTabPermission } = useAuth()
+  const { user: authStoreUser, token, logout: authStoreLogout, currentDashboardModules } = useAuthStore()
   const { resetToInitial, cases } = useCases()
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
+  
+  // Convert auth store user to the format expected by the layout
+  const user = authStoreUser ? {
+    id: authStoreUser.userId,
+    name: authStoreUser.username,
+    email: authStoreUser.email,
+    role: "admin" as const, // Default role - you may want to get this from API
+    permissions: [] // You may want to derive this from currentDashboardModules
+  } : null
+  
+  const isAuthenticated = !!(user && token)
+  const isLoading = isChecking
 
-  // Filter nav items based on user permissions
+  // Create a map of module permissions from currentDashboardModules
+  const modulePermissions = useMemo(() => {
+    const permissions: Map<TabId, { canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean }> = new Map()
+    
+    if (currentDashboardModules) {
+      currentDashboardModules.forEach((module) => {
+        const tabId = MODULE_NAME_TO_TAB_ID[module.moduleName]
+        if (tabId) {
+          const actions = module.actions || []
+          permissions.set(tabId, {
+            canView: actions.some(a => a.actionName === "view"),
+            canCreate: actions.some(a => a.actionName === "create"),
+            canEdit: actions.some(a => a.actionName === "edit"),
+            canDelete: actions.some(a => a.actionName === "delete"),
+          })
+        }
+      })
+    }
+    
+    return permissions
+  }, [currentDashboardModules])
+
+  // Filter nav items based on user permissions from modules
   const navItems = useMemo(() => {
-    if (!user) return []
-    return allNavItems.filter((item) => canAccessTab(item.id))
-  }, [canAccessTab, user])
-
+    if (!user || !isAuthenticated) return []
+    
+    // If we have module permissions, filter based on them
+    if (modulePermissions.size > 0) {
+      return allNavItems.filter((item) => {
+        const perm = modulePermissions.get(item.id)
+        return perm && perm.canView // Show tab if user can view it
+      })
+    }
+    
+    // If no modules loaded yet, show all items (will be filtered once modules load)
+    return allNavItems
+  }, [user, isAuthenticated, modulePermissions])
+  
+  // Helper functions for permissions based on modules
+  const canAccessTab = (tabId: TabId): boolean => {
+    if (!user) return false
+    
+    // If we have module permissions, check them
+    if (modulePermissions.size > 0) {
+      const perm = modulePermissions.get(tabId)
+      return perm ? perm.canView : false
+    }
+    
+    // If no modules loaded, allow access (will be restricted once modules load)
+    return true
+  }
+  
+  const getTabPermission = (tabId: TabId): "read" | "write" | "none" => {
+    if (!user) return "none"
+    
+    // If we have module permissions, determine permission level
+    if (modulePermissions.size > 0) {
+      const perm = modulePermissions.get(tabId)
+      if (!perm || !perm.canView) return "none"
+      
+      // If user can edit or delete, they have write access
+      if (perm.canEdit || perm.canDelete) return "write"
+      
+      // If user can only view, they have read access
+      if (perm.canView) return "read"
+      
+      return "none"
+    }
+    
+    // If no modules loaded, default to write (will be restricted once modules load)
+    return "write"
+  }
+  
   const handleReset = () => {
     if (window.confirm("Reset all case data to initial state? This will remove any cases you've added.")) {
       resetToInitial()
     }
   }
 
+  // Wait for auth store to hydrate before checking authentication
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login")
-    }
-  }, [isLoading, isAuthenticated, router])
+    if (typeof window === 'undefined') return
+    
+    const timer = setTimeout(() => {
+      setIsChecking(false)
+      // Only redirect if we're sure there's no authentication
+      // Check both Zustand store and localStorage as fallback
+      const hasToken = token || localStorage.getItem('auth_token')
+      if (!user || !hasToken) {
+        router.replace("/login")
+      }
+    }, 400) // Give enough time for Zustand to hydrate
+    
+    return () => clearTimeout(timer)
+  }, [user, token, router])
 
-  // Check if user has access to current route
+  // Check if user has access to current route (only after modules are loaded)
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user && navItems.length > 0) {
+    if (isChecking || !isAuthenticated || !user) return
+    
+    // Wait for modules to load before checking permissions
+    if (currentDashboardModules && currentDashboardModules.length > 0) {
       const currentNav = allNavItems.find((item) => pathname.startsWith(item.href))
       if (currentNav && !canAccessTab(currentNav.id)) {
         // Redirect to first accessible tab
@@ -77,7 +180,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
         }
       }
     }
-  }, [isLoading, isAuthenticated, user, pathname, canAccessTab, router, navItems])
+  }, [isChecking, isAuthenticated, user, pathname, canAccessTab, router, navItems, currentDashboardModules])
 
   if (isLoading) {
     return (
@@ -89,17 +192,6 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
 
   if (!isAuthenticated) {
     return null
-  }
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case "admin":
-        return { bg: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }
-      case "analyst":
-        return { bg: "rgba(59, 130, 246, 0.15)", color: "#3b82f6" }
-      default:
-        return { bg: "rgba(107, 114, 128, 0.15)", color: "#6b7280" }
-    }
   }
 
   return (
@@ -178,55 +270,34 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
           })}
         </nav>
 
-        {/* Footer section */}
+        {/* Footer section - Only Cases count and Reset button */}
         <div className="absolute bottom-0 left-0 right-0 border-t border-border/50 p-3">
           {!sidebarCollapsed ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg bg-muted/30 px-2 py-1.5">
-                <span className="text-xs text-muted-foreground">Cases: {cases.length}</span>
-                <div className="flex items-center gap-1">
-                  {/* <ThemeToggle size="sm" /> */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={handleReset}
-                    title="Reset to initial data"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{user?.name}</p>
-                  <Badge
-                    variant="secondary"
-                    className="mt-0.5 text-[10px] font-medium"
-                    style={getRoleBadgeColor(user?.role || "viewer")}
-                  >
-                    {user?.role?.toUpperCase()}
-                  </Badge>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={logout}>
-                  <LogOut className="h-4 w-4" />
+            <div className="flex items-center justify-between rounded-lg bg-muted/30 px-2 py-1.5">
+              <span className="text-xs text-muted-foreground">Cases: {cases.length}</span>
+              <div className="flex items-center gap-1">
+                {/* <ThemeToggle size="sm" /> */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={handleReset}
+                  title="Reset to initial data"
+                >
+                  <RotateCcw className="h-3 w-3" />
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="space-y-2">
-              {/* <ThemeToggle /> */}
+            <div className="flex flex-col items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 w-full"
+                className="h-8 w-8 cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={handleReset}
                 title="Reset data"
               >
                 <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 w-full" onClick={logout}>
-                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           )}
@@ -239,12 +310,12 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 cursor-pointer hover:bg-accent/50 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <Menu className="h-4 w-4" />
           </Button>
-          <Link href="/select-dashboard" className="flex items-center gap-2">
+          <Link href="/select-dashboard" className="flex items-center gap-2 cursor-pointer">
             <div
               className="flex h-7 w-7 items-center justify-center rounded-lg"
               style={{ backgroundColor: "rgba(59, 130, 246, 0.15)" }}
@@ -253,19 +324,6 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
             </div>
             <span className="font-semibold text-foreground">Analytics Platform</span>
           </Link>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="secondary"
-            className="text-[10px] font-medium"
-            style={getRoleBadgeColor(user?.role || "viewer")}
-          >
-            {user?.role?.toUpperCase()}
-          </Badge>
-          {/* <ThemeToggle /> */}
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={logout}>
-            <LogOut className="h-4 w-4" />
-          </Button>
         </div>
       </header>
 
@@ -317,11 +375,17 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
       {/* Main content */}
       <main
         className={cn(
-          "min-h-screen flex-1 pt-14 transition-all duration-300 lg:pt-0",
+          "min-h-screen flex-1 flex flex-col transition-all duration-300",
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
         )}
       >
-        {children}
+        {/* Dashboard Header - fixed at top, visible on all screen sizes */}
+        <DashboardHeader sidebarCollapsed={sidebarCollapsed} />
+        
+        {/* Page Content - add padding top to account for fixed header */}
+        <div className="flex-1 overflow-auto pt-14">
+          {children}
+        </div>
       </main>
     </div>
   )

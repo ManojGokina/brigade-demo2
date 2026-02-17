@@ -30,10 +30,31 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Only redirect if we have a token (means token is invalid/expired)
       // Don't redirect on login failures (no token yet)
+      // Don't redirect if we're already on the login page
+      if (typeof window === 'undefined') {
+        return Promise.reject(error);
+      }
+      
       const token = localStorage.getItem('auth_token');
-      if (token) {
+      const currentPath = window.location.pathname;
+      const requestUrl = error.config?.url || '';
+      
+      // Don't redirect for login endpoint failures
+      if (requestUrl.includes('/auth/login')) {
+        return Promise.reject(error);
+      }
+      
+      // Only redirect if we have a token and we're not already on login page
+      if (token && currentPath !== '/login') {
+        console.error('401 Unauthorized - Token may be invalid or expired');
         localStorage.removeItem('auth_token');
-        window.location.href = '/login';
+        // Use a small delay to allow error handling in the calling code
+        // and prevent redirect loops
+        setTimeout(() => {
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }, 200);
       }
     }
     return Promise.reject(error);

@@ -9,14 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuthStore } from "@/store/auth.store"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const { user, login, isLoading, error, clearError } = useAuthStore()
+  const { user, token, login, isLoading, error, clearError } = useAuthStore()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     setMounted(true)
@@ -24,12 +26,29 @@ export default function LoginPage() {
     clearError()
   }, [])
 
-  // Redirect if already authenticated - only after successful login
+  // Redirect if already authenticated - but only after mount and hydration
+  // This prevents redirect loops by ensuring we only redirect once
   useEffect(() => {
-    if (mounted && user && !isLoading && !error) {
-      router.push("/select-dashboard")
-    }
-  }, [user, isLoading, error, router, mounted])
+    if (!mounted) return
+    
+    // Wait for hydration and ensure we're not in a loading state
+    const timer = setTimeout(() => {
+      // Only redirect if user exists, we're not loading, no errors, and we're on login page
+      if (user && token && !isLoading && !error) {
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+        if (currentPath === '/login') {
+          // Use replace to avoid adding to history
+          router.replace("/select-dashboard")
+          toast({
+            title: "Welcome back",
+            description: "You are already logged in.",
+          })
+        }
+      }
+    }, 500) // Longer delay to ensure Zustand has fully hydrated
+
+    return () => clearTimeout(timer)
+  }, [user, token, isLoading, error, router, mounted])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -37,8 +56,17 @@ export default function LoginPage() {
 
     try {
       await login(email.trim(), password.trim())
-    } catch (err) {
-      // Error is already set in store, don't navigate
+      toast({
+        title: "Login successful",
+        description: "Redirecting to your dashboards...",
+      })
+    } catch (err: any) {
+      // Error is already set in store, also show toast
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: err?.response?.data?.message || "Please check your credentials and try again.",
+      })
       return
     }
   }

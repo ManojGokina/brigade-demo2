@@ -230,26 +230,6 @@ export default function AddCasePage() {
         </Badge>
       </div>
 
-      {/* Info banner */}
-      <div
-        className="mb-6 flex items-start gap-3 rounded-lg border p-4"
-        style={{ borderColor: "#3b82f6", backgroundColor: "rgba(59, 130, 246, 0.1)" }}
-      >
-        <div
-          className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full"
-          style={{ backgroundColor: "#3b82f6" }}
-        >
-          <span className="text-xs font-bold text-white">i</span>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-foreground">Persistent Demo Mode</p>
-          <p className="text-sm text-muted-foreground">
-            Cases you add will be saved to localStorage and persist across page refreshes. 
-            Dashboard statistics will update automatically.
-          </p>
-        </div>
-      </div>
-
       {/* Validation errors summary */}
       {Object.keys(errors).length > 0 && (
         <div

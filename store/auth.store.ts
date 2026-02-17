@@ -49,11 +49,13 @@ interface AuthState {
   currentDashboardModules: DashboardModule[] | null;
   isLoading: boolean;
   error: string | null;
+  _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   fetchDashboardAccess: () => Promise<void>;
   fetchDashboardModules: (dashboardId: number) => Promise<void>;
   clearError: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -66,6 +68,10 @@ export const useAuthStore = create<AuthState>()(
       currentDashboardModules: null,
       isLoading: false,
       error: null,
+      _hasHydrated: false,
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state });
+      },
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -75,7 +81,9 @@ export const useAuthStore = create<AuthState>()(
           const { user, token } = response.data.data;
           
           // Store token in localStorage for axios interceptor
-          localStorage.setItem('auth_token', token);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('auth_token', token);
+          }
           
           set({ 
             user, 
@@ -128,8 +136,12 @@ export const useAuthStore = create<AuthState>()(
             user_id: user.userId
           });
           
+          // API returns array directly, wrap it in the expected structure
+          const dashboards = Array.isArray(response.data.data) 
+            ? response.data.data 
+            : [];
           set({ 
-            dashboardAccess: response.data.data,
+            dashboardAccess: { dashboards, modules: [] },
             isLoading: false 
           });
         } catch (error: any) {
@@ -146,6 +158,21 @@ export const useAuthStore = create<AuthState>()(
 
       fetchDashboardModules: async (dashboardId: number) => {
         set({ isLoading: true, error: null });
+        
+        // Ensure token is available before making the request
+        const { token } = get();
+        if (!token) {
+          const storedToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+          if (!storedToken) {
+            const errorMessage = 'No authentication token found. Please login again.';
+            set({ 
+              error: errorMessage, 
+              isLoading: false 
+            });
+            throw new Error(errorMessage);
+          }
+        }
+        
         try {
           const response = await api.get(`/dashboards/${dashboardId}/modules`);
           set({ 
@@ -154,7 +181,8 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false 
           });
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || 'Failed to fetch dashboard modules';
+          console.error('Error fetching dashboard modules:', error);
+          const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch dashboard modules';
           set({ 
             error: errorMessage, 
             isLoading: false 
@@ -171,8 +199,31 @@ export const useAuthStore = create<AuthState>()(
         dashboardAccess: state.dashboardAccess,
         currentDashboardId: state.currentDashboardId,
         currentDashboardModules: state.currentDashboardModules
+        // _hasHydrated is not persisted - it's a runtime flag
       }),
       skipHydration: false,
+      onRehydrateStorage: () => {
+        return (state) => {
+          // Mark as hydrated
+          if (state) {
+            state._hasHydrated = true;
+          }
+          
+          // Sync token from Zustand to localStorage after hydration
+          if (state?.token && typeof window !== 'undefined') {
+            const storedToken = localStorage.getItem('auth_token');
+            if (storedToken !== state.token) {
+              localStorage.setItem('auth_token', state.token);
+            }
+          } else if (!state?.token && typeof window !== 'undefined') {
+            // If no token in store but exists in localStorage, sync it to store
+            const storedToken = localStorage.getItem('auth_token');
+            if (storedToken && state) {
+              state.token = storedToken;
+            }
+          }
+        };
+      },
     }
   )
 );

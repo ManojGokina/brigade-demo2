@@ -26,19 +26,32 @@ import { CaseDetailDrawer } from "./case-detail-drawer"
 
 const PAGE_SIZE = 25 // Declared PAGE_SIZE variable
 
-interface CasesTableProps {
-  cases: Case[]
+interface PaginationProps {
+  total: number
+  offset: number
+  limit: number
+  hasMore: boolean
+  onPageChange: (offset: number) => void
+  onPageSizeChange: (pageSize: number) => void
 }
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
+interface CasesTableProps {
+  cases: Case[]
+  pagination?: PaginationProps
+}
 
-export function CasesTable({ cases }: CasesTableProps) {
+const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100]
+
+export function CasesTable({ cases, pagination }: CasesTableProps) {
   const [sortField, setSortField] = useState<SortField>("caseNo")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(25)
   const [selectedCase, setSelectedCase] = useState<Case | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  
+  // Use server-side pagination if provided, otherwise use client-side
+  const isServerSidePagination = !!pagination
 
   // Early return if cases is not available
   if (!cases || !Array.isArray(cases)) {
@@ -50,8 +63,12 @@ export function CasesTable({ cases }: CasesTableProps) {
   }
 
   const handlePageSizeChange = (value: string) => {
-    setPageSize(Number(value))
+    const newPageSize = Number(value)
+    setPageSize(newPageSize)
     setCurrentPage(0)
+    if (isServerSidePagination && pagination) {
+      pagination.onPageSizeChange(newPageSize)
+    }
   }
 
   const handleRowClick = (caseData: Case) => {
@@ -73,12 +90,30 @@ export function CasesTable({ cases }: CasesTableProps) {
     setCurrentPage(0)
   }
 
-const sortedCases = sortCases(cases || [], sortField, sortDirection)
-  const totalPages = Math.ceil(sortedCases.length / pageSize)
-  const paginatedCases = sortedCases.slice(
-    currentPage * pageSize,
-    (currentPage + 1) * pageSize
-  )
+  // For server-side pagination, use cases as-is (already paginated)
+  // For client-side, sort and paginate locally
+  const sortedCases = isServerSidePagination 
+    ? cases 
+    : sortCases(cases || [], sortField, sortDirection)
+  
+  const totalItems = isServerSidePagination 
+    ? (pagination?.total || 0)
+    : sortedCases.length
+  
+  const totalPages = isServerSidePagination
+    ? Math.ceil(totalItems / (pagination?.limit || pageSize))
+    : Math.ceil(sortedCases.length / pageSize)
+  
+  const currentPageIndex = isServerSidePagination
+    ? Math.floor((pagination?.offset || 0) / (pagination?.limit || pageSize))
+    : currentPage
+  
+  const paginatedCases = isServerSidePagination
+    ? sortedCases
+    : sortedCases.slice(
+        currentPage * pageSize,
+        (currentPage + 1) * pageSize
+      )
 
   const SortableHeader = ({
     field,
@@ -244,13 +279,17 @@ const sortedCases = sortCases(cases || [], sortField, sortDirection)
 <div className="flex items-center justify-between border-t border-border/50 px-4 py-3">
         <div className="flex items-center gap-4">
           <span className="text-xs text-muted-foreground">
-            Showing {currentPage * pageSize + 1}-
-            {Math.min((currentPage + 1) * pageSize, sortedCases.length)} of{" "}
-            {sortedCases.length}
+            {isServerSidePagination && pagination
+              ? `Showing ${pagination.offset + 1}-${Math.min(pagination.offset + pagination.limit, pagination.total)} of ${pagination.total}`
+              : `Showing ${currentPage * pageSize + 1}-${Math.min((currentPage + 1) * pageSize, sortedCases.length)} of ${sortedCases.length}`
+            }
           </span>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Rows per page:</span>
-            <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+            <Select 
+              value={String(isServerSidePagination && pagination ? pagination.limit : pageSize)} 
+              onValueChange={handlePageSizeChange}
+            >
               <SelectTrigger className="h-8 w-[70px] border-border bg-white text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -269,20 +308,42 @@ const sortedCases = sortCases(cases || [], sortField, sortDirection)
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
+              onClick={() => {
+                if (isServerSidePagination && pagination) {
+                  const newOffset = Math.max(0, pagination.offset - pagination.limit)
+                  pagination.onPageChange(newOffset)
+                } else {
+                  setCurrentPage((p) => Math.max(0, p - 1))
+                }
+              }}
+              disabled={isServerSidePagination 
+                ? (pagination?.offset || 0) === 0
+                : currentPage === 0
+              }
               className="h-8 border-border bg-white text-foreground hover:bg-accent"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-xs text-muted-foreground">
-              {currentPage + 1} / {totalPages}
+              {currentPageIndex + 1} / {totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage >= totalPages - 1}
+              onClick={() => {
+                if (isServerSidePagination && pagination) {
+                  const newOffset = pagination.offset + pagination.limit
+                  if (pagination.hasMore) {
+                    pagination.onPageChange(newOffset)
+                  }
+                } else {
+                  setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+                }
+              }}
+              disabled={isServerSidePagination 
+                ? !pagination?.hasMore
+                : currentPage >= totalPages - 1
+              }
               className="h-8 border-border bg-white text-foreground hover:bg-accent"
             >
               <ChevronRight className="h-4 w-4" />

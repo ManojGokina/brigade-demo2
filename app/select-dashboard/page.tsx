@@ -6,10 +6,12 @@ import { Activity, BarChart3, ArrowRight, Lock, Sparkles, Package, ShieldAlert }
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useAuthStore } from "@/store/auth.store"
 import { useCaseStats } from "@/lib/case-context"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ProtectedRoute } from "@/components/protected-route"
+import { useToast } from "@/hooks/use-toast"
 
 interface DashboardOption {
   id: string
@@ -46,23 +48,51 @@ export default function SelectDashboardPage() {
   const { stats, isLoaded: caseDataLoaded } = useCaseStats()
   const router = useRouter()
   const [selectedDashboard, setSelectedDashboard] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const userDashboards = dashboardAccess?.dashboards || []
   const hasAccess = userDashboards.length > 0
+  const showSkeleton = isLoading && !dashboardAccess
 
   const handleDashboardSelect = async (dashboardId: number, name: string) => {
     setSelectedDashboard(dashboardId.toString())
     
     try {
+      // Ensure we have a token before making the API call
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        console.error('No authentication token found')
+        router.push('/login')
+        return
+      }
+      
       await fetchDashboardModules(dashboardId)
+      toast({
+        title: "Dashboard selected",
+        description: name,
+      })
       const route = DASHBOARD_ROUTES[name] || "/tracker/cases/new"
       console.log('Modules fetched, navigating to:', route)
       // Use router.push for client-side navigation to avoid page reload
       await router.push(route)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch dashboard modules:', error)
-      const route = DASHBOARD_ROUTES[name] || "/tracker/cases/new"
-      await router.push(route)
+      toast({
+        variant: "destructive",
+        title: "Failed to load dashboard",
+        description: error?.response?.data?.message || "Please try again or contact support.",
+      })
+      
+      // Only redirect to login if it's an authentication error
+      // Otherwise, still navigate to the dashboard
+      if (error.response?.status === 401 || error.message?.includes('authentication')) {
+        console.error('Authentication error - redirecting to login')
+        router.push('/login')
+      } else {
+        // For other errors, still navigate to the dashboard
+        const route = DASHBOARD_ROUTES[name] || "/tracker/cases/new"
+        await router.push(route)
+      }
     }
   }
 
@@ -96,18 +126,55 @@ export default function SelectDashboardPage() {
       {/* Main content */}
       <main className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-10">
-          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Dashboard Hub
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-            Welcome back, {user?.username?.split(" ")[0]}
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            {hasAccess ? "Select a module to access your healthcare analytics workspace" : "Contact your administrator for dashboard access"}
-          </p>
+          {showSkeleton ? (
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-32 rounded-full" />
+              <Skeleton className="h-8 w-64 rounded-lg" />
+              <Skeleton className="h-4 w-80 rounded-full max-w-full" />
+            </div>
+          ) : (
+            <>
+              <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                Dashboard Hub
+              </p>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+                Welcome back, {user?.username?.split(" ")[0]}
+              </h1>
+              <p className="mt-2 text-muted-foreground">
+                {hasAccess ? "Select a module to access your healthcare analytics workspace" : "Contact your administrator for dashboard access"}
+              </p>
+            </>
+          )}
         </div>
 
-        {!hasAccess ? (
+        {showSkeleton ? (
+          <div className="grid gap-6 sm:grid-cols-2">
+            {[0, 1].map((i) => (
+              <Card
+                key={i}
+                className="relative overflow-hidden border-border/60 bg-card/60"
+                style={{
+                  borderLeftWidth: "4px",
+                }}
+              >
+                <CardHeader className="relative pb-3 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-12 w-12 rounded-xl" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-40 rounded-lg" />
+                    <Skeleton className="h-4 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4 rounded-lg" />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Skeleton className="h-5 w-32 rounded-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : !hasAccess ? (
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}>
@@ -196,54 +263,75 @@ export default function SelectDashboardPage() {
         {/* Quick stats */}
         <div className="mt-12 rounded-xl border border-border/50 bg-white p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Platform Overview
-            </h2>
-            <Badge variant="outline" className="text-xs">
-              Live Data
-            </Badge>
+            {showSkeleton ? (
+              <>
+                <Skeleton className="h-4 w-32 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </>
+            ) : (
+              <>
+                <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  Platform Overview
+                </h2>
+                <Badge variant="outline" className="text-xs">
+                  Live Data
+                </Badge>
+              </>
+            )}
           </div>
           <div className="mt-6 grid gap-8 sm:grid-cols-4">
-            <div className="relative">
-              <div
-                className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                style={{ backgroundColor: "#3b82f6" }}
-              />
-              <p className="text-3xl font-bold" style={{ color: "#3b82f6" }}>
-                {caseDataLoaded && stats ? stats.totalCases : "..."}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">Total Cases</p>
-            </div>
-            <div className="relative">
-              <div
-                className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                style={{ backgroundColor: "#10b981" }}
-              />
-              <p className="text-3xl font-bold" style={{ color: "#10b981" }}>
-                {caseDataLoaded && stats ? stats.uniqueSurgeons : "..."}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">Active Surgeons</p>
-            </div>
-            <div className="relative">
-              <div
-                className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                style={{ backgroundColor: "#f59e0b" }}
-              />
-              <p className="text-3xl font-bold" style={{ color: "#f59e0b" }}>
-                {caseDataLoaded && stats ? stats.uniqueSites : "..."}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">Active Sites</p>
-            </div>
-            <div className="relative">
-              <div
-                className="absolute -left-3 top-0 h-full w-1 rounded-full"
-                style={{ backgroundColor: "#8b5cf6" }}
-              />
-              <p className="text-3xl font-bold" style={{ color: "#8b5cf6" }}>
-                {caseDataLoaded && stats ? stats.totalNervesTreated : "..."}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">Nerves Treated</p>
-            </div>
+            {showSkeleton ? (
+              [0, 1, 2, 3].map((i) => (
+                <div className="relative space-y-2" key={i}>
+                  <Skeleton className="absolute -left-3 top-0 h-full w-1 rounded-full" />
+                  <Skeleton className="h-8 w-16 rounded-lg" />
+                  <Skeleton className="h-4 w-24 rounded-full" />
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="relative">
+                  <div
+                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
+                    style={{ backgroundColor: "#3b82f6" }}
+                  />
+                  <p className="text-3xl font-bold" style={{ color: "#3b82f6" }}>
+                    {caseDataLoaded && stats ? stats.totalCases : "..."}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">Total Cases</p>
+                </div>
+                <div className="relative">
+                  <div
+                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
+                    style={{ backgroundColor: "#10b981" }}
+                  />
+                  <p className="text-3xl font-bold" style={{ color: "#10b981" }}>
+                    {caseDataLoaded && stats ? stats.uniqueSurgeons : "..."}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">Active Surgeons</p>
+                </div>
+                <div className="relative">
+                  <div
+                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
+                    style={{ backgroundColor: "#f59e0b" }}
+                  />
+                  <p className="text-3xl font-bold" style={{ color: "#f59e0b" }}>
+                    {caseDataLoaded && stats ? stats.uniqueSites : "..."}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">Active Sites</p>
+                </div>
+                <div className="relative">
+                  <div
+                    className="absolute -left-3 top-0 h-full w-1 rounded-full"
+                    style={{ backgroundColor: "#8b5cf6" }}
+                  />
+                  <p className="text-3xl font-bold" style={{ color: "#8b5cf6" }}>
+                    {caseDataLoaded && stats ? stats.totalNervesTreated : "..."}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">Nerves Treated</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
         </>
