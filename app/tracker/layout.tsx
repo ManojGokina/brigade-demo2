@@ -199,7 +199,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
       {/* Sidebar - Desktop */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 hidden h-screen border-r border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300 lg:block",
+          "fixed left-0 top-0 z-40 hidden h-screen border-r border-border/50 bg-white transition-all duration-300 lg:block",
           sidebarCollapsed ? "w-16" : "w-64"
         )}
       >
@@ -305,7 +305,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
       </aside>
 
       {/* Mobile header */}
-      <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center justify-between border-b border-border/50 bg-card/80 px-4 backdrop-blur-sm lg:hidden">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-border/50 bg-card/80 px-4 backdrop-blur-sm lg:hidden">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -334,7 +334,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
             className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <nav className="absolute left-0 top-14 w-64 border-r border-border/50 bg-card p-3">
+          <nav className="absolute left-0 top-16 w-64 border-r border-border/50 bg-card p-3">
             {navItems.map((item) => {
               const isActive = pathname === item.href || 
                 (pathname.startsWith(item.href + "/") && !navItems.some(other => 
@@ -383,7 +383,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
         <DashboardHeader sidebarCollapsed={sidebarCollapsed} />
         
         {/* Page Content - add padding top to account for fixed header */}
-        <div className="flex-1 overflow-auto pt-14">
+        <div className="flex-1 overflow-auto pt-16">
           {children}
         </div>
       </main>

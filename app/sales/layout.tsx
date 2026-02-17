@@ -39,7 +39,7 @@ export default function SalesLayout({
         {/* Sidebar - Desktop (matches Case Tracker layout) */}
         <aside
           className={cn(
-            "fixed left-0 top-0 z-40 hidden h-screen border-r border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300 lg:block",
+            "fixed left-0 top-0 z-40 hidden h-screen border-r border-border/50 bg-white transition-all duration-300 lg:block",
             sidebarCollapsed ? "w-16" : "w-64"
           )}
         >
@@ -118,7 +118,7 @@ export default function SalesLayout({
           )}
         >
           <DashboardHeader sidebarCollapsed={sidebarCollapsed} />
-          <div className="flex-1 pt-14 px-4 py-6 lg:px-6 overflow-auto">
+          <div className="flex-1 pt-16 px-4 py-6 lg:px-6 overflow-auto">
             {children}
           </div>
         </main>

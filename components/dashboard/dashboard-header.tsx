@@ -116,7 +116,7 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
   return (
     <header 
       className={cn(
-        "fixed top-0 z-50 flex h-14 items-center justify-between border-b border-border/50 bg-card/95 backdrop-blur-md px-4 shadow-sm",
+        "fixed top-0 z-50 flex h-16 items-center justify-between border-b border-border/50 bg-card/95 backdrop-blur-md px-4 shadow-sm",
         "transition-all duration-300",
         sidebarCollapsed ? "lg:left-16" : "lg:left-64",
         "left-0 right-0 lg:px-6"
@@ -128,7 +128,7 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
           variant="ghost"
           size="sm"
           onClick={handleHomeClick}
-          className="flex items-center gap-2 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer rounded-lg px-3"
+          className="flex items-center gap-2 bg-primary/10 text-primary transition-all cursor-pointer rounded-lg px-3"
         >
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline font-medium">Home</span>
@@ -200,7 +200,7 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
               variant="ghost" 
               size="sm"
               onClick={handleLogout}
-              className="flex items-center gap-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all cursor-pointer rounded-lg px-3 border border-transparent hover:border-destructive/20"
+              className="flex items-center gap-2 bg-destructive/10 text-destructive border-destructive/20 transition-all cursor-pointer rounded-lg px-3 border"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline font-medium">Logout</span>
