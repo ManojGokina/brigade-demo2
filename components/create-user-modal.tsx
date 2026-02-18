@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog"
 import {
   Select,
@@ -22,7 +23,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
-import { ChevronDown, ChevronRight, Shield, ShieldCheck, Edit3, Eye, Search, CheckSquare, XSquare, User, Mail, Lock, UserCog, Settings, EyeOff } from "lucide-react"
+import { ChevronDown, ChevronRight, Shield, ShieldCheck, Edit3, Eye, Search, CheckSquare, XSquare, User, Mail, Lock, UserCog, Settings, EyeOff, X } from "lucide-react"
 
 interface Role {
   id: number
@@ -77,6 +78,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [allAccessSelected, setAllAccessSelected] = useState(false)
 
   const [formData, setFormData] = useState<UserFormData>({
     name: "",
@@ -131,6 +133,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
       dashboardIds: allDashboardIds,
       modulePermissions: allModulePermissions
     }))
+    setAllAccessSelected(true)
   }
 
   const clearAllPermissions = () => {
@@ -139,9 +142,11 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
       dashboardIds: [],
       modulePermissions: []
     }))
+    setAllAccessSelected(false)
   }
 
   const handleModuleToggle = (moduleId: number) => {
+    setAllAccessSelected(false)
     const isSelected = formData.modulePermissions.some(mp => mp.moduleId === moduleId)
     if (isSelected) {
       setFormData(prev => ({
@@ -276,6 +281,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
   }
 
   const handleDashboardToggle = (dashboardId: number) => {
+    setAllAccessSelected(false)
     const isSelected = formData.dashboardIds.includes(dashboardId)
     
     if (isSelected) {
@@ -299,6 +305,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
   }
 
   const handleModuleActionToggle = (moduleId: number, actionId: number) => {
+    setAllAccessSelected(false)
     setFormData((prev) => {
       const existingModule = prev.modulePermissions.find((m) => m.moduleId === moduleId)
       
@@ -346,12 +353,23 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[100vw] max-w-[1400px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
-          <DialogDescription>Add a new user with role and permissions</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-6 py-4">
+      <DialogContent className="w-[100vw] max-w-[1400px] h-[90vh] flex flex-col p-0" showCloseButton={false}>
+        <div className="shrink-0 border-b border-border bg-white rounded-t-lg flex items-center justify-between px-6 py-3">
+          <div>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>Add a new user with role and permissions</DialogDescription>
+          </div>
+          <DialogClose asChild>
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </DialogClose>
+        </div>
+        <div className="grid flex-1 gap-6 py-4 px-6 overflow-y-auto no-scrollbar">
           {/* User Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-border">
@@ -366,6 +384,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="John Doe"
+                  className="bg-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -376,6 +395,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="john@hospital.org"
+                  className="bg-white"
                 />
               </div>
             </div>
@@ -398,7 +418,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Enter password"
-                    className="pr-10"
+                    className="pr-10 bg-white"
                   />
                   <button
                     type="button"
@@ -418,7 +438,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     placeholder="Re-enter password"
-                    className="pr-10"
+                    className="pr-10 bg-white"
                   />
                   <button
                     type="button"
@@ -449,7 +469,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                   setFormData({ ...formData, roleId, isSuperAdmin })
                 }}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-white">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -477,28 +497,44 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
               <h3 className="font-semibold text-sm">Dashboard & Module Permissions</h3>
               <div className="flex gap-2 ml-auto">
                 {formData.dashboardIds.length === 0 && formData.modulePermissions.length === 0 ? (
-                  <Button variant="outline" size="sm" onClick={selectAllPermissions}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAllPermissions}
+                    className="border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+                  >
                     <CheckSquare className="h-3 w-3 mr-1" />
                     Select All
                   </Button>
                 ) : (
-                  <Button variant="outline" size="sm" onClick={clearAllPermissions}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearAllPermissions}
+                    className="border-red-400 text-red-600 hover:bg-red-50"
+                  >
                     <XSquare className="h-3 w-3 mr-1" />
                     Clear All
                   </Button>
                 )}
               </div>
             </div>
+            {allAccessSelected && (
+              <p className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md px-3 py-1 inline-flex items-center gap-2">
+                <Shield className="h-3 w-3 text-emerald-500" />
+                All dashboards and modules access have been granted for this user.
+              </p>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search dashboard or module..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-9 bg-white"
               />
             </div>
-            <div className="rounded-lg border border-border/50 bg-muted/20 max-h-[350px] overflow-y-auto">
+            <div className="rounded-lg border border-border/50 bg-white max-h-[350px] overflow-y-auto">
               {filteredDashboards.map((dashboard) => {
                 const dashboardModules = modules.filter((m) => m.dashboard_id === dashboard.id)
                 const isExpanded = expandedDashboards.has(dashboard.id)
@@ -520,6 +556,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                           id={`dashboard-${dashboard.id}`}
                           checked={formData.dashboardIds.includes(dashboard.id)}
                           onCheckedChange={() => handleDashboardToggle(dashboard.id)}
+                          className="border border-gray-400 data-[state=checked]:border-gray-700"
                         />
                         <Label htmlFor={`dashboard-${dashboard.id}`} className="cursor-pointer font-medium text-sm">
                           {dashboard.name}
@@ -543,6 +580,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                                     if (el) (el as any).indeterminate = checkState === 'indeterminate'
                                   }}
                                   onCheckedChange={() => handleModuleToggle(module.id)}
+                                  className="border border-gray-400 data-[state=checked]:border-gray-700"
                                 />
                                 <Label htmlFor={`module-${module.id}`} className="text-sm cursor-pointer">
                                   {module.name}
@@ -576,7 +614,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="shrink-0 border-t border-border bg-white px-6 py-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={onClose} disabled={isCreating}>
             Cancel
           </Button>
