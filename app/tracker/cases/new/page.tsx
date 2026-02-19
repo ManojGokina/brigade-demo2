@@ -266,7 +266,7 @@ export default function AddCasePage() {
                   type="date"
                   value={formData.opDate}
                   onChange={(e) => updateField("opDate", e.target.value)}
-                  className={`bg-white ${errors.opDate ? "border-destructive" : ""}`}
+                  className={`bg-white border border-slate-400 ${errors.opDate ? "border-destructive" : ""}`}
                 />
               </div>
 
@@ -280,7 +280,9 @@ export default function AddCasePage() {
                 >
                   <SelectTrigger
                     id="caseType"
-                    className={`w-full bg-white ${errors.caseType ? "border-destructive" : ""}`}
+                    className={`w-full bg-white border border-slate-400 ${
+                      errors.caseType ? "border-destructive" : ""
+                    }`}
                   >
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
@@ -295,13 +297,15 @@ export default function AddCasePage() {
                 <Label htmlFor="surgery">
                   Surgery Performed <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="surgery"
-                  placeholder="e.g., Carpal Tunnel Release"
-                  value={formData.surgery}
-                  onChange={(e) => updateField("surgery", e.target.value)}
-                  className={`bg-white ${errors.surgery ? "border-destructive" : ""}`}
-                />
+                  <Input
+                    id="surgery"
+                    placeholder="e.g., Carpal Tunnel Release"
+                    value={formData.surgery}
+                    onChange={(e) => updateField("surgery", e.target.value)}
+                    className={`bg-white border border-slate-400 ${
+                      errors.surgery ? "border-destructive" : ""
+                    }`}
+                  />
               </div>
 
               <div className="grid gap-2">
@@ -315,7 +319,9 @@ export default function AddCasePage() {
                   placeholder="e.g., 3"
                   value={formData.nervesTreated}
                   onChange={(e) => updateField("nervesTreated", e.target.value)}
-                  className={`bg-white ${errors.nervesTreated ? "border-destructive" : ""}`}
+                  className={`bg-white border border-slate-400 ${
+                    errors.nervesTreated ? "border-destructive" : ""
+                  }`}
                 />
               </div>
 
@@ -330,7 +336,9 @@ export default function AddCasePage() {
                   >
                     <SelectTrigger
                       id="specialty"
-                      className={`w-full bg-white ${errors.specialty ? "border-destructive" : ""}`}
+                      className={`w-full bg-white border border-slate-400 ${
+                        errors.specialty ? "border-destructive" : ""
+                      }`}
                     >
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
@@ -355,7 +363,9 @@ export default function AddCasePage() {
                   >
                     <SelectTrigger
                       id="extremity"
-                      className={`w-full bg-white ${errors.extremity ? "border-destructive" : ""}`}
+                      className={`w-full bg-white border border-slate-400 ${
+                        errors.extremity ? "border-destructive" : ""
+                      }`}
                     >
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
@@ -377,7 +387,9 @@ export default function AddCasePage() {
                 >
                   <SelectTrigger
                     id="userStatus"
-                    className={`w-full bg-white ${errors.userStatus ? "border-destructive" : ""}`}
+                    className={`w-full bg-white border border-slate-400 ${
+                      errors.userStatus ? "border-destructive" : ""
+                    }`}
                   >
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -407,7 +419,7 @@ export default function AddCasePage() {
                   placeholder="e.g., Virtua, Penn Medicine"
                   value={formData.system}
                   onChange={(e) => updateField("system", e.target.value)}
-                  className={`bg-white ${errors.system ? "border-destructive" : ""}`}
+                  className={`bg-white border border-slate-400 ${errors.system ? "border-destructive" : ""}`}
                   list="systems-list"
                 />
                 <datalist id="systems-list">
@@ -426,7 +438,7 @@ export default function AddCasePage() {
                   placeholder="e.g., Main Campus"
                   value={formData.site}
                   onChange={(e) => updateField("site", e.target.value)}
-                  className={`bg-white ${errors.site ? "border-destructive" : ""}`}
+                  className={`bg-white border border-slate-400 ${errors.site ? "border-destructive" : ""}`}
                   list="sites-list"
                 />
                 <datalist id="sites-list">
@@ -445,7 +457,7 @@ export default function AddCasePage() {
                   placeholder="e.g., Dr. Smith"
                   value={formData.surgeon}
                   onChange={(e) => updateField("surgeon", e.target.value)}
-                  className={`bg-white ${errors.surgeon ? "border-destructive" : ""}`}
+                  className={`bg-white border border-slate-400 ${errors.surgeon ? "border-destructive" : ""}`}
                   list="surgeons-list"
                 />
                 <datalist id="surgeons-list">
@@ -465,7 +477,9 @@ export default function AddCasePage() {
                 >
                   <SelectTrigger
                     id="territory"
-                    className={`w-full bg-white ${errors.territory ? "border-destructive" : ""}`}
+                    className={`w-full bg-white border border-slate-400 ${
+                      errors.territory ? "border-destructive" : ""
+                    }`}
                   >
                     <SelectValue placeholder="Select territory" />
                   </SelectTrigger>
@@ -500,6 +514,7 @@ export default function AddCasePage() {
                   id="training"
                   checked={formData.training}
                   onCheckedChange={(v) => updateField("training", v)}
+                  className="border-2 border-slate-400"
                 />
               </div>
 
@@ -514,6 +529,7 @@ export default function AddCasePage() {
                   id="neuromaCase"
                   checked={formData.neuromaCase}
                   onCheckedChange={(v) => updateField("neuromaCase", v)}
+                  className="border-2 border-slate-400"
                 />
               </div>
 
@@ -528,6 +544,7 @@ export default function AddCasePage() {
                   id="caseStudy"
                   checked={formData.caseStudy}
                   onCheckedChange={(v) => updateField("caseStudy", v)}
+                  className="border-2 border-slate-400"
                 />
               </div>
             </CardContent>
@@ -544,7 +561,7 @@ export default function AddCasePage() {
                 placeholder="Enter any additional notes or observations..."
                 value={formData.notes}
                 onChange={(e) => updateField("notes", e.target.value)}
-                className="min-h-[120px] bg-white"
+                className="min-h-[120px] bg-white border border-slate-400"
               />
             </CardContent>
           </Card>

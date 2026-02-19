@@ -137,7 +137,7 @@ export default function LoginPage() {
                       setEmail(e.target.value)
                       if (error) clearError()
                     }}
-                    className="h-11 bg-background/50 pl-10"
+                    className="h-11 bg-white border border-slate-400 pl-10"
                     autoFocus
                     autoComplete="email"
                     disabled={isLoading}
@@ -156,7 +156,7 @@ export default function LoginPage() {
                       setPassword(e.target.value)
                       if (error) clearError()
                     }}
-                    className="h-11 bg-background/50 pl-10 pr-10"
+                    className="h-11 bg-white border border-slate-400 pl-10 pr-10"
                     autoComplete="current-password"
                     disabled={isLoading}
                   />
