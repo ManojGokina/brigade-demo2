@@ -8,7 +8,7 @@ import { CaseFiltersComponent } from "@/components/dashboard/case-filters"
 import { CasesTable } from "@/components/dashboard/cases-table"
 import { fetchCases, mapCaseRowToCase, type CasesApiParams } from "@/lib/cases-api"
 import { useCaseStats } from "@/lib/case-context"
-import type { CaseFilters, Case } from "@/types/case"
+import type { CaseFilters, Case, SortField, SortDirection } from "@/types/case"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -35,10 +35,37 @@ export default function CasesPage() {
     search: "",
   })
 
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+
   const { toast } = useToast()
 
+  // Map frontend sort fields to backend field names
+  const mapSortFieldToBackend = (field: SortField): string => {
+    const fieldMap: Record<SortField, string> = {
+      caseNo: 'caseNumber',
+      opDate: 'operationDate',
+      type: 'useCase',
+      surgeon: 'surgeon',
+      site: 'site',
+      specialty: 'specialty',
+      ueOrLe: 'ueLe',
+      nervesTreated: 'nervesTreated',
+      userStatus: 'userStatus',
+      region: 'region',
+      system: 'systemName',
+      training: 'training',
+      surgeryPerformed: 'surgeryPerformed',
+      neuromaCase: 'isNeuromaCase',
+      caseStudy: 'isCaseStudy',
+      survivalDays: 'operationDate',
+      survivalWeeks: 'operationDate',
+    }
+    return fieldMap[field] || field
+  }
+
   // Convert frontend filters to API params
-  const getApiParams = useCallback((currentFilters: CaseFilters, currentOffset: number = 0): CasesApiParams => {
+  const getApiParams = useCallback((currentFilters: CaseFilters, currentOffset: number = 0, currentSortField?: SortField | null, currentSortDirection?: SortDirection): CasesApiParams => {
     const params: CasesApiParams = {
       limit: pagination.limit,
       offset: currentOffset,
@@ -80,16 +107,22 @@ export default function CasesPage() {
       params.operationDateTo = currentFilters.dateTo
     }
 
+    // Add sorting parameters
+    if (currentSortField) {
+      params.sortBy = mapSortFieldToBackend(currentSortField)
+      params.sortOrder = currentSortDirection || 'asc'
+    }
+
     return params
   }, [pagination.limit])
 
   // Fetch cases from API
-  const loadCases = useCallback(async (currentFilters: CaseFilters, offset: number = 0) => {
+  const loadCases = useCallback(async (currentFilters: CaseFilters, offset: number = 0, currentSortField?: SortField | null, currentSortDirection?: SortDirection) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const apiParams = getApiParams(currentFilters, offset)
+      const apiParams = getApiParams(currentFilters, offset, currentSortField, currentSortDirection)
       const response = await fetchCases(apiParams)
       
       const mappedCases = response.items.map(mapCaseRowToCase)
@@ -115,10 +148,10 @@ export default function CasesPage() {
     }
   }, [getApiParams])
 
-  // Load cases when filters change (reset to first page)
+  // Load cases when filters or sorting change (reset to first page)
   useEffect(() => {
-    loadCases(filters, 0)
-  }, [filters]) // Only reload when filters change
+    loadCases(filters, 0, sortField, sortDirection)
+  }, [filters, sortField, sortDirection]) // Reload when filters or sorting change
 
   // Handle filter changes
   const handleFiltersChange = (newFilters: CaseFilters) => {
@@ -129,14 +162,14 @@ export default function CasesPage() {
 
   // Handle pagination
   const handlePageChange = (newOffset: number) => {
-    loadCases(filters, newOffset)
+    loadCases(filters, newOffset, sortField, sortDirection)
   }
 
   // Handle page size change
   const handlePageSizeChange = useCallback((newPageSize: number) => {
     setIsLoading(true)
     setError(null)
-    const apiParams = getApiParams(filters, 0)
+    const apiParams = getApiParams(filters, 0, sortField, sortDirection)
     apiParams.limit = newPageSize
     
     fetchCases(apiParams).then(response => {
@@ -154,7 +187,14 @@ export default function CasesPage() {
       setError(err.response?.data?.message || err.message || 'Failed to load cases')
       setIsLoading(false)
     })
-  }, [filters, getApiParams])
+  }, [filters, getApiParams, sortField, sortDirection])
+
+  // Handle sort change
+  const handleSortChange = useCallback((field: SortField, direction: SortDirection) => {
+    setSortField(field)
+    setSortDirection(direction)
+    // loadCases will be triggered by useEffect
+  }, [])
 
   return (
     <ProtectedRoute>
@@ -235,6 +275,9 @@ export default function CasesPage() {
               onPageChange: handlePageChange,
               onPageSizeChange: handlePageSizeChange,
             }}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSortChange={handleSortChange}
           />
         )}
       </div>

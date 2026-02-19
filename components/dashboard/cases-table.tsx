@@ -38,13 +38,16 @@ interface PaginationProps {
 interface CasesTableProps {
   cases: Case[]
   pagination?: PaginationProps
+  sortField?: SortField
+  sortDirection?: SortDirection
+  onSortChange?: (field: SortField, direction: SortDirection) => void
 }
 
 const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100]
 
-export function CasesTable({ cases, pagination }: CasesTableProps) {
-  const [sortField, setSortField] = useState<SortField>("caseNo")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+export function CasesTable({ cases, pagination, sortField: externalSortField, sortDirection: externalSortDirection, onSortChange }: CasesTableProps) {
+  const [localSortField, setLocalSortField] = useState<SortField | null>(null)
+  const [localSortDirection, setLocalSortDirection] = useState<SortDirection>("asc")
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(25)
   const [selectedCase, setSelectedCase] = useState<Case | null>(null)
@@ -52,6 +55,11 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
   
   // Use server-side pagination if provided, otherwise use client-side
   const isServerSidePagination = !!pagination
+  const isServerSideSorting = !!onSortChange
+  
+  // Use external sort state if provided, otherwise use local state
+  const sortField = isServerSideSorting ? externalSortField : localSortField
+  const sortDirection = isServerSideSorting ? (externalSortDirection || "asc") : localSortDirection
 
   // Early return if cases is not available
   if (!cases || !Array.isArray(cases)) {
@@ -81,20 +89,46 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
   }
 
   const handleSort = (field: SortField) => {
+    let newDirection: SortDirection | null = null
+    let newField: SortField | null = null
+    
     if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      // Same field: cycle through asc → desc → none
+      if (sortDirection === "asc") {
+        newDirection = "desc"
+        newField = field
+      } else if (sortDirection === "desc") {
+        // Third click: clear sorting
+        newDirection = null
+        newField = null
+      }
     } else {
-      setSortField(field)
-      setSortDirection("asc")
+      // Different field: start with asc
+      newDirection = "asc"
+      newField = field
+    }
+    
+    if (isServerSideSorting && onSortChange) {
+      // Server-side sorting
+      if (newField && newDirection) {
+        onSortChange(newField, newDirection)
+      } else {
+        // Clear sorting by setting to default
+        onSortChange("caseNo", "asc")
+      }
+    } else {
+      // Client-side sorting
+      setLocalSortField(newField || "caseNo")
+      setLocalSortDirection(newDirection || "asc")
     }
     setCurrentPage(0)
   }
 
-  // For server-side pagination, use cases as-is (already paginated)
+  // For server-side pagination/sorting, use cases as-is (already sorted and paginated)
   // For client-side, sort and paginate locally
-  const sortedCases = isServerSidePagination 
+  const sortedCases = (isServerSidePagination || isServerSideSorting)
     ? cases 
-    : sortCases(cases || [], sortField, sortDirection)
+    : (sortField ? sortCases(cases || [], sortField, sortDirection) : cases)
   
   const totalItems = isServerSidePagination 
     ? (pagination?.total || 0)
@@ -123,26 +157,37 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
     field: SortField
     children: React.ReactNode
     className?: string
-  }) => (
-    <TableHead className={className}>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => handleSort(field)}
-        className="-ml-3 h-8 text-xs font-medium text-muted-foreground hover:text-foreground"
-      >
-        {children}
-        <ArrowUpDown className="ml-1 h-3 w-3" />
-      </Button>
-    </TableHead>
-  )
+  }) => {
+    const isActive = sortField === field
+    const showIcon = field === "caseNo" || field === "nervesTreated"
+    
+    return (
+      <TableHead className={className}>
+        {showIcon ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleSort(field)}
+            className={`-ml-3 h-8 text-xs font-medium hover:text-foreground ${
+              isActive ? "text-foreground bg-accent" : "text-muted-foreground"
+            }`}
+          >
+            {children}
+            <ArrowUpDown className="ml-1 h-3 w-3" />
+          </Button>
+        ) : (
+          <span className="text-xs font-medium text-muted-foreground">{children}</span>
+        )}
+      </TableHead>
+    )
+  }
 
   return (
     <div className="rounded-lg border border-border/50 bg-card flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
-      {/* Fixed Header */}
-      <div className="overflow-x-auto border-b border-border/50">
+      {/* Table with fixed header and scrollable body */}
+      <div className="flex-1 overflow-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-card z-10 border-b border-border/50">
             <TableRow className="border-border/50 hover:bg-transparent">
               <SortableHeader field="caseNo" className="w-[60px]">
                 Case
@@ -182,12 +227,6 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
               </SortableHeader>
             </TableRow>
           </TableHeader>
-        </Table>
-      </div>
-
-      {/* Scrollable Body */}
-      <div className="flex-1 overflow-auto">
-        <Table>
           <TableBody>
             {paginatedCases.map((c) => (
               <TableRow
@@ -195,13 +234,15 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
                 className="cursor-pointer border-border/50 transition-colors hover:bg-accent/50"
                 onClick={() => handleRowClick(c)}
               >
-                <TableCell className="font-mono text-sm text-foreground">
+                <TableCell className={`w-[60px] font-mono text-sm text-foreground ${
+                  sortField === "caseNo" ? "bg-accent/30" : ""
+                }`}>
                   {c.caseNo}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="w-[90px] text-sm text-muted-foreground">
                   {c.opDate}
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-[90px]">
                   <Badge
                     variant={c.type === "Primary" ? "default" : "secondary"}
                     className={
@@ -213,19 +254,19 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
                     {c.type}
                   </Badge>
                 </TableCell>
-                <TableCell className="font-medium text-sm text-foreground">
+                <TableCell className="w-[80px] font-medium text-sm text-foreground">
                   {c.surgeon}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="w-[80px] text-sm text-muted-foreground">
                   {c.site}
                 </TableCell>
-                <TableCell className="text-sm text-foreground">
+                <TableCell className="w-[100px] text-sm text-foreground">
                   {c.specialty}
                 </TableCell>
-                <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                <TableCell className="min-w-[200px] truncate text-sm text-muted-foreground">
                   <span title={c.surgeryPerformed}>{c.surgeryPerformed}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-[60px]">
                   <Badge
                     variant="outline"
                     className={
@@ -237,10 +278,12 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
                     {c.ueOrLe}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-center font-mono text-sm text-foreground">
+                <TableCell className={`w-[70px] text-center font-mono text-sm text-foreground ${
+                  sortField === "nervesTreated" ? "bg-accent/30" : ""
+                }`}>
                   {c.nervesTreated}
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-[70px]">
                   <Badge
                     variant="outline"
                     className={
@@ -254,7 +297,7 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
                     {c.userStatus}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-[100px]">
                   <div className="flex gap-1">
                     {c.neuromaCase && (
                       <Badge
@@ -274,7 +317,7 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="w-[100px] text-sm text-muted-foreground">
                   {c.region}
                 </TableCell>
               </TableRow>
