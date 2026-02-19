@@ -423,8 +423,8 @@ export default function AddCasePage() {
                   list="systems-list"
                 />
                 <datalist id="systems-list">
-                  {[...new Set(sites)].slice(0, 10).map((s) => (
-                    <option key={s} value={s} />
+                  {[...new Set(sites)].slice(0, 10).map((s, idx) => (
+                    <option key={`system-${idx}`} value={s} />
                   ))}
                 </datalist>
               </div>
@@ -442,8 +442,8 @@ export default function AddCasePage() {
                   list="sites-list"
                 />
                 <datalist id="sites-list">
-                  {sites.map((s) => (
-                    <option key={s} value={s} />
+                  {sites.map((s, idx) => (
+                    <option key={`site-${idx}`} value={s} />
                   ))}
                 </datalist>
               </div>
@@ -461,8 +461,8 @@ export default function AddCasePage() {
                   list="surgeons-list"
                 />
                 <datalist id="surgeons-list">
-                  {surgeons.map((s) => (
-                    <option key={s} value={s} />
+                  {surgeons.map((s, idx) => (
+                    <option key={`surgeon-${idx}`} value={s} />
                   ))}
                 </datalist>
               </div>

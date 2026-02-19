@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Home, LogOut } from "lucide-react"
+import { Home, LogOut, Activity, BarChart3, Package, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -22,6 +22,13 @@ const DASHBOARD_ROUTES_BY_ID: Record<number, string> = {
   102: "/sales/overview",
   103: "/inventory/add-inventory",
   104: "/user-management/users",
+}
+
+const DASHBOARD_ICONS: Record<string, typeof Activity> = {
+  "Case Tracking Dashboard": Activity,
+  "Sales Dashboard": BarChart3,
+  "Inventory Management": Package,
+  "User Management": Users,
 }
 
 interface DashboardHeaderProps {
@@ -154,28 +161,38 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
                   {isSwitching ? (
                     <span className="text-muted-foreground">Switching...</span>
                   ) : currentDashboard ? (
-                    <span className="font-semibold text-foreground">{currentDashboard.name}</span>
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const Icon = DASHBOARD_ICONS[currentDashboard.name] || Activity
+                        return <Icon className="h-4 w-4" />
+                      })()}
+                      <span className="font-semibold text-foreground">{currentDashboard.name}</span>
+                    </div>
                   ) : (
                     "Select dashboard"
                   )}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="cursor-pointer">
-                {userDashboards.map((dashboard) => (
-                  <SelectItem 
-                    key={dashboard.id} 
-                    value={String(dashboard.id)}
-                    disabled={!dashboard.is_active}
-                    className="cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 transition-colors font-medium"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>{dashboard.name}</span>
-                      {!dashboard.is_active && (
-                        <span className="text-xs text-muted-foreground">(Inactive)</span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
+                {userDashboards.map((dashboard) => {
+                  const Icon = DASHBOARD_ICONS[dashboard.name] || Activity
+                  return (
+                    <SelectItem 
+                      key={dashboard.id} 
+                      value={String(dashboard.id)}
+                      disabled={!dashboard.is_active}
+                      className="cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 transition-colors font-medium"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        <span>{dashboard.name}</span>
+                        {!dashboard.is_active && (
+                          <span className="text-xs text-muted-foreground">(Inactive)</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           </div>

@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { CaseFiltersComponent } from "@/components/dashboard/case-filters"
 import { CasesTable } from "@/components/dashboard/cases-table"
 import { fetchCases, mapCaseRowToCase, type CasesApiParams } from "@/lib/cases-api"
@@ -13,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 const DEFAULT_PAGE_SIZE = 20
 
 export default function CasesPage() {
+  const router = useRouter()
   const { specialties, regions, surgeons } = useCaseStats()
   const [cases, setCases] = useState<Case[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -162,13 +166,22 @@ export default function CasesPage() {
             <Skeleton className="h-4 w-64 rounded-full" />
           </div>
         ) : (
-          <>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">All Cases</h1>
-            <p className="text-sm text-muted-foreground">
-              {`${pagination.total} total cases`}
-              {pagination.offset > 0 && ` (showing ${pagination.offset + 1}-${Math.min(pagination.offset + pagination.limit, pagination.total)} of ${pagination.total})`}
-            </p>
-          </>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">All Cases</h1>
+              <p className="text-sm text-muted-foreground">
+                {`${pagination.total} total cases`}
+                {pagination.offset > 0 && ` (showing ${pagination.offset + 1}-${Math.min(pagination.offset + pagination.limit, pagination.total)} of ${pagination.total})`}
+              </p>
+            </div>
+            <Button
+              onClick={() => router.push('/tracker/cases/new')}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add New Case
+            </Button>
+          </div>
         )}
       </div>
 
