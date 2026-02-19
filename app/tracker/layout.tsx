@@ -22,6 +22,7 @@ import type { TabId } from "@/lib/auth-context"
 import { useCases } from "@/lib/case-context"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { Footer } from "@/components/dashboard/footer"
 import { cn } from "@/lib/utils"
 
 interface NavItem {
@@ -353,6 +354,9 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
         <div className="flex-1 overflow-auto pt-16">
           {children}
         </div>
+        
+        {/* Footer */}
+        <Footer />
       </main>
     </div>
   )
