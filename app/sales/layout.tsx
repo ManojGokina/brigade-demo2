@@ -91,7 +91,7 @@ export default function SalesLayout({
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer",
                         active
-                          ? "bg-primary/10 text-primary"
+                          ? "bg-[#1d99ac] text-white shadow-sm"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                         sidebarCollapsed && "justify-center"
                       )}
@@ -99,7 +99,7 @@ export default function SalesLayout({
                     >
                       <Icon
                         className="h-4 w-4 flex-shrink-0"
-                        style={active ? { color: "#3b82f6" } : undefined}
+                        style={active ? { color: "#ffffff" } : undefined}
                       />
                       {!sidebarCollapsed && (
                         <span className="flex-1 truncate">{module.moduleName}</span>

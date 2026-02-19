@@ -11,7 +11,8 @@
   --card-foreground: oklch(0.18 0.02 250);
   --popover: oklch(0.99 0.005 250);
   --popover-foreground: oklch(0.18 0.02 250);
-  --primary: oklch(0.50 0.22 240);
+  /* Brand primary: #1d99ac (teal) */
+  --primary: #1d99ac;
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.95 0.02 250);
   --secondary-foreground: oklch(0.25 0.02 250);
@@ -23,8 +24,8 @@
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.85 0.025 250);
   --input: oklch(1.0 0 0);
-  --ring: oklch(0.50 0.22 240);
-  --chart-1: oklch(0.50 0.22 240);
+  --ring: #1d99ac;
+  --chart-1: #1d99ac;
   --chart-2: oklch(0.55 0.22 155);
   --chart-3: oklch(0.65 0.20 75);
   --chart-4: oklch(0.55 0.25 320);
@@ -32,12 +33,12 @@
   --radius: 0.5rem;
   --sidebar: oklch(0.92 0.008 250);
   --sidebar-foreground: oklch(0.18 0.02 250);
-  --sidebar-primary: oklch(0.50 0.22 240);
+  --sidebar-primary: #1d99ac;
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.88 0.02 250);
   --sidebar-accent-foreground: oklch(0.18 0.02 250);
   --sidebar-border: oklch(0.80 0.025 250);
-  --sidebar-ring: oklch(0.50 0.22 240);
+  --sidebar-ring: #1d99ac;
   --success: oklch(0.55 0.22 155);
   --success-foreground: oklch(0.99 0 0);
   --warning: oklch(0.70 0.20 75);

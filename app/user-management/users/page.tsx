@@ -290,7 +290,7 @@ export default function UsersPage() {
             <p className="text-sm text-muted-foreground">{pagination.total} total users</p>
           </div>
           <Button 
-            style={{ backgroundColor: "#3b82f6" }}
+            style={{ backgroundColor: "#1d99ac" }}
             onClick={() => setIsModalOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -370,7 +370,7 @@ export default function UsersPage() {
                             variant="outline"
                             size="sm"
                             className="h-8 border-border text-xs cursor-pointer text-white"
-                            style={{ backgroundColor: "#3b82f6" }}
+                            style={{ backgroundColor: "#1d99ac" }}
                             onClick={() => openAccessDialog(user)}
                           >
                             <Shield className="mr-2 h-3 w-3" />
@@ -594,7 +594,7 @@ export default function UsersPage() {
               <Button
                 onClick={handleSaveEdit}
                 disabled={isSavingEdit}
-                style={{ backgroundColor: "#3b82f6" }}
+                style={{ backgroundColor: "#1d99ac" }}
               >
                 {isSavingEdit ? "Saving..." : "Save Changes"}
               </Button>

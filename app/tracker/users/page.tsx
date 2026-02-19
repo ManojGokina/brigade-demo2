@@ -90,7 +90,7 @@ const getRoleColor = (role: string) => {
     case "admin":
       return { bg: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }
     case "analyst":
-      return { bg: "rgba(59, 130, 246, 0.15)", color: "#3b82f6" }
+      return { bg: "rgba(29, 153, 172, 0.12)", color: "#1d99ac" }
     default:
       return { bg: "rgba(107, 114, 128, 0.15)", color: "#6b7280" }
   }
@@ -101,7 +101,7 @@ const getPermissionColor = (permission: PermissionLevel) => {
     case "write":
       return { bg: "rgba(16, 185, 129, 0.15)", color: "#10b981" }
     case "read":
-      return { bg: "rgba(59, 130, 246, 0.15)", color: "#3b82f6" }
+      return { bg: "rgba(29, 153, 172, 0.12)", color: "#1d99ac" }
     default:
       return { bg: "rgba(107, 114, 128, 0.15)", color: "#6b7280" }
   }
@@ -321,7 +321,7 @@ export default function UserManagementPage() {
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button style={{ backgroundColor: "#3b82f6" }}>
+              <Button style={{ backgroundColor: "#1d99ac" }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add User
               </Button>
@@ -341,7 +341,7 @@ export default function UserManagementPage() {
                 <Button
                   onClick={handleCreateUser}
                   disabled={!formData.email || !formData.name}
-                  style={{ backgroundColor: "#3b82f6" }}
+                  style={{ backgroundColor: "#1d99ac" }}
                 >
                   Create User
                 </Button>
@@ -353,9 +353,9 @@ export default function UserManagementPage() {
         {/* Stats Cards */}
         <div className="grid gap-4 sm:grid-cols-3">
           <Card className="border-border/50">
-            <CardHeader className="pb-2">
+              <CardHeader className="pb-2">
               <CardDescription>Total Users</CardDescription>
-              <CardTitle className="text-3xl" style={{ color: "#3b82f6" }}>
+              <CardTitle className="text-3xl" style={{ color: "#1d99ac" }}>
                 {users.length}
               </CardTitle>
             </CardHeader>
@@ -384,7 +384,7 @@ export default function UserManagementPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" style={{ color: "#3b82f6" }} />
+                  <Users className="h-5 w-5" style={{ color: "#1d99ac" }} />
                   Users
                 </CardTitle>
                 <CardDescription>{filteredUsers.length} users found</CardDescription>
@@ -477,7 +477,7 @@ export default function UserManagementPage() {
                                 <Button
                                   onClick={handleEditUser}
                                   disabled={!formData.email || !formData.name}
-                                  style={{ backgroundColor: "#3b82f6" }}
+                                  style={{ backgroundColor: "#1d99ac" }}
                                 >
                                   Save Changes
                                 </Button>

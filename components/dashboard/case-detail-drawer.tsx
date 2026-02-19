@@ -55,8 +55,8 @@ export function CaseDetailDrawer({ caseData, open, onClose }: CaseDetailDrawerPr
           <div className="mt-4 flex flex-wrap gap-2">
             <Badge
               style={{
-                backgroundColor: caseData.type === "Primary" ? "#3b82f620" : "#10b98120",
-                color: caseData.type === "Primary" ? "#3b82f6" : "#10b981",
+                backgroundColor: caseData.type === "Primary" ? "#1d99ac20" : "#10b98120",
+                color: caseData.type === "Primary" ? "#1d99ac" : "#10b981",
               }}
             >
               {caseData.type}

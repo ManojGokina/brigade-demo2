@@ -191,15 +191,15 @@ export default function AddCasePage() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-6">
         <div
           className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
-          style={{ backgroundColor: "rgba(16, 185, 129, 0.15)" }}
+          style={{ backgroundColor: "rgba(29, 153, 172, 0.12)" }}
         >
-          <CheckCircle2 className="h-10 w-10" style={{ color: "#10b981" }} />
+          <CheckCircle2 className="h-10 w-10" style={{ color: "#1d99ac" }} />
         </div>
         <h2 className="text-2xl font-bold text-foreground">Case Added Successfully</h2>
         <p className="mt-2 text-muted-foreground">
           Case #{newCaseNo} has been saved to the system
         </p>
-        <Badge className="mt-4" style={{ backgroundColor: "#10b981" }}>
+        <Badge className="mt-4" style={{ backgroundColor: "#1d99ac" }}>
           Data persisted to localStorage
         </Badge>
         <p className="mt-4 text-sm text-muted-foreground">Redirecting to cases list...</p>
@@ -514,7 +514,7 @@ export default function AddCasePage() {
                   id="training"
                   checked={formData.training}
                   onCheckedChange={(v) => updateField("training", v)}
-                  className="border-2 border-slate-400"
+                  className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
                 />
               </div>
 
@@ -529,7 +529,7 @@ export default function AddCasePage() {
                   id="neuromaCase"
                   checked={formData.neuromaCase}
                   onCheckedChange={(v) => updateField("neuromaCase", v)}
-                  className="border-2 border-slate-400"
+                  className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
                 />
               </div>
 
@@ -544,7 +544,7 @@ export default function AddCasePage() {
                   id="caseStudy"
                   checked={formData.caseStudy}
                   onCheckedChange={(v) => updateField("caseStudy", v)}
-                  className="border-2 border-slate-400"
+                  className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
                 />
               </div>
             </CardContent>
@@ -578,7 +578,7 @@ export default function AddCasePage() {
                 Cancel
               </Button>
             </Link>
-            <Button type="submit" disabled={isSubmitting} style={{ backgroundColor: "#3b82f6" }}>
+            <Button type="submit" disabled={isSubmitting} style={{ backgroundColor: "#1d99ac" }}>
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

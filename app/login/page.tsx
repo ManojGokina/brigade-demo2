@@ -85,7 +85,7 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div 
           className="absolute -left-40 -top-40 h-80 w-80 rounded-full opacity-20 blur-3xl"
-          style={{ background: "linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)" }}
+          style={{ background: "linear-gradient(135deg, #1d99ac 0%, #5cc6d4 100%)" }}
         />
         <div 
           className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full opacity-20 blur-3xl"
@@ -180,7 +180,7 @@ export default function LoginPage() {
                 className="h-11 w-full"
                 disabled={!isFormValid || isLoading}
                 style={{ 
-                  backgroundColor: isFormValid ? "#3b82f6" : undefined,
+                  backgroundColor: isFormValid ? "#1d99ac" : undefined,
                 }}
               >
                 {isLoading ? (

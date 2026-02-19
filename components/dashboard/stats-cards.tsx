@@ -15,8 +15,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: stats.totalCases,
       icon: Activity,
       description: `${stats.primaryCases} Primary, ${stats.revisionCases} Revision`,
-      color: "#3b82f6", // blue
-      bgColor: "rgba(59, 130, 246, 0.1)",
+      color: "#1d99ac", // brand teal
+      bgColor: "rgba(29, 153, 172, 0.10)",
     },
     {
       label: "Nerves Treated",

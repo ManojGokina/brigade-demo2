@@ -249,7 +249,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-[#1d99ac] text-white shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   sidebarCollapsed && "justify-center"
                 )}
@@ -257,7 +257,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
               >
                 <item.icon
                   className="h-4 w-4 flex-shrink-0"
-                  style={isActive ? { color: "#3b82f6" } : undefined}
+                  style={isActive ? { color: "#ffffff" } : undefined}
                 />
                 {!sidebarCollapsed && (
                   <span className="flex-1">{item.label}</span>
@@ -285,9 +285,9 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
           <Link href="/select-dashboard" className="flex items-center gap-2 cursor-pointer">
             <div
               className="flex h-7 w-7 items-center justify-center rounded-lg"
-              style={{ backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+              style={{ backgroundColor: "rgba(29, 153, 172, 0.15)" }}
             >
-              <Activity className="h-3.5 w-3.5" style={{ color: "#3b82f6" }} />
+              <Activity className="h-3.5 w-3.5" style={{ color: "#1d99ac" }} />
             </div>
             <span className="font-semibold text-foreground">Analytics Platform</span>
           </Link>
@@ -320,13 +320,13 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-[#1d99ac] text-white shadow-sm"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   <item.icon
                     className="h-4 w-4"
-                    style={isActive ? { color: "#3b82f6" } : undefined}
+                    style={isActive ? { color: "#ffffff" } : undefined}
                   />
                   <span className="flex-1">{item.label}</span>
                   {isReadOnly && (

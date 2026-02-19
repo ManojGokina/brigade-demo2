@@ -33,7 +33,7 @@ const DASHBOARD_ICONS: Record<string, typeof Activity> = {
 }
 
 const DASHBOARD_COLORS: Record<string, { color: string; bgColor: string }> = {
-  "Case Tracking Dashboard": { color: "#3b82f6", bgColor: "rgba(59, 130, 246, 0.1)" },
+  "Case Tracking Dashboard": { color: "#1d99ac", bgColor: "rgba(29, 153, 172, 0.08)" },
   "Sales Dashboard": { color: "#10b981", bgColor: "rgba(16, 185, 129, 0.1)" },
   "Inventory Management": { color: "#f59e0b", bgColor: "rgba(245, 158, 11, 0.1)" },
   "User Management": { color: "#8b5cf6", bgColor: "rgba(139, 92, 246, 0.1)" },
@@ -170,8 +170,8 @@ export default function SelectDashboardPage() {
               {hasAccess && (
                 <div className="mt-4 flex flex-wrap gap-3">
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
-                    <span className="text-sm font-semibold" style={{ color: "#3b82f6" }}>
+              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#1d99ac" }} />
+                  <span className="text-sm font-semibold" style={{ color: "#1d99ac" }}>
                       {caseDataLoaded && stats ? stats.totalCases : "..."}
                     </span>
                     <span className="text-xs text-muted-foreground">Total Cases</span>
@@ -247,7 +247,7 @@ export default function SelectDashboardPage() {
           {userDashboards.map((dashboard, index) => {
             const isSelected = selectedDashboard === dashboard.id.toString()
             const Icon = DASHBOARD_ICONS[dashboard.name] || Activity
-            const colors = DASHBOARD_COLORS[dashboard.name] || { color: "#3b82f6", bgColor: "rgba(59, 130, 246, 0.1)" }
+            const colors = DASHBOARD_COLORS[dashboard.name] || { color: "#1d99ac", bgColor: "rgba(29, 153, 172, 0.08)" }
             return (
               <Card
                 key={dashboard.id}

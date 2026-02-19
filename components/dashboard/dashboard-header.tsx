@@ -47,7 +47,7 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
       case "admin":
         return { bg: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }
       case "analyst":
-        return { bg: "rgba(59, 130, 246, 0.15)", color: "#3b82f6" }
+        return { bg: "rgba(29, 153, 172, 0.12)", color: "#1d99ac" }
       default:
         return { bg: "rgba(107, 114, 128, 0.15)", color: "#6b7280" }
     }
@@ -128,7 +128,11 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
           variant="ghost"
           size="sm"
           onClick={handleHomeClick}
-          className="flex items-center gap-2 bg-primary/10 text-primary transition-all cursor-pointer rounded-lg px-3"
+          className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-all cursor-pointer"
+          style={{
+            backgroundColor: "#1d99ac",
+            color: "#ffffff",
+          }}
         >
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline font-medium">Home</span>
@@ -145,7 +149,7 @@ export function DashboardHeader({ sidebarCollapsed = false }: DashboardHeaderPro
               onValueChange={handleDashboardChange}
               disabled={isSwitching || isLoading}
             >
-              <SelectTrigger className="w-full cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary">
+              <SelectTrigger className="w-full cursor-pointer bg-white border border-slate-400 hover:border-primary/50 hover:bg-accent/30 transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary">
                 <SelectValue placeholder="Select dashboard">
                   {isSwitching ? (
                     <span className="text-muted-foreground">Switching...</span>

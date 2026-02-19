@@ -618,7 +618,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
           <Button variant="outline" onClick={onClose} disabled={isCreating}>
             Cancel
           </Button>
-          <Button onClick={handleCreateUser} disabled={isCreating} style={{ backgroundColor: "#3b82f6" }}>
+          <Button onClick={handleCreateUser} disabled={isCreating} style={{ backgroundColor: "#1d99ac" }}>
             {isCreating ? (
               <>
                 <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />

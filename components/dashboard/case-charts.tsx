@@ -42,13 +42,13 @@ interface TimeSeriesData {
 }
 
 const COLORS = [
-  "#3b82f6", // bright blue
+  "#1d99ac", // brand teal
+  "#5cc6d4", // light teal
+  "#0f7482", // deep teal
   "#10b981", // emerald green
   "#f59e0b", // amber
   "#ec4899", // pink
   "#8b5cf6", // violet
-  "#06b6d4", // cyan
-  "#f43f5e", // rose
   "#84cc16", // lime
   "#f97316", // orange
   "#6366f1", // indigo
@@ -274,7 +274,7 @@ export function CasesOverTimeChart({ data }: CasesOverTimeChartProps) {
           <CardTitle className="text-sm font-medium text-foreground">Cases Over Time</CardTitle>
           <div className="flex gap-3">
             <div className="flex items-center gap-1.5">
-              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#1d99ac" }} />
               <span className="text-xs text-muted-foreground">Cases</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -289,8 +289,8 @@ export function CasesOverTimeChart({ data }: CasesOverTimeChartProps) {
           <AreaChart data={data} margin={{ left: 0, right: 0, top: 10, bottom: 0 }}>
             <defs>
               <linearGradient id="casesGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
+                <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.05} />
               </linearGradient>
               <linearGradient id="nervesGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
@@ -308,7 +308,7 @@ export function CasesOverTimeChart({ data }: CasesOverTimeChartProps) {
             <Area
               type="monotone"
               dataKey="cases"
-              stroke="#3b82f6"
+              stroke="#1d99ac"
               fill="url(#casesGradient)"
               strokeWidth={2}
             />
@@ -414,7 +414,7 @@ export function SurgeonProductivityChart({ data, allSurgeons }: SurgeonProductiv
   }
 
   const chartConfig = {
-    cases: { label: "Cases", color: "#3b82f6" },
+    cases: { label: "Cases", color: "#1d99ac" },
     nerves: { label: "Nerves", color: "#10b981" },
   }
 
