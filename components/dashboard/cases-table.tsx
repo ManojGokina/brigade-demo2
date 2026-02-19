@@ -52,6 +52,8 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
   const [pageSize, setPageSize] = useState(25)
   const [selectedCase, setSelectedCase] = useState<Case | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const headerRef = React.useRef<HTMLDivElement>(null)
+  const bodyRef = React.useRef<HTMLDivElement>(null)
   
   // Use server-side pagination if provided, otherwise use client-side
   const isServerSidePagination = !!pagination
@@ -86,6 +88,13 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
 
   const handleDrawerClose = () => {
     setDrawerOpen(false)
+  }
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget
+    if (target === bodyRef.current && headerRef.current) {
+      headerRef.current.scrollLeft = target.scrollLeft
+    }
   }
 
   const handleSort = (field: SortField) => {
@@ -184,65 +193,84 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
 
   return (
     <div className="rounded-lg border border-border/50 bg-card flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
-      {/* Table with fixed header and scrollable body */}
-      <div className="flex-1 overflow-auto">
-        <Table>
-          <TableHeader className="sticky top-0 bg-card z-10 border-b border-border/50">
-            <TableRow className="border-border/50 hover:bg-transparent">
-              <SortableHeader field="caseNo" className="w-[60px]">
-                Case
-              </SortableHeader>
-              <SortableHeader field="opDate" className="w-[90px]">
-                Date
-              </SortableHeader>
-              <SortableHeader field="type" className="w-[90px]">
-                Type
-              </SortableHeader>
-              <SortableHeader field="surgeon" className="w-[80px]">
-                Surgeon
-              </SortableHeader>
-              <SortableHeader field="site" className="w-[80px]">
-                Site
-              </SortableHeader>
-              <SortableHeader field="specialty" className="w-[100px]">
-                Specialty
-              </SortableHeader>
-              <TableHead className="min-w-[200px]">
-                <span className="text-xs font-medium text-muted-foreground">Surgery</span>
-              </TableHead>
-              <SortableHeader field="ueOrLe" className="w-[60px]">
-                Ext
-              </SortableHeader>
-              <SortableHeader field="nervesTreated" className="w-[70px]">
-                Nerves
-              </SortableHeader>
-              <SortableHeader field="userStatus" className="w-[70px]">
-                Status
-              </SortableHeader>
-              <TableHead className="w-[100px]">
-                <span className="text-xs font-medium text-muted-foreground">Flags</span>
-              </TableHead>
-              <SortableHeader field="region" className="w-[100px]">
-                Region
-              </SortableHeader>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="flex-1 overflow-auto" ref={bodyRef} onScroll={handleScroll}>
+        <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+          <thead className="sticky top-0 bg-card z-10 border-b border-border/50">
+            <tr className="border-border/50">
+              <th className="w-[60px] px-3 py-2 text-left">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSort("caseNo")}
+                  className={`-ml-3 h-8 text-xs font-bold hover:text-foreground ${
+                    sortField === "caseNo" ? "text-foreground bg-accent" : "text-muted-foreground"
+                  }`}
+                >
+                  Case
+                  <ArrowUpDown className="ml-1 h-3 w-3" />
+                </Button>
+              </th>
+              <th className="w-[90px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Date</span>
+              </th>
+              <th className="w-[90px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Type</span>
+              </th>
+              <th className="w-[80px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Surgeon</span>
+              </th>
+              <th className="w-[80px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Site</span>
+              </th>
+              <th className="w-[100px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Specialty</span>
+              </th>
+              <th className="w-[250px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Surgery</span>
+              </th>
+              <th className="w-[60px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Ext</span>
+              </th>
+              <th className="w-[70px] px-3 py-2 text-left">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSort("nervesTreated")}
+                  className={`-ml-3 h-8 text-xs font-bold hover:text-foreground ${
+                    sortField === "nervesTreated" ? "text-foreground bg-accent" : "text-muted-foreground"
+                  }`}
+                >
+                  Nerves
+                  <ArrowUpDown className="ml-1 h-3 w-3" />
+                </Button>
+              </th>
+              <th className="w-[70px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Status</span>
+              </th>
+              <th className="w-[100px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Flags</span>
+              </th>
+              <th className="w-[100px] px-3 py-2 text-left">
+                <span className="text-xs font-bold text-muted-foreground">Region</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
             {paginatedCases.map((c) => (
-              <TableRow
+              <tr
                 key={c.caseNo}
-                className="cursor-pointer border-border/50 transition-colors hover:bg-accent/50"
+                className="cursor-pointer border-b border-border/50 transition-colors hover:bg-accent/50"
                 onClick={() => handleRowClick(c)}
               >
-                <TableCell className={`w-[60px] font-mono text-sm text-foreground ${
+                <td className={`px-3 py-2 font-mono text-sm text-foreground ${
                   sortField === "caseNo" ? "bg-accent/30" : ""
                 }`}>
                   {c.caseNo}
-                </TableCell>
-                <TableCell className="w-[90px] text-sm text-muted-foreground">
+                </td>
+                <td className="px-3 py-2 text-sm text-muted-foreground">
                   {c.opDate}
-                </TableCell>
-                <TableCell className="w-[90px]">
+                </td>
+                <td className="px-3 py-2">
                   <Badge
                     variant={c.type === "Primary" ? "default" : "secondary"}
                     className={
@@ -253,20 +281,22 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                   >
                     {c.type}
                   </Badge>
-                </TableCell>
-                <TableCell className="w-[80px] font-medium text-sm text-foreground">
+                </td>
+                <td className="px-3 py-2 font-medium text-sm text-foreground">
                   {c.surgeon}
-                </TableCell>
-                <TableCell className="w-[80px] text-sm text-muted-foreground">
+                </td>
+                <td className="px-3 py-2 text-sm text-muted-foreground">
                   {c.site}
-                </TableCell>
-                <TableCell className="w-[100px] text-sm text-foreground">
+                </td>
+                <td className="px-3 py-2 text-sm text-foreground">
                   {c.specialty}
-                </TableCell>
-                <TableCell className="min-w-[200px] truncate text-sm text-muted-foreground">
-                  <span title={c.surgeryPerformed}>{c.surgeryPerformed}</span>
-                </TableCell>
-                <TableCell className="w-[60px]">
+                </td>
+                <td className="px-3 py-2 text-sm text-muted-foreground">
+                  <div className="break-words line-clamp-3" title={c.surgeryPerformed}>
+                    {c.surgeryPerformed}
+                  </div>
+                </td>
+                <td className="px-3 py-2">
                   <Badge
                     variant="outline"
                     className={
@@ -277,13 +307,13 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                   >
                     {c.ueOrLe}
                   </Badge>
-                </TableCell>
-                <TableCell className={`w-[70px] text-center font-mono text-sm text-foreground ${
+                </td>
+                <td className={`px-3 py-2 text-center font-mono text-sm text-foreground ${
                   sortField === "nervesTreated" ? "bg-accent/30" : ""
                 }`}>
                   {c.nervesTreated}
-                </TableCell>
-                <TableCell className="w-[70px]">
+                </td>
+                <td className="px-3 py-2">
                   <Badge
                     variant="outline"
                     className={
@@ -296,8 +326,8 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                   >
                     {c.userStatus}
                   </Badge>
-                </TableCell>
-                <TableCell className="w-[100px]">
+                </td>
+                <td className="px-3 py-2">
                   <div className="flex gap-1">
                     {c.neuromaCase && (
                       <Badge
@@ -316,14 +346,14 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                       </Badge>
                     )}
                   </div>
-                </TableCell>
-                <TableCell className="w-[100px] text-sm text-muted-foreground">
+                </td>
+                <td className="px-3 py-2 text-sm text-muted-foreground">
                   {c.region}
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
       {/* Fixed Footer */}
