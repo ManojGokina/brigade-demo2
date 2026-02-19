@@ -138,8 +138,9 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
   )
 
   return (
-    <div className="rounded-lg border border-border/50 bg-card">
-      <div className="overflow-x-auto">
+    <div className="rounded-lg border border-border/50 bg-card flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
+      {/* Fixed Header */}
+      <div className="overflow-x-auto border-b border-border/50">
         <Table>
           <TableHeader>
             <TableRow className="border-border/50 hover:bg-transparent">
@@ -181,6 +182,12 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
               </SortableHeader>
             </TableRow>
           </TableHeader>
+        </Table>
+      </div>
+
+      {/* Scrollable Body */}
+      <div className="flex-1 overflow-auto">
+        <Table>
           <TableBody>
             {paginatedCases.map((c) => (
               <TableRow
@@ -276,7 +283,8 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
         </Table>
       </div>
 
-<div className="flex items-center justify-between border-t border-border/50 px-4 py-3">
+      {/* Fixed Footer */}
+      <div className="flex items-center justify-between border-t border-border/50 px-4 py-3 bg-card">
         <div className="flex items-center gap-4">
           <span className="text-xs text-muted-foreground">
             {isServerSidePagination && pagination
