@@ -68,6 +68,14 @@ export default function CasesPage() {
       params.region = currentFilters.region
     }
 
+    if (currentFilters.dateFrom) {
+      params.operationDateFrom = currentFilters.dateFrom
+    }
+
+    if (currentFilters.dateTo) {
+      params.operationDateTo = currentFilters.dateTo
+    }
+
     return params
   }, [pagination.limit])
 

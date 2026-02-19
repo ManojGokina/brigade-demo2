@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 import type { CaseFilters } from "@/types/case"
 
 interface CaseFiltersComponentProps {
@@ -36,7 +37,9 @@ export function CaseFiltersComponent({
     filters.ueOrLe !== "all" ||
     filters.userStatus !== "all" ||
     filters.surgeon ||
-    filters.search
+    filters.search ||
+    filters.dateFrom ||
+    filters.dateTo
 
   const clearFilters = () => {
     onFiltersChange({
@@ -47,6 +50,8 @@ export function CaseFiltersComponent({
       userStatus: "all",
       surgeon: undefined,
       search: "",
+      dateFrom: undefined,
+      dateTo: undefined,
     })
   }
 
@@ -59,24 +64,32 @@ export function CaseFiltersComponent({
             placeholder="Search cases..."
             value={filters.search || ""}
             onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-            className="pl-9 bg-white border-border text-foreground placeholder:text-muted-foreground"
+            className="pl-9 bg-white border-border text-foreground placeholder:text-muted-foreground cursor-pointer"
           />
         </div>
       )}
 
-<Select
+      <DateRangePicker
+        value={{ from: filters.dateFrom, to: filters.dateTo }}
+        onChange={(range) => onFiltersChange({ ...filters, dateFrom: range.from, dateTo: range.to })}
+        placeholder="Select date range"
+      />
+
+      <Select
         value={filters.surgeon || "all"}
         onValueChange={(value) =>
           onFiltersChange({ ...filters, surgeon: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
+        <SelectTrigger className={`w-[140px] bg-white border-border text-foreground cursor-pointer ${
+          filters.surgeon ? "ring-2 ring-primary border-primary" : ""
+        }`}>
           <SelectValue placeholder="Surgeon" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Surgeons</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All Surgeons</SelectItem>
           {(surgeons || []).map((s, index) => (
-            <SelectItem key={`${s}-${index}`} value={s}>
+            <SelectItem key={`${s}-${index}`} value={s} className="cursor-pointer">
               {s}
             </SelectItem>
           ))}
@@ -89,13 +102,15 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, type: value as CaseFilters["type"] })
         }
       >
-        <SelectTrigger className="w-[130px] bg-white border-border text-foreground">
+        <SelectTrigger className={`w-[130px] bg-white border-border text-foreground cursor-pointer ${
+          filters.type !== "all" ? "ring-2 ring-primary border-primary" : ""
+        }`}>
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Types</SelectItem>
-          <SelectItem value="Primary">Primary</SelectItem>
-          <SelectItem value="Revision">Revision</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All Types</SelectItem>
+          <SelectItem value="Primary" className="cursor-pointer">Primary</SelectItem>
+          <SelectItem value="Revision" className="cursor-pointer">Revision</SelectItem>
         </SelectContent>
       </Select>
 
@@ -105,13 +120,15 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, specialty: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
+        <SelectTrigger className={`w-[140px] bg-white border-border text-foreground cursor-pointer ${
+          filters.specialty ? "ring-2 ring-primary border-primary" : ""
+        }`}>
           <SelectValue placeholder="Specialty" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Specialties</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All Specialties</SelectItem>
           {(specialties || []).map((s) => (
-            <SelectItem key={s} value={s}>
+            <SelectItem key={s} value={s} className="cursor-pointer">
               {s}
             </SelectItem>
           ))}
@@ -124,20 +141,20 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, region: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
+        <SelectTrigger className={`w-[140px] bg-white border-border text-foreground cursor-pointer ${
+          filters.region ? "ring-2 ring-primary border-primary" : ""
+        }`}>
           <SelectValue placeholder="Region" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Regions</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All Regions</SelectItem>
           {(regions || []).map((r, index) => (
-            <SelectItem key={`${r}-${index}`} value={r}>
+            <SelectItem key={`${r}-${index}`} value={r} className="cursor-pointer">
               {r}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-
-      
 
       <Select
         value={filters.ueOrLe || "all"}
@@ -145,13 +162,15 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, ueOrLe: value as CaseFilters["ueOrLe"] })
         }
       >
-        <SelectTrigger className="w-[120px] bg-white border-border text-foreground">
+        <SelectTrigger className={`w-[120px] bg-white border-border text-foreground cursor-pointer ${
+          filters.ueOrLe !== "all" ? "ring-2 ring-primary border-primary" : ""
+        }`}>
           <SelectValue placeholder="Extremity" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All</SelectItem>
-          <SelectItem value="UE">Upper (UE)</SelectItem>
-          <SelectItem value="LE">Lower (LE)</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All</SelectItem>
+          <SelectItem value="UE" className="cursor-pointer">Upper (UE)</SelectItem>
+          <SelectItem value="LE" className="cursor-pointer">Lower (LE)</SelectItem>
         </SelectContent>
       </Select>
 
@@ -161,14 +180,16 @@ export function CaseFiltersComponent({
           onFiltersChange({ ...filters, userStatus: value as CaseFilters["userStatus"] })
         }
       >
-        <SelectTrigger className="w-[120px] bg-white border-border text-foreground">
+        <SelectTrigger className={`w-[120px] bg-white border-border text-foreground cursor-pointer ${
+          filters.userStatus !== "all" ? "ring-2 ring-primary border-primary" : ""
+        }`}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Status</SelectItem>
-          <SelectItem value="EST">EST</SelectItem>
-          <SelectItem value="IN">IN</SelectItem>
-          <SelectItem value="VAL">VAL</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All Status</SelectItem>
+          <SelectItem value="EST" className="cursor-pointer">EST</SelectItem>
+          <SelectItem value="IN" className="cursor-pointer">IN</SelectItem>
+          <SelectItem value="VAL" className="cursor-pointer">VAL</SelectItem>
         </SelectContent>
       </Select>
 
@@ -177,7 +198,7 @@ export function CaseFiltersComponent({
           variant="ghost"
           size="sm"
           onClick={clearFilters}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-white bg-primary hover:bg-primary/90 hover:text-white cursor-pointer"
         >
           <X className="mr-1 h-4 w-4" />
           Clear

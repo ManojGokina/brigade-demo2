@@ -26,6 +26,8 @@ export interface CaseFilters {
   userStatus?: "EST" | "IN" | "VAL" | "all"
   surgeon?: string
   search?: string
+  dateFrom?: string
+  dateTo?: string
 }
 
 export interface CaseStats {
