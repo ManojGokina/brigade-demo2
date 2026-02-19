@@ -15,13 +15,13 @@ export interface Case {
   caseStudy: boolean
   survivalDays: number
   survivalWeeks: number
-  tty: string
+  region: string
 }
 
 export interface CaseFilters {
   type?: "Primary" | "Revision" | "all"
   specialty?: string
-  tty?: string
+  region?: string
   ueOrLe?: "UE" | "LE" | "all"
   userStatus?: "EST" | "IN" | "VAL" | "all"
   surgeon?: string

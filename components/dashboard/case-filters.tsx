@@ -16,7 +16,7 @@ interface CaseFiltersComponentProps {
   filters: CaseFilters
   onFiltersChange: (filters: CaseFilters) => void
   specialties: string[]
-  territories: string[]
+  regions: string[]
   surgeons: string[]
   showSearch?: boolean
 }
@@ -25,14 +25,14 @@ export function CaseFiltersComponent({
   filters,
   onFiltersChange,
   specialties,
-  territories,
+  regions,
   surgeons,
   showSearch = true,
 }: CaseFiltersComponentProps) {
   const hasActiveFilters =
     filters.type !== "all" ||
     filters.specialty ||
-    filters.tty ||
+    filters.region ||
     filters.ueOrLe !== "all" ||
     filters.userStatus !== "all" ||
     filters.surgeon ||
@@ -42,7 +42,7 @@ export function CaseFiltersComponent({
     onFiltersChange({
       type: "all",
       specialty: undefined,
-      tty: undefined,
+      region: undefined,
       ueOrLe: "all",
       userStatus: "all",
       surgeon: undefined,
@@ -63,6 +63,25 @@ export function CaseFiltersComponent({
           />
         </div>
       )}
+
+<Select
+        value={filters.surgeon || "all"}
+        onValueChange={(value) =>
+          onFiltersChange({ ...filters, surgeon: value === "all" ? undefined : value })
+        }
+      >
+        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
+          <SelectValue placeholder="Surgeon" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Surgeons</SelectItem>
+          {(surgeons || []).map((s, index) => (
+            <SelectItem key={`${s}-${index}`} value={s}>
+              {s}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <Select
         value={filters.type || "all"}
@@ -100,42 +119,25 @@ export function CaseFiltersComponent({
       </Select>
 
       <Select
-        value={filters.tty || "all"}
+        value={filters.region || "all"}
         onValueChange={(value) =>
-          onFiltersChange({ ...filters, tty: value === "all" ? undefined : value })
+          onFiltersChange({ ...filters, region: value === "all" ? undefined : value })
         }
       >
         <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
-          <SelectValue placeholder="Territory" />
+          <SelectValue placeholder="Region" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Territories</SelectItem>
-          {(territories || []).map((t, index) => (
-            <SelectItem key={`${t}-${index}`} value={t}>
-              {t}
+          <SelectItem value="all">All Regions</SelectItem>
+          {(regions || []).map((r, index) => (
+            <SelectItem key={`${r}-${index}`} value={r}>
+              {r}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Select
-        value={filters.surgeon || "all"}
-        onValueChange={(value) =>
-          onFiltersChange({ ...filters, surgeon: value === "all" ? undefined : value })
-        }
-      >
-        <SelectTrigger className="w-[140px] bg-white border-border text-foreground">
-          <SelectValue placeholder="Surgeon" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Surgeons</SelectItem>
-          {(surgeons || []).map((s, index) => (
-            <SelectItem key={`${s}-${index}`} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      
 
       <Select
         value={filters.ueOrLe || "all"}

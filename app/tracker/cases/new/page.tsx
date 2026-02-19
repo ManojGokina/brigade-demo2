@@ -33,7 +33,7 @@ interface FormData {
   system: string
   site: string
   surgeon: string
-  territory: string
+  region: string
   training: boolean
   neuromaCase: boolean
   caseStudy: boolean
@@ -51,7 +51,7 @@ interface ValidationErrors {
   system?: string
   site?: string
   surgeon?: string
-  territory?: string
+  region?: string
 }
 
 const initialFormData: FormData = {
@@ -65,7 +65,7 @@ const initialFormData: FormData = {
   system: "",
   site: "",
   surgeon: "",
-  territory: "",
+  region: "",
   training: false,
   neuromaCase: false,
   caseStudy: false,
@@ -75,7 +75,7 @@ const initialFormData: FormData = {
 export default function AddCasePage() {
   const router = useRouter()
   const { addCase, getNextCaseNo } = useCases()
-  const { specialties, territories, surgeons, sites } = useCaseStats()
+  const { specialties, regions, surgeons, sites } = useCaseStats()
 
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<ValidationErrors>({})
@@ -116,8 +116,8 @@ export default function AddCasePage() {
     if (!formData.surgeon.trim()) {
       newErrors.surgeon = "Surgeon is required"
     }
-    if (!formData.territory) {
-      newErrors.territory = "Territory is required"
+    if (!formData.region) {
+      newErrors.region = "Region is required"
     }
 
     setErrors(newErrors)
@@ -156,13 +156,13 @@ export default function AddCasePage() {
       userStatus: formData.userStatus as "EST" | "IN" | "VAL",
       specialty: formData.specialty,
       training: formData.training ? "Yes" : "No",
-      extremity: formData.extremity as "UE" | "LE",
+      ueOrLe: formData.extremity as "UE" | "LE",
       surgeryPerformed: formData.surgery,
       neuromaCase: formData.neuromaCase,
       caseStudy: formData.caseStudy,
       survivalDays: Math.max(0, survivalDays),
       survivalWeeks: Math.max(0, survivalWeeks),
-      territory: formData.territory,
+      region: formData.region,
     }
 
     const newCase = addCase(newCaseData)
@@ -468,25 +468,25 @@ export default function AddCasePage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="territory">
-                  Territory <span className="text-destructive">*</span>
+                <Label htmlFor="region">
+                  Region <span className="text-destructive">*</span>
                 </Label>
                 <Select
-                  value={formData.territory}
-                  onValueChange={(v) => updateField("territory", v)}
+                  value={formData.region}
+                  onValueChange={(v) => updateField("region", v)}
                 >
                   <SelectTrigger
-                    id="territory"
+                    id="region"
                     className={`w-full bg-white border border-slate-400 ${
-                      errors.territory ? "border-destructive" : ""
+                      errors.region ? "border-destructive" : ""
                     }`}
                   >
-                    <SelectValue placeholder="Select territory" />
+                    <SelectValue placeholder="Select region" />
                   </SelectTrigger>
                   <SelectContent>
-                    {territories.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
+                    {regions.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
                       </SelectItem>
                     ))}
                     <SelectItem value="Other">Other</SelectItem>

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 const DEFAULT_PAGE_SIZE = 20
 
 export default function CasesPage() {
-  const { specialties, territories, surgeons } = useCaseStats()
+  const { specialties, regions, surgeons } = useCaseStats()
   const [cases, setCases] = useState<Case[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -64,8 +64,8 @@ export default function CasesPage() {
       params.surgeon = currentFilters.surgeon
     }
 
-    if (currentFilters.tty) {
-      params.tbd = currentFilters.tty
+    if (currentFilters.region) {
+      params.region = currentFilters.region
     }
 
     return params
@@ -174,7 +174,7 @@ export default function CasesPage() {
         filters={filters}
         onFiltersChange={handleFiltersChange}
         specialties={specialties || []}
-        territories={territories || []}
+        regions={regions || []}
         surgeons={surgeons || []}
       />
 

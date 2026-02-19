@@ -104,7 +104,7 @@ export function mapCaseRowToCase(row: CaseRow): import('@/types/case').Case {
     caseStudy: row.isCaseStudy || false,
     survivalDays,
     survivalWeeks,
-    tty: row.tbd || '',
+    region: row.region || '',
   };
 }
 

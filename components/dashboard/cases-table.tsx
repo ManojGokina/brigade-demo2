@@ -176,8 +176,8 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
               <TableHead className="w-[100px]">
                 <span className="text-xs font-medium text-muted-foreground">Flags</span>
               </TableHead>
-              <SortableHeader field="tty" className="w-[100px]">
-                Territory
+              <SortableHeader field="region" className="w-[100px]">
+                Region
               </SortableHeader>
             </TableRow>
           </TableHeader>
@@ -268,7 +268,7 @@ export function CasesTable({ cases, pagination }: CasesTableProps) {
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {c.tty}
+                  {c.region}
                 </TableCell>
               </TableRow>
             ))}

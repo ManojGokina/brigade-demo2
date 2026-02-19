@@ -155,12 +155,12 @@ export function useCaseStats(filters?: CaseFilters) {
         stats: null,
         byType: [],
         bySpecialty: [],
-        byTerritory: [],
+        byRegion: [],
         byExtremity: [],
         bySurgeon: [],
         byMonth: [],
         specialties: [],
-        territories: [],
+        regions: [],
         surgeons: [],
         sites: [],
         totalCases: 0,
@@ -170,7 +170,7 @@ export function useCaseStats(filters?: CaseFilters) {
 
     // Get all unique values from ALL cases (not filtered) for filter dropdowns
     const allSpecialties = [...new Set(cases.map((c) => c.specialty))].sort()
-    const allTerritories = [...new Set(cases.map((c) => c.tty))].sort()
+    const allRegions = [...new Set(cases.map((c) => c.region))].sort()
     const allSurgeons = [...new Set(cases.map((c) => c.surgeon))].sort()
     const allSites = [...new Set(cases.map((c) => c.site))].sort()
 
@@ -200,17 +200,17 @@ export function useCaseStats(filters?: CaseFilters) {
     ]
 
     const specialtyCounts: Record<string, number> = {}
-    const territoryCounts: Record<string, number> = {}
+    const regionCounts: Record<string, number> = {}
     filteredCases.forEach((c) => {
       specialtyCounts[c.specialty] = (specialtyCounts[c.specialty] || 0) + 1
-      territoryCounts[c.tty] = (territoryCounts[c.tty] || 0) + 1
+      regionCounts[c.region] = (regionCounts[c.region] || 0) + 1
     })
 
     const bySpecialty = Object.entries(specialtyCounts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
 
-    const byTerritory = Object.entries(territoryCounts)
+    const byRegion = Object.entries(regionCounts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
 
@@ -260,12 +260,12 @@ export function useCaseStats(filters?: CaseFilters) {
       stats,
       byType,
       bySpecialty,
-      byTerritory,
+      byRegion,
       byExtremity,
       bySurgeon,
       byMonth,
       specialties: allSpecialties,
-      territories: allTerritories,
+      regions: allRegions,
       surgeons: allSurgeons,
       sites: allSites,
       totalCases: cases.length,
