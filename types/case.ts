@@ -11,6 +11,7 @@ export interface Case {
   training: string
   ueOrLe: "UE" | "LE"
   surgeryPerformed: string
+  typeOfSurgery?: string // Cap, TMR Adj, Wrap, Sheet - maps to use_case in database
   neuromaCase: boolean
   caseStudy: boolean
   survivalDays: number

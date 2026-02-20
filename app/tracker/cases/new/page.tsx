@@ -7,7 +7,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -34,7 +33,8 @@ interface FormData {
   site: string
   surgeon: string
   region: string
-  training: boolean
+  training: string
+  typeOfSurgery: string
   neuromaCase: boolean
   caseStudy: boolean
   notes: string
@@ -52,6 +52,8 @@ interface ValidationErrors {
   site?: string
   surgeon?: string
   region?: string
+  training?: string
+  typeOfSurgery?: string
 }
 
 const initialFormData: FormData = {
@@ -66,11 +68,23 @@ const initialFormData: FormData = {
   site: "",
   surgeon: "",
   region: "",
-  training: false,
+  training: "",
+  typeOfSurgery: "",
   neuromaCase: false,
   caseStudy: false,
   notes: "",
 }
+
+// Dropdown options - Update these arrays with actual values from your data source
+// Column references match the requirements table (G, H, I, J, K, L, M, N columns)
+const SYSTEM_OPTIONS: string[] = [] // G column - System options
+const SITE_OPTIONS: string[] = [] // H column - Site options
+const SURGEON_OPTIONS: string[] = [] // I column - Surgeon options
+const SPECIALTY_OPTIONS: string[] = [] // J column - Specialty options (falls back to useCaseStats if empty)
+const TRAINING_OPTIONS: string[] = [] // K column - Training options
+const SURGERY_PERFORMED_OPTIONS: string[] = [] // L column - Surgery Performed options
+const REGION_OPTIONS: string[] = [] // M column - Region options (falls back to regions from useCaseStats if empty)
+const TYPE_OF_SURGERY_OPTIONS: string[] = ["Cap", "TMR Adj", "Wrap", "Sheet"] // N column - Type of Surgery options
 
 export default function AddCasePage() {
   const router = useRouter()
@@ -83,13 +97,17 @@ export default function AddCasePage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [newCaseNo, setNewCaseNo] = useState<number | null>(null)
 
+  // Compute dropdown options to avoid key warnings
+  const specialtyOptions = SPECIALTY_OPTIONS.length > 0 ? SPECIALTY_OPTIONS : specialties
+  const regionOptions = REGION_OPTIONS.length > 0 ? REGION_OPTIONS : regions
+
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {}
 
     if (!formData.caseType) {
       newErrors.caseType = "Case type is required"
     }
-    if (!formData.surgery.trim()) {
+    if (!formData.surgery || (typeof formData.surgery === 'string' && !formData.surgery.trim())) {
       newErrors.surgery = "Surgery performed is required"
     }
     if (!formData.nervesTreated || parseInt(formData.nervesTreated) < 1) {
@@ -107,17 +125,23 @@ export default function AddCasePage() {
     if (!formData.userStatus) {
       newErrors.userStatus = "User status is required"
     }
-    if (!formData.system.trim()) {
+    if (!formData.system || (typeof formData.system === 'string' && !formData.system.trim())) {
       newErrors.system = "System is required"
     }
-    if (!formData.site.trim()) {
+    if (!formData.site || (typeof formData.site === 'string' && !formData.site.trim())) {
       newErrors.site = "Site is required"
     }
-    if (!formData.surgeon.trim()) {
+    if (!formData.surgeon || (typeof formData.surgeon === 'string' && !formData.surgeon.trim())) {
       newErrors.surgeon = "Surgeon is required"
     }
     if (!formData.region) {
       newErrors.region = "Region is required"
+    }
+    if (!formData.training || (typeof formData.training === 'string' && !formData.training.trim())) {
+      newErrors.training = "Training is required"
+    }
+    if (!formData.typeOfSurgery || (typeof formData.typeOfSurgery === 'string' && !formData.typeOfSurgery.trim())) {
+      newErrors.typeOfSurgery = "Type of Surgery is required"
     }
 
     setErrors(newErrors)
@@ -146,18 +170,22 @@ export default function AddCasePage() {
     const survivalDays = Math.floor((today.getTime() - opDate.getTime()) / (1000 * 60 * 60 * 24))
     const survivalWeeks = Math.floor(survivalDays / 7)
 
+    // Format date for database (YYYY-MM-DD format for database, but display as MM/DD/YYYY)
+    const dbDate = formData.opDate // Already in YYYY-MM-DD format from date input
+
     const newCaseData: Omit<Case, "caseNo"> = {
       nervesTreated: parseInt(formData.nervesTreated),
-      opDate: formattedDate,
+      opDate: formattedDate, // Display format MM/DD/YYYY
       type: formData.caseType as "Primary" | "Revision",
       system: formData.system,
       site: formData.site,
       surgeon: formData.surgeon,
       userStatus: formData.userStatus as "EST" | "IN" | "VAL",
       specialty: formData.specialty,
-      training: formData.training ? "Yes" : "No",
+      training: formData.training, // String value from dropdown
       ueOrLe: formData.extremity as "UE" | "LE",
       surgeryPerformed: formData.surgery,
+      typeOfSurgery: formData.typeOfSurgery, // Cap, TMR Adj, Wrap, Sheet - maps to use_case in database
       neuromaCase: formData.neuromaCase,
       caseStudy: formData.caseStudy,
       survivalDays: Math.max(0, survivalDays),
@@ -209,56 +237,36 @@ export default function AddCasePage() {
 
   return (
     <ProtectedRoute>
-    <div className="p-6">
+    <div className="max-w-5xl mx-auto">
+      <div className="p-4">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/tracker/cases">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Add New Case</h1>
-            <p className="text-sm text-muted-foreground">
-              Enter case details to add to the tracker
-            </p>
-          </div>
+      <div className="mb-4 flex items-center gap-3">
+        <Link href="/tracker/cases">
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Add New Case</h1>
+          <p className="text-xs text-muted-foreground">
+            Enter case details to add to the tracker
+          </p>
         </div>
-        <Badge variant="outline" className="text-sm">
-          Case #{nextCaseNo}
-        </Badge>
       </div>
 
-      {/* Validation errors summary */}
-      {Object.keys(errors).length > 0 && (
-        <div
-          className="mb-6 flex items-start gap-3 rounded-lg border p-4"
-          style={{ borderColor: "#ef4444", backgroundColor: "rgba(239, 68, 68, 0.1)" }}
-        >
-          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: "#ef4444" }} />
-          <div>
-            <p className="text-sm font-medium text-foreground">Please fix the following errors:</p>
-            <ul className="mt-1 list-inside list-disc text-sm text-muted-foreground">
-              {Object.values(errors).map((error, i) => (
-                <li key={i}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Case Information */}
-          <Card className="border-border/60 bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg">Case Information</CardTitle>
-              <CardDescription>Basic details about the surgical case</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="opDate">
+        <div className="rounded-lg border border-border/60 bg-card shadow-sm p-4 overflow-visible">
+          <div className="space-y-6">
+            {/* Case Information Section */}
+            <div className="space-y-4">
+              <div className="space-y-0.5">
+                <h2 className="text-lg font-semibold text-foreground">Case Information</h2>
+                <p className="text-xs text-muted-foreground">Basic details about the surgical case</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="opDate" className="text-sm">
                   Operation Date <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -266,12 +274,15 @@ export default function AddCasePage() {
                   type="date"
                   value={formData.opDate}
                   onChange={(e) => updateField("opDate", e.target.value)}
-                  className={`bg-white border border-slate-400 ${errors.opDate ? "border-destructive" : ""}`}
+                  className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.opDate ? "border-destructive" : ""}`}
                 />
+                {errors.opDate && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.opDate}</p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="caseType">
+              <div className="grid gap-1.5">
+                <Label htmlFor="caseType" className="text-sm">
                   Case Type <span className="text-destructive">*</span>
                 </Label>
                 <Select
@@ -280,7 +291,7 @@ export default function AddCasePage() {
                 >
                   <SelectTrigger
                     id="caseType"
-                    className={`w-full bg-white border border-slate-400 ${
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.caseType ? "border-destructive" : ""
                     }`}
                   >
@@ -291,25 +302,46 @@ export default function AddCasePage() {
                     <SelectItem value="Revision">Revision</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.caseType && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.caseType}</p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="surgery">
+              <div className="grid gap-1.5">
+                <Label htmlFor="surgery" className="text-sm">
                   Surgery Performed <span className="text-destructive">*</span>
                 </Label>
-                  <Input
+                <Select
+                  value={formData.surgery}
+                  onValueChange={(v) => updateField("surgery", v)}
+                >
+                  <SelectTrigger
                     id="surgery"
-                    placeholder="e.g., Carpal Tunnel Release"
-                    value={formData.surgery}
-                    onChange={(e) => updateField("surgery", e.target.value)}
-                    className={`bg-white border border-slate-400 ${
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.surgery ? "border-destructive" : ""
                     }`}
-                  />
+                  >
+                    <SelectValue placeholder="Select surgery performed" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SURGERY_PERFORMED_OPTIONS.length > 0 ? (
+                      SURGERY_PERFORMED_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">No options available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.surgery && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.surgery}</p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="nervesTreated">
+              <div className="grid gap-1.5">
+                <Label htmlFor="nervesTreated" className="text-sm">
                   Number of Nerves Treated <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -319,66 +351,72 @@ export default function AddCasePage() {
                   placeholder="e.g., 3"
                   value={formData.nervesTreated}
                   onChange={(e) => updateField("nervesTreated", e.target.value)}
-                  className={`bg-white border border-slate-400 ${
+                  className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                     errors.nervesTreated ? "border-destructive" : ""
                   }`}
                 />
+                {errors.nervesTreated && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.nervesTreated}</p>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="specialty">
-                    Specialty <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={formData.specialty}
-                    onValueChange={(v) => updateField("specialty", v)}
+              <div className="grid gap-1.5">
+                <Label htmlFor="specialty" className="text-sm">
+                  Specialty <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.specialty}
+                  onValueChange={(v) => updateField("specialty", v)}
+                >
+                  <SelectTrigger
+                    id="specialty"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.specialty ? "border-destructive" : ""
+                    }`}
                   >
-                    <SelectTrigger
-                      id="specialty"
-                      className={`w-full bg-white border border-slate-400 ${
-                        errors.specialty ? "border-destructive" : ""
-                      }`}
-                    >
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {specialties.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="extremity">
-                    Extremity <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={formData.extremity}
-                    onValueChange={(v) => updateField("extremity", v as "UE" | "LE")}
-                  >
-                    <SelectTrigger
-                      id="extremity"
-                      className={`w-full bg-white border border-slate-400 ${
-                        errors.extremity ? "border-destructive" : ""
-                      }`}
-                    >
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UE">Upper (UE)</SelectItem>
-                      <SelectItem value="LE">Lower (LE)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {specialtyOptions.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.specialty && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.specialty}</p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="userStatus">
+              <div className="grid gap-1.5">
+                <Label htmlFor="extremity" className="text-sm">
+                  Extremity <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.extremity}
+                  onValueChange={(v) => updateField("extremity", v as "UE" | "LE")}
+                >
+                  <SelectTrigger
+                    id="extremity"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.extremity ? "border-destructive" : ""
+                    }`}
+                  >
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UE">Upper (UE)</SelectItem>
+                    <SelectItem value="LE">Lower (LE)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.extremity && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.extremity}</p>
+                )}
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="userStatus" className="text-sm">
                   User Status <span className="text-destructive">*</span>
                 </Label>
                 <Select
@@ -387,7 +425,7 @@ export default function AddCasePage() {
                 >
                   <SelectTrigger
                     id="userStatus"
-                    className={`w-full bg-white border border-slate-400 ${
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.userStatus ? "border-destructive" : ""
                     }`}
                   >
@@ -399,76 +437,124 @@ export default function AddCasePage() {
                     <SelectItem value="VAL">VAL - Validated</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.userStatus && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.userStatus}</p>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
 
-          {/* Location & Provider */}
-          <Card className="border-border/60 bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg">Location & Provider</CardTitle>
-              <CardDescription>Where and who performed the surgery</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="system">
+            {/* Divider */}
+            <div className="border-t border-border/60"></div>
+
+            {/* Location & Provider Section */}
+            <div className="space-y-4">
+              <div className="space-y-0.5">
+                <h2 className="text-lg font-semibold text-foreground">Location & Provider</h2>
+                <p className="text-xs text-muted-foreground">Where and who performed the surgery</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="system" className="text-sm">
                   System <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="system"
-                  placeholder="e.g., Virtua, Penn Medicine"
+                <Select
                   value={formData.system}
-                  onChange={(e) => updateField("system", e.target.value)}
-                  className={`bg-white border border-slate-400 ${errors.system ? "border-destructive" : ""}`}
-                  list="systems-list"
-                />
-                <datalist id="systems-list">
-                  {[...new Set(sites)].slice(0, 10).map((s, idx) => (
-                    <option key={`system-${idx}`} value={s} />
-                  ))}
-                </datalist>
+                  onValueChange={(v) => updateField("system", v)}
+                >
+                  <SelectTrigger
+                    id="system"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.system ? "border-destructive" : ""
+                    }`}
+                  >
+                    <SelectValue placeholder="Select system" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SYSTEM_OPTIONS.length > 0 ? (
+                      SYSTEM_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">No options available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.system && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.system}</p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="site">
+              <div className="grid gap-1.5">
+                <Label htmlFor="site" className="text-sm">
                   Site <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="site"
-                  placeholder="e.g., Main Campus"
+                <Select
                   value={formData.site}
-                  onChange={(e) => updateField("site", e.target.value)}
-                  className={`bg-white border border-slate-400 ${errors.site ? "border-destructive" : ""}`}
-                  list="sites-list"
-                />
-                <datalist id="sites-list">
-                  {sites.map((s, idx) => (
-                    <option key={`site-${idx}`} value={s} />
-                  ))}
-                </datalist>
+                  onValueChange={(v) => updateField("site", v)}
+                >
+                  <SelectTrigger
+                    id="site"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.site ? "border-destructive" : ""
+                    }`}
+                  >
+                    <SelectValue placeholder="Select site" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SITE_OPTIONS.length > 0 ? (
+                      SITE_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">No options available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.site && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.site}</p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="surgeon">
+              <div className="grid gap-1.5">
+                <Label htmlFor="surgeon" className="text-sm">
                   Surgeon <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="surgeon"
-                  placeholder="e.g., Dr. Smith"
+                <Select
                   value={formData.surgeon}
-                  onChange={(e) => updateField("surgeon", e.target.value)}
-                  className={`bg-white border border-slate-400 ${errors.surgeon ? "border-destructive" : ""}`}
-                  list="surgeons-list"
-                />
-                <datalist id="surgeons-list">
-                  {surgeons.map((s, idx) => (
-                    <option key={`surgeon-${idx}`} value={s} />
-                  ))}
-                </datalist>
+                  onValueChange={(v) => updateField("surgeon", v)}
+                >
+                  <SelectTrigger
+                    id="surgeon"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.surgeon ? "border-destructive" : ""
+                    }`}
+                  >
+                    <SelectValue placeholder="Select surgeon" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SURGEON_OPTIONS.length > 0 ? (
+                      SURGEON_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">No options available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.surgeon && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.surgeon}</p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="region">
+              <div className="grid gap-1.5">
+                <Label htmlFor="region" className="text-sm">
                   Region <span className="text-destructive">*</span>
                 </Label>
                 <Select
@@ -477,123 +563,239 @@ export default function AddCasePage() {
                 >
                   <SelectTrigger
                     id="region"
-                    className={`w-full bg-white border border-slate-400 ${
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.region ? "border-destructive" : ""
                     }`}
                   >
                     <SelectValue placeholder="Select region" />
                   </SelectTrigger>
                   <SelectContent>
-                    {regions.map((r) => (
+                    {regionOptions.map((r) => (
                       <SelectItem key={r} value={r}>
                         {r}
                       </SelectItem>
                     ))}
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.region && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.region}</p>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
 
-          {/* Status & Flags */}
-          <Card className="border-border/60 bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg">Status & Flags</CardTitle>
-              <CardDescription>Case classification and tracking flags</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
-                <div>
-                  <Label htmlFor="training" className="font-medium">
-                    Training Case
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Mark if used for training purposes</p>
-                </div>
-                <Switch
-                  id="training"
-                  checked={formData.training}
-                  onCheckedChange={(v) => updateField("training", v)}
-                  className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
-                />
+            {/* Divider */}
+            <div className="border-t border-border/60"></div>
+
+            {/* Status & Flags Section */}
+            <div className="space-y-4">
+              <div className="space-y-0.5">
+                <h2 className="text-lg font-semibold text-foreground">Status & Flags</h2>
+                <p className="text-xs text-muted-foreground">Case classification and tracking flags</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="training" className="text-sm">
+                  Training <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.training}
+                  onValueChange={(v) => updateField("training", v)}
+                >
+                  <SelectTrigger
+                    id="training"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.training ? "border-destructive" : ""
+                    }`}
+                  >
+                    <SelectValue placeholder="Select training" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TRAINING_OPTIONS.length > 0 ? (
+                      TRAINING_OPTIONS.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">No options available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.training && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.training}</p>
+                )}
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
-                <div>
-                  <Label htmlFor="neuromaCase" className="font-medium">
+              <div className="grid gap-1.5">
+                <Label htmlFor="typeOfSurgery" className="text-sm">
+                  Type of Surgery <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.typeOfSurgery}
+                  onValueChange={(v) => updateField("typeOfSurgery", v)}
+                >
+                  <SelectTrigger
+                    id="typeOfSurgery"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.typeOfSurgery ? "border-destructive" : ""
+                    }`}
+                  >
+                    <SelectValue placeholder="Select type of surgery" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TYPE_OF_SURGERY_OPTIONS.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.typeOfSurgery && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.typeOfSurgery}</p>
+                )}
+              </div>
+
+              </div>
+
+              <div
+                onClick={(e) => {
+                  const target = e.target as HTMLElement
+                  // Don't toggle if clicking directly on the switch or its container
+                  if (target.closest('[role="switch"]') || target.closest('button')) {
+                    return
+                  }
+                  updateField("neuromaCase", !formData.neuromaCase)
+                }}
+                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+                  formData.neuromaCase
+                    ? "border-[#1d99ac] bg-[#1d99ac]/10 shadow-sm"
+                    : "border-border/50 bg-background/30 hover:border-border/70 hover:bg-background/40"
+                }`}
+              >
+                <div className="flex-1">
+                  <Label htmlFor="neuromaCase" className="text-sm font-medium cursor-pointer">
                     Neuroma Case
                   </Label>
-                  <p className="text-xs text-muted-foreground">Case involves neuroma treatment</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Case involves neuroma treatment</p>
                 </div>
-                <Switch
-                  id="neuromaCase"
-                  checked={formData.neuromaCase}
-                  onCheckedChange={(v) => updateField("neuromaCase", v)}
-                  className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
-                />
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation()
+                  }}
+                >
+                  <Switch
+                    id="neuromaCase"
+                    checked={formData.neuromaCase}
+                    onCheckedChange={(v) => {
+                      updateField("neuromaCase", v)
+                    }}
+                    className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
-                <div>
-                  <Label htmlFor="caseStudy" className="font-medium">
+              <div
+                onClick={(e) => {
+                  const target = e.target as HTMLElement
+                  // Don't toggle if clicking directly on the switch or its container
+                  if (target.closest('[role="switch"]') || target.closest('button')) {
+                    return
+                  }
+                  updateField("caseStudy", !formData.caseStudy)
+                }}
+                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+                  formData.caseStudy
+                    ? "border-[#1d99ac] bg-[#1d99ac]/10 shadow-sm"
+                    : "border-border/50 bg-background/30 hover:border-border/70 hover:bg-background/40"
+                }`}
+              >
+                <div className="flex-1">
+                  <Label htmlFor="caseStudy" className="text-sm font-medium cursor-pointer">
                     Case Study
                   </Label>
-                  <p className="text-xs text-muted-foreground">Include in case study documentation</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Include in case study documentation</p>
                 </div>
-                <Switch
-                  id="caseStudy"
-                  checked={formData.caseStudy}
-                  onCheckedChange={(v) => updateField("caseStudy", v)}
-                  className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation()
+                  }}
+                >
+                  <Switch
+                    id="caseStudy"
+                    checked={formData.caseStudy}
+                    onCheckedChange={(v) => {
+                      updateField("caseStudy", v)
+                    }}
+                    className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-border/60"></div>
+
+            {/* Additional Notes Section */}
+            <div className="space-y-4">
+              <div className="space-y-0.5">
+                <h2 className="text-lg font-semibold text-foreground">Additional Notes</h2>
+                <p className="text-xs text-muted-foreground">Any additional information about the case</p>
+              </div>
+              <div>
+                <Textarea
+                  placeholder="Enter any additional notes or observations..."
+                  value={formData.notes}
+                  onChange={(e) => updateField("notes", e.target.value)}
+                  className="min-h-[100px] bg-white border border-slate-400 text-sm"
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Notes */}
-          <Card className="border-border/60 bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg">Additional Notes</CardTitle>
-              <CardDescription>Any additional information about the case</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Enter any additional notes or observations..."
-                value={formData.notes}
-                onChange={(e) => updateField("notes", e.target.value)}
-                className="min-h-[120px] bg-white border border-slate-400"
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Submit */}
-        <div className="mt-6 flex items-center justify-between rounded-lg border border-border/50 bg-card/50 p-4">
-          <p className="text-sm text-muted-foreground">
-            Fields marked with <span className="text-destructive">*</span> are required
-          </p>
-          <div className="flex items-center gap-3">
-            <Link href="/tracker/cases">
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </Link>
-            <Button type="submit" disabled={isSubmitting} style={{ backgroundColor: "#1d99ac" }}>
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Saving...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Save className="h-4 w-4" />
-                  Save Case
-                </span>
-              )}
-            </Button>
+            </div>
           </div>
         </div>
       </form>
+
+      {/* Footer Buttons */}
+      <div className="mt-6 flex items-center justify-end gap-2">
+        <Link href="/tracker/cases">
+          <Button type="button" variant="outline" size="sm" className="cursor-pointer">
+            Cancel
+          </Button>
+        </Link>
+        <Button 
+          type="button" 
+          onClick={(e) => {
+            e.preventDefault()
+            const form = document.querySelector('form')
+            if (form) {
+              form.requestSubmit()
+            }
+          }}
+          disabled={isSubmitting} 
+          size="sm" 
+          className="cursor-pointer"
+          style={{ backgroundColor: "#1d99ac" }}
+        >
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Saving...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Save className="h-3 w-3" />
+              Save Case
+            </span>
+          )}
+        </Button>
+      </div>
+      </div>
     </div>
     </ProtectedRoute>
   )
