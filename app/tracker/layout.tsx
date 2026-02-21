@@ -343,7 +343,7 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
       {/* Main content */}
       <main
         className={cn(
-          "min-h-screen flex-1 flex flex-col transition-all duration-300",
+          "h-screen flex-1 flex flex-col transition-all duration-300 overflow-hidden",
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
         )}
       >

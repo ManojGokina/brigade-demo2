@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { useCases, useCaseStats } from "@/lib/case-context"
 import type { Case } from "@/types/case"
 import { ProtectedRoute } from "@/components/protected-route"
+import { createCase } from "@/lib/cases-api"
 
 interface FormData {
   caseType: "Primary" | "Revision" | ""
@@ -349,6 +350,8 @@ export default function AddCasePage() {
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [showError, setShowError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [newCaseNo, setNewCaseNo] = useState<number | null>(null)
 
   // Compute dropdown options to avoid key warnings
@@ -410,52 +413,43 @@ export default function AddCasePage() {
     }
 
     setIsSubmitting(true)
+    setShowError(false)
+    setErrorMessage('')
 
-    // Simulate brief processing delay for UX
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    try {
+      const apiPayload = {
+        operationDate: formData.opDate,
+        nervesTreated: parseInt(formData.nervesTreated),
+        systemName: formData.system,
+        site: formData.site,
+        surgeon: formData.surgeon,
+        region: formData.region,
+        userStatus: formData.userStatus,
+        ueLe: formData.extremity,
+        surgery_Performed: formData.surgery,
+        useCase: formData.typeOfSurgery,
+        isNeuromaCase: formData.neuromaCase,
+        isCaseStudy: formData.caseStudy,
+        specialty: formData.specialty,
+        training: formData.training,
+        tbd: formData.caseType,
+        isActive: true,
+      }
 
-    // Parse the date to MM/DD/YYYY format
-    const dateParts = formData.opDate.split("-")
-    const formattedDate = `${dateParts[1]}/${dateParts[2]}/${dateParts[0]}`
+      const createdCase = await createCase(apiPayload)
+      setNewCaseNo(createdCase.caseNumber || null)
+      setShowSuccess(true)
 
-    // Calculate survival days from op date to today
-    const opDate = new Date(formData.opDate)
-    const today = new Date()
-    const survivalDays = Math.floor((today.getTime() - opDate.getTime()) / (1000 * 60 * 60 * 24))
-    const survivalWeeks = Math.floor(survivalDays / 7)
-
-    // Format date for database (YYYY-MM-DD format for database, but display as MM/DD/YYYY)
-    const dbDate = formData.opDate // Already in YYYY-MM-DD format from date input
-
-    const newCaseData: Omit<Case, "caseNo"> = {
-      nervesTreated: parseInt(formData.nervesTreated),
-      opDate: formattedDate, // Display format MM/DD/YYYY
-      type: formData.caseType as "Primary" | "Revision",
-      system: formData.system,
-      site: formData.site,
-      surgeon: formData.surgeon,
-      userStatus: formData.userStatus as "EST" | "IN" | "VAL",
-      specialty: formData.specialty,
-      training: formData.training, // String value from dropdown
-      ueOrLe: formData.extremity as "UE" | "LE",
-      surgeryPerformed: formData.surgery,
-      typeOfSurgery: formData.typeOfSurgery, // Cap, TMR Adj, Wrap, Sheet - maps to use_case in database
-      neuromaCase: formData.neuromaCase,
-      caseStudy: formData.caseStudy,
-      survivalDays: Math.max(0, survivalDays),
-      survivalWeeks: Math.max(0, survivalWeeks),
-      region: formData.region,
+      setTimeout(() => {
+        router.push("/tracker/cases")
+      }, 2000)
+    } catch (error: any) {
+      console.error('Failed to create case:', error)
+      const message = error.response?.data?.message || error.message || 'Failed to create case. Please try again.'
+      setErrorMessage(message)
+      setShowError(true)
+      setIsSubmitting(false)
     }
-
-    const newCase = addCase(newCaseData)
-    setNewCaseNo(newCase.caseNo)
-    setIsSubmitting(false)
-    setShowSuccess(true)
-
-    // Redirect after showing success
-    setTimeout(() => {
-      router.push("/tracker/cases")
-    }, 2000)
   }
 
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
@@ -482,7 +476,7 @@ export default function AddCasePage() {
           Case #{newCaseNo} has been saved to the system
         </p>
         <Badge className="mt-4" style={{ backgroundColor: "#1d99ac" }}>
-          Data persisted to localStorage
+          Saved to database
         </Badge>
         <p className="mt-4 text-sm text-muted-foreground">Redirecting to cases list...</p>
       </div>
@@ -510,6 +504,24 @@ export default function AddCasePage() {
 
 
       <form onSubmit={handleSubmit}>
+        {showError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-red-800">Error Creating Case</h3>
+                <p className="text-sm text-red-700 mt-1">{errorMessage}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowError(false)}
+                className="text-red-400 hover:text-red-600"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
         <div className="rounded-lg border border-border/60 bg-card shadow-sm p-4 overflow-visible">
           <div className="space-y-6">
             {/* Case Information Section */}
@@ -528,7 +540,8 @@ export default function AddCasePage() {
                   type="date"
                   value={formData.opDate}
                   onChange={(e) => updateField("opDate", e.target.value)}
-                  className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.opDate ? "border-destructive" : ""}`}
+                  disabled={isSubmitting}
+                  className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.opDate ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                 />
                 {errors.opDate && (
                   <p className="text-xs text-destructive mt-0.5">{errors.opDate}</p>
@@ -542,12 +555,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.caseType}
                   onValueChange={(v) => updateField("caseType", v as "Primary" | "Revision")}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="caseType"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.caseType ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
@@ -568,12 +582,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.surgery}
                   onValueChange={(v) => updateField("surgery", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="surgery"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.surgery ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select surgery performed" />
                   </SelectTrigger>
@@ -605,9 +620,10 @@ export default function AddCasePage() {
                   placeholder="e.g., 3"
                   value={formData.nervesTreated}
                   onChange={(e) => updateField("nervesTreated", e.target.value)}
+                  disabled={isSubmitting}
                   className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                     errors.nervesTreated ? "border-destructive" : ""
-                  }`}
+                  } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                 />
                 {errors.nervesTreated && (
                   <p className="text-xs text-destructive mt-0.5">{errors.nervesTreated}</p>
@@ -621,12 +637,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.specialty}
                   onValueChange={(v) => updateField("specialty", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="specialty"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.specialty ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -650,12 +667,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.extremity}
                   onValueChange={(v) => updateField("extremity", v as "UE" | "LE")}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="extremity"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.extremity ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -676,12 +694,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.userStatus}
                   onValueChange={(v) => updateField("userStatus", v as "EST" | "IN" | "VAL")}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="userStatus"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.userStatus ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -715,12 +734,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.system}
                   onValueChange={(v) => updateField("system", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="system"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.system ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select system" />
                   </SelectTrigger>
@@ -748,12 +768,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.site}
                   onValueChange={(v) => updateField("site", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="site"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.site ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select site" />
                   </SelectTrigger>
@@ -781,12 +802,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.surgeon}
                   onValueChange={(v) => updateField("surgeon", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="surgeon"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.surgeon ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select surgeon" />
                   </SelectTrigger>
@@ -814,12 +836,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.region}
                   onValueChange={(v) => updateField("region", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="region"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.region ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select region" />
                   </SelectTrigger>
@@ -855,12 +878,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.training}
                   onValueChange={(v) => updateField("training", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="training"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.training ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select training" />
                   </SelectTrigger>
@@ -888,12 +912,13 @@ export default function AddCasePage() {
                 <Select
                   value={formData.typeOfSurgery}
                   onValueChange={(v) => updateField("typeOfSurgery", v)}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     id="typeOfSurgery"
                     className={`h-9 w-full bg-white border border-slate-400 text-sm ${
                       errors.typeOfSurgery ? "border-destructive" : ""
-                    }`}
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <SelectValue placeholder="Select type of surgery" />
                   </SelectTrigger>
@@ -914,18 +939,18 @@ export default function AddCasePage() {
 
               <div
                 onClick={(e) => {
+                  if (isSubmitting) return
                   const target = e.target as HTMLElement
-                  // Don't toggle if clicking directly on the switch or its container
                   if (target.closest('[role="switch"]') || target.closest('button')) {
                     return
                   }
                   updateField("neuromaCase", !formData.neuromaCase)
                 }}
-                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+                className={`flex items-center justify-between rounded-lg border p-3 transition-all ${
                   formData.neuromaCase
                     ? "border-[#1d99ac] bg-[#1d99ac]/10 shadow-sm"
                     : "border-border/50 bg-background/30 hover:border-border/70 hover:bg-background/40"
-                }`}
+                } ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 <div className="flex-1">
                   <Label htmlFor="neuromaCase" className="text-sm font-medium cursor-pointer">
@@ -947,6 +972,7 @@ export default function AddCasePage() {
                     onCheckedChange={(v) => {
                       updateField("neuromaCase", v)
                     }}
+                    disabled={isSubmitting}
                     className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
                   />
                 </div>
@@ -954,18 +980,18 @@ export default function AddCasePage() {
 
               <div
                 onClick={(e) => {
+                  if (isSubmitting) return
                   const target = e.target as HTMLElement
-                  // Don't toggle if clicking directly on the switch or its container
                   if (target.closest('[role="switch"]') || target.closest('button')) {
                     return
                   }
                   updateField("caseStudy", !formData.caseStudy)
                 }}
-                className={`flex items-center justify-between rounded-lg border p-3 cursor-pointer transition-all ${
+                className={`flex items-center justify-between rounded-lg border p-3 transition-all ${
                   formData.caseStudy
                     ? "border-[#1d99ac] bg-[#1d99ac]/10 shadow-sm"
                     : "border-border/50 bg-background/30 hover:border-border/70 hover:bg-background/40"
-                }`}
+                } ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 <div className="flex-1">
                   <Label htmlFor="caseStudy" className="text-sm font-medium cursor-pointer">
@@ -987,6 +1013,7 @@ export default function AddCasePage() {
                     onCheckedChange={(v) => {
                       updateField("caseStudy", v)
                     }}
+                    disabled={isSubmitting}
                     className="border-2 border-slate-400 data-[state=checked]:border-[#1d99ac]"
                   />
                 </div>
@@ -1007,7 +1034,8 @@ export default function AddCasePage() {
                   placeholder="Enter any additional notes or observations..."
                   value={formData.notes}
                   onChange={(e) => updateField("notes", e.target.value)}
-                  className="min-h-[100px] bg-white border border-slate-400 text-sm"
+                  disabled={isSubmitting}
+                  className={`min-h-[100px] bg-white border border-slate-400 text-sm ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                 />
               </div>
             </div>
@@ -1018,7 +1046,7 @@ export default function AddCasePage() {
       {/* Footer Buttons */}
       <div className="mt-6 flex items-center justify-end gap-2">
         <Link href="/tracker/cases">
-          <Button type="button" variant="outline" size="sm" className="cursor-pointer">
+          <Button type="button" variant="outline" size="sm" disabled={isSubmitting} className="cursor-pointer">
             Cancel
           </Button>
         </Link>

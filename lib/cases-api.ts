@@ -76,6 +76,45 @@ export async function fetchCases(params: CasesApiParams = {}): Promise<CasesApiR
 }
 
 /**
+ * Create a new case
+ */
+export async function createCase(caseData: Partial<CaseRow>): Promise<CaseRow> {
+  const response = await api.post<{ success: boolean; data: CaseRow }>(
+    '/users/cases',
+    caseData
+  );
+  return response.data.data;
+}
+
+/**
+ * Update an existing case
+ */
+export async function updateCase(caseId: string, caseData: Partial<CaseRow>): Promise<CaseRow> {
+  const response = await api.put<{ success: boolean; data: CaseRow }>(
+    `/users/cases/${caseId}`,
+    caseData
+  );
+  return response.data.data;
+}
+
+/**
+ * Delete a case
+ */
+export async function deleteCase(caseId: string): Promise<void> {
+  await api.delete(`/users/cases/${caseId}`);
+}
+
+/**
+ * Get case by ID
+ */
+export async function getCaseById(caseId: string): Promise<CaseRow> {
+  const response = await api.get<{ success: boolean; data: CaseRow }>(
+    `/users/cases/${caseId}`
+  );
+  return response.data.data;
+}
+
+/**
  * Map API CaseRow to frontend Case type
  */
 export function mapCaseRowToCase(row: CaseRow): import('@/types/case').Case {

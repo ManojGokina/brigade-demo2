@@ -2,6 +2,7 @@
 
 import React from "react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Table,
   TableBody,
@@ -19,10 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowUpDown, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react"
 import type { Case, SortField, SortDirection } from "@/types/case"
 import { sortCases } from "@/lib/case-data"
 import { CaseDetailDrawer } from "./case-detail-drawer"
+import { deleteCase } from "@/lib/cases-api"
 
 const PAGE_SIZE = 25 // Declared PAGE_SIZE variable
 
@@ -41,17 +43,20 @@ interface CasesTableProps {
   sortField?: SortField
   sortDirection?: SortDirection
   onSortChange?: (field: SortField, direction: SortDirection) => void
+  onCaseDeleted?: () => void
 }
 
 const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100]
 
-export function CasesTable({ cases, pagination, sortField: externalSortField, sortDirection: externalSortDirection, onSortChange }: CasesTableProps) {
+export function CasesTable({ cases, pagination, sortField: externalSortField, sortDirection: externalSortDirection, onSortChange, onCaseDeleted }: CasesTableProps) {
+  const router = useRouter()
   const [localSortField, setLocalSortField] = useState<SortField | null>(null)
   const [localSortDirection, setLocalSortDirection] = useState<SortDirection>("asc")
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(25)
   const [selectedCase, setSelectedCase] = useState<Case | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
   const headerRef = React.useRef<HTMLDivElement>(null)
   const bodyRef = React.useRef<HTMLDivElement>(null)
   
@@ -88,6 +93,26 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
 
   const handleDrawerClose = () => {
     setDrawerOpen(false)
+  }
+
+  const handleEdit = (e: React.MouseEvent, caseData: Case) => {
+    e.stopPropagation()
+    router.push(`/tracker/cases/edit/${caseData.caseNo}`)
+  }
+
+  const handleDelete = async (e: React.MouseEvent, caseData: Case) => {
+    e.stopPropagation()
+    if (!confirm(`Are you sure you want to delete Case #${caseData.caseNo}?`)) return
+    
+    setDeletingId(caseData.caseNo)
+    try {
+      await deleteCase(String(caseData.caseNo))
+      onCaseDeleted?.()
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to delete case')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -192,12 +217,12 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
   }
 
   return (
-    <div className="rounded-lg border border-border/50 bg-card flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
+    <div className="rounded-lg border border-border/50 bg-card flex flex-col h-full">
       <div className="flex-1 overflow-auto" ref={bodyRef} onScroll={handleScroll}>
-        <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+        <table className="w-full border-collapse" style={{ minWidth: '1800px' }}>
           <thead className="sticky top-0 bg-card z-10 border-b border-border/50">
             <tr className="border-border/50">
-              <th className="w-[60px] px-3 py-2 text-left">
+              <th className="sticky left-0 w-[80px] px-3 py-2 text-left bg-card border-r border-border/50 z-20">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -210,28 +235,28 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                   <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
               </th>
-              <th className="w-[90px] px-3 py-2 text-left">
+              <th className="sticky left-[80px] w-[120px] px-3 py-2 text-left bg-card border-r border-border/50 z-20">
                 <span className="text-xs font-bold text-muted-foreground">Date</span>
               </th>
-              <th className="w-[90px] px-3 py-2 text-left">
+              <th className="w-[120px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Type</span>
               </th>
-              <th className="w-[80px] px-3 py-2 text-left">
+              <th className="w-[150px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Surgeon</span>
               </th>
-              <th className="w-[80px] px-3 py-2 text-left">
+              <th className="w-[150px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Site</span>
               </th>
-              <th className="w-[100px] px-3 py-2 text-left">
+              <th className="w-[150px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Specialty</span>
               </th>
-              <th className="w-[250px] px-3 py-2 text-left">
+              <th className="w-[300px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Surgery</span>
               </th>
-              <th className="w-[60px] px-3 py-2 text-left">
+              <th className="w-[100px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Ext</span>
               </th>
-              <th className="w-[70px] px-3 py-2 text-left">
+              <th className="w-[100px] px-3 py-2 text-left border-r border-border/50">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -244,14 +269,17 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                   <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
               </th>
-              <th className="w-[70px] px-3 py-2 text-left">
+              <th className="w-[100px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Status</span>
               </th>
-              <th className="w-[100px] px-3 py-2 text-left">
+              <th className="w-[120px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Flags</span>
               </th>
-              <th className="w-[100px] px-3 py-2 text-left">
+              <th className="w-[150px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Region</span>
+              </th>
+              <th className="sticky right-0 w-[120px] px-3 py-2 text-left bg-card border-l border-border/50">
+                <span className="text-xs font-bold text-muted-foreground">Actions</span>
               </th>
             </tr>
           </thead>
@@ -262,15 +290,15 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                 className="cursor-pointer border-b border-border/50 transition-colors hover:bg-accent/50"
                 onClick={() => handleRowClick(c)}
               >
-                <td className={`px-3 py-2 font-mono text-sm text-foreground ${
+                <td className={`sticky left-0 px-3 py-2 font-mono text-sm text-foreground bg-card border-r border-border/50 z-10 ${
                   sortField === "caseNo" ? "bg-accent/30" : ""
                 }`}>
                   {c.caseNo}
                 </td>
-                <td className="px-3 py-2 text-sm text-muted-foreground">
+                <td className="sticky left-[80px] px-3 py-2 text-sm text-muted-foreground bg-card border-r border-border/50 z-10">
                   {c.opDate}
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 border-r border-border/50">
                   <Badge
                     variant={c.type === "Primary" ? "default" : "secondary"}
                     className={
@@ -282,21 +310,21 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                     {c.type}
                   </Badge>
                 </td>
-                <td className="px-3 py-2 font-medium text-sm text-foreground">
+                <td className="px-3 py-2 font-medium text-sm text-foreground border-r border-border/50">
                   {c.surgeon}
                 </td>
-                <td className="px-3 py-2 text-sm text-muted-foreground">
+                <td className="px-3 py-2 text-sm text-muted-foreground border-r border-border/50">
                   {c.site}
                 </td>
-                <td className="px-3 py-2 text-sm text-foreground">
+                <td className="px-3 py-2 text-sm text-foreground border-r border-border/50">
                   {c.specialty}
                 </td>
-                <td className="px-3 py-2 text-sm text-muted-foreground">
+                <td className="px-3 py-2 text-sm text-muted-foreground border-r border-border/50">
                   <div className="break-words line-clamp-3" title={c.surgeryPerformed}>
                     {c.surgeryPerformed}
                   </div>
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 border-r border-border/50">
                   <Badge
                     variant="outline"
                     className={
@@ -308,12 +336,12 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                     {c.ueOrLe}
                   </Badge>
                 </td>
-                <td className={`px-3 py-2 text-center font-mono text-sm text-foreground ${
+                <td className={`px-3 py-2 text-center font-mono text-sm text-foreground border-r border-border/50 ${
                   sortField === "nervesTreated" ? "bg-accent/30" : ""
                 }`}>
                   {c.nervesTreated}
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 border-r border-border/50">
                   <Badge
                     variant="outline"
                     className={
@@ -327,7 +355,7 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                     {c.userStatus}
                   </Badge>
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 border-r border-border/50">
                   <div className="flex gap-1">
                     {c.neuromaCase && (
                       <Badge
@@ -347,8 +375,35 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                     )}
                   </div>
                 </td>
-                <td className="px-3 py-2 text-sm text-muted-foreground">
+                <td className="px-3 py-2 text-sm text-muted-foreground border-r border-border/50">
                   {c.region}
+                </td>
+                <td className="sticky right-0 px-3 py-2 bg-card border-l border-border/50">
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleEdit(e, c)}
+                      className="h-7 w-7 p-0 hover:bg-blue-100 hover:text-blue-600"
+                      title="Edit case"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDelete(e, c)}
+                      disabled={deletingId === c.caseNo}
+                      className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-600"
+                      title="Delete case"
+                    >
+                      {deletingId === c.caseNo ? (
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

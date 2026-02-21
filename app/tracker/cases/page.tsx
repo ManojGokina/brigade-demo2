@@ -198,7 +198,7 @@ export default function CasesPage() {
 
   return (
     <ProtectedRoute>
-    <div className="p-6">
+    <div className="h-full flex flex-col p-6">
       <div className="mb-6">
         {isLoading ? (
           <div className="space-y-2">
@@ -278,6 +278,7 @@ export default function CasesPage() {
             sortField={sortField}
             sortDirection={sortDirection}
             onSortChange={handleSortChange}
+            onCaseDeleted={() => loadCases(filters, pagination.offset, sortField, sortDirection)}
           />
         )}
       </div>
