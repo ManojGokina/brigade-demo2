@@ -14,6 +14,7 @@ export interface Case {
   typeOfSurgery?: string // Cap, TMR Adj, Wrap, Sheet - maps to use_case in database
   neuromaCase: boolean
   caseStudy: boolean
+  tbd: "Primary" | "Revision" | ""
   survivalDays: number
   survivalWeeks: number
   region: string

@@ -300,14 +300,14 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                 </td>
                 <td className="px-3 py-2 border-r border-border/50">
                   <Badge
-                    variant={c.type === "Primary" ? "default" : "secondary"}
+                    variant={c.tbd === "Primary" ? "default" : "secondary"}
                     className={
-                      c.type === "Primary"
+                      c.tbd === "Primary"
                         ? "bg-chart-1/20 text-chart-1 hover:bg-chart-1/30"
                         : "bg-chart-2/20 text-chart-2 hover:bg-chart-2/30"
                     }
                   >
-                    {c.type}
+                    {c.tbd}
                   </Badge>
                 </td>
                 <td className="px-3 py-2 font-medium text-sm text-foreground border-r border-border/50">

@@ -144,6 +144,7 @@ export function mapCaseRowToCase(row: CaseRow): import('@/types/case').Case {
     survivalDays,
     survivalWeeks,
     region: row.region || '',
+    tbd: (row.tbd === 'Primary' || row.tbd === 'Revision') ? row.tbd : '',
   };
 }
 
