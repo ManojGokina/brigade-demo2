@@ -87,7 +87,7 @@ export default function EditCasePage() {
         caseType: data.tbd || "",
         surgery: data.surgeryPerformed || "",
         nervesTreated: data.nervesTreated?.toString() || "",
-        opDate: data.operationDate || "",
+        opDate: data.operationDate ? new Date(data.operationDate).toISOString().split('T')[0] : "",
         specialty: data.specialty || "",
         extremity: data.ueLe || "",
         userStatus: data.userStatus || "",
