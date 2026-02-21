@@ -20,6 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { ArrowUpDown, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react"
 import type { Case, SortField, SortDirection } from "@/types/case"
 import { sortCases } from "@/lib/case-data"
@@ -57,6 +67,8 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
   const [selectedCase, setSelectedCase] = useState<Case | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deleteCaseTarget, setDeleteCaseTarget] = useState<Case | null>(null)
   const headerRef = React.useRef<HTMLDivElement>(null)
   const bodyRef = React.useRef<HTMLDivElement>(null)
   
@@ -100,18 +112,24 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
     router.push(`/tracker/cases/edit/${caseData.caseNo}`)
   }
 
-  const handleDelete = async (e: React.MouseEvent, caseData: Case) => {
+  const handleDelete = (e: React.MouseEvent, caseData: Case) => {
     e.stopPropagation()
-    if (!confirm(`Are you sure you want to delete Case #${caseData.caseNo}?`)) return
-    
-    setDeletingId(caseData.caseNo)
+    setDeleteCaseTarget(caseData)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteCase = async () => {
+    if (!deleteCaseTarget) return
+    setDeletingId(deleteCaseTarget.caseNo)
     try {
-      await deleteCase(String(caseData.caseNo))
+      await deleteCase(String(deleteCaseTarget.caseNo))
       onCaseDeleted?.()
     } catch (error: any) {
       alert(error.response?.data?.message || 'Failed to delete case')
     } finally {
       setDeletingId(null)
+      setIsDeleteDialogOpen(false)
+      setDeleteCaseTarget(null)
     }
   }
 
@@ -494,6 +512,28 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
         open={drawerOpen}
         onClose={handleDrawerClose}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this case?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete Case #{deleteCaseTarget?.caseNo}? This action will mark the case as inactive.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
+              onClick={confirmDeleteCase}
+              disabled={deletingId !== null}
+            >
+              {deletingId !== null ? "Deleting..." : "Yes, delete case"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
