@@ -33,9 +33,9 @@ interface NavItem {
 }
 
 const allNavItems: NavItem[] = [
+  { id: "overview", label: "Overview", href: "/tracker/overview", icon: LayoutDashboard },
   { id: "add-case", label: "Add New Case", href: "/tracker/cases/new", icon: PlusCircle },
   { id: "all-cases", label: "All Cases", href: "/tracker/cases", icon: FileText },
-  { id: "overview", label: "Overview", href: "/tracker/overview", icon: LayoutDashboard },
   { id: "user-management", label: "User Management", href: "/tracker/users", icon: Users },
 ]
 

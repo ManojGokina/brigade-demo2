@@ -1,168 +1,479 @@
 "use client"
 
 import { useState } from "react"
-import { StatsCards } from "@/components/dashboard/stats-cards"
-import {
-  CasesByTypeChart,
-  CasesBySpecialtyChart,
-  CasesByTerritoryChart,
-  CasesOverTimeChart,
-  ExtremityChart,
-  SurgeonProductivityChart,
-  TopPerformingSurgeons,
-} from "@/components/dashboard/case-charts"
-import { CaseFiltersComponent } from "@/components/dashboard/case-filters"
-import { useCaseStats } from "@/lib/case-context"
-import { Badge } from "@/components/ui/badge"
-import { Filter } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { CaseFilters } from "@/types/case"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer, AreaChart, Area } from "recharts"
 import { ProtectedRoute } from "@/components/protected-route"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
+import type { DateRange } from "@/components/ui/date-range-picker"
+
+const COLORS = ["#1d99ac", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#84cc16", "#f97316", "#6366f1"]
+
+// Dummy Data
+const qoqGrowthData = [
+  { quarter: "Q1 2024", cases: 45, surgeons: 12, productivity: 3.75 },
+  { quarter: "Q2 2024", cases: 62, surgeons: 15, productivity: 4.13 },
+  { quarter: "Q3 2024", cases: 78, surgeons: 18, productivity: 4.33 },
+  { quarter: "Q4 2024", cases: 95, surgeons: 22, productivity: 4.32 },
+]
+
+const casesByRegionData = [
+  { region: "Northeast", cases: 85, surgeons: 12 },
+  { region: "Southeast", cases: 72, surgeons: 10 },
+  { region: "Midwest", cases: 58, surgeons: 8 },
+  { region: "West", cases: 65, surgeons: 9 },
+]
+
+const productivityByUserTypeData = [
+  { quarter: "Q1", EST: 4.2, IN: 3.5, VAL: 4.8 },
+  { quarter: "Q2", EST: 4.5, IN: 3.8, VAL: 5.1 },
+  { quarter: "Q3", EST: 4.7, IN: 4.0, VAL: 5.3 },
+  { quarter: "Q4", EST: 4.9, IN: 4.2, VAL: 5.5 },
+]
+
+const timeToSecondCaseData = [
+  { quarter: "Q1", avg: 45, median: 38, max: 120 },
+  { quarter: "Q2", avg: 42, median: 35, max: 110 },
+  { quarter: "Q3", avg: 38, median: 32, max: 95 },
+  { quarter: "Q4", avg: 35, median: 30, max: 85 },
+]
+
+const surgeonsBySpecialtyData = [
+  { name: "Podiatry", value: 35 },
+  { name: "Hand", value: 25 },
+  { name: "Plastics", value: 20 },
+  { name: "Vascular", value: 12 },
+  { name: "Neurosurgery", value: 8 },
+]
+
+const surgeonsByCaseLoadData = [
+  { name: "1-5 cases", value: 45 },
+  { name: "6-10 cases", value: 28 },
+  { name: "11-20 cases", value: 18 },
+  { name: "21+ cases", value: 9 },
+]
+
+const top10ByCaseLoadData = [
+  { name: "Dr. Smith", cases: 45 },
+  { name: "Dr. Johnson", cases: 38 },
+  { name: "Dr. Williams", cases: 35 },
+  { name: "Dr. Brown", cases: 32 },
+  { name: "Dr. Davis", cases: 28 },
+  { name: "Dr. Miller", cases: 25 },
+  { name: "Dr. Wilson", cases: 22 },
+  { name: "Dr. Moore", cases: 20 },
+  { name: "Dr. Taylor", cases: 18 },
+  { name: "Dr. Anderson", cases: 15 },
+]
+
+const top10ByNeuromaData = [
+  { name: "Dr. Williams", cases: 28 },
+  { name: "Dr. Smith", cases: 25 },
+  { name: "Dr. Johnson", cases: 22 },
+  { name: "Dr. Brown", cases: 18 },
+  { name: "Dr. Davis", cases: 15 },
+  { name: "Dr. Miller", cases: 12 },
+  { name: "Dr. Wilson", cases: 10 },
+  { name: "Dr. Moore", cases: 8 },
+  { name: "Dr. Taylor", cases: 7 },
+  { name: "Dr. Anderson", cases: 5 },
+]
+
+const top10ByProductivityData = [
+  { name: "Dr. Davis", productivity: 5.8 },
+  { name: "Dr. Smith", productivity: 5.5 },
+  { name: "Dr. Johnson", productivity: 5.2 },
+  { name: "Dr. Williams", productivity: 4.9 },
+  { name: "Dr. Brown", productivity: 4.7 },
+  { name: "Dr. Miller", productivity: 4.5 },
+  { name: "Dr. Wilson", productivity: 4.3 },
+  { name: "Dr. Moore", productivity: 4.1 },
+  { name: "Dr. Taylor", productivity: 3.9 },
+  { name: "Dr. Anderson", productivity: 3.7 },
+]
 
 export default function OverviewPage() {
-  const [filters, setFilters] = useState<CaseFilters>({
-    type: "all",
-    ueOrLe: "all",
-    userStatus: "all",
-    search: "",
-  })
-
-  const {
-    isLoaded,
-    stats,
-    byType,
-    bySpecialty,
-    byTerritory,
-    byExtremity,
-    bySurgeon,
-    byMonth,
-    specialties,
-    territories,
-    surgeons,
-    totalCases,
-    filteredCount,
-  } = useCaseStats(filters)
-
-  const hasActiveFilters =
-    filters.type !== "all" ||
-    filters.specialty ||
-    filters.tty ||
-    filters.ueOrLe !== "all" ||
-    filters.userStatus !== "all" ||
-    filters.surgeon ||
-    filters.search
-
-  const showSkeleton = !isLoaded || !stats
-
-  if (showSkeleton) {
-    return (
-      <ProtectedRoute>
-      <div className="p-6 space-y-6">
-        {/* Header skeleton */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-56 rounded-lg" />
-            <Skeleton className="h-4 w-72 rounded-full" />
-          </div>
-          <Skeleton className="h-8 w-40 rounded-full" />
-        </div>
-
-        {/* Filters skeleton */}
-        <div className="rounded-lg border border-border/50 bg-card/50 p-4 space-y-3">
-          <div className="flex flex-wrap gap-3">
-            <Skeleton className="h-9 w-32 rounded-md" />
-            <Skeleton className="h-9 w-32 rounded-md" />
-            <Skeleton className="h-9 w-40 rounded-md" />
-            <Skeleton className="h-9 w-48 rounded-md" />
-          </div>
-        </div>
-
-        {/* Stats cards skeleton */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="relative overflow-hidden rounded-lg border border-border/60 bg-card p-4"
-            >
-              <Skeleton className="mb-3 h-4 w-16 rounded-full" />
-              <Skeleton className="h-7 w-20 rounded-lg" />
-              <Skeleton className="mt-2 h-3 w-24 rounded-full" />
-            </div>
-          ))}
-        </div>
-
-        {/* Charts skeleton */}
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
-      </div>
-      </ProtectedRoute>
-    )
-  }
+  const [dateRange, setDateRange] = useState<DateRange>({})
 
   return (
     <ProtectedRoute>
-    <div className="p-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
-          <p className="text-sm text-muted-foreground">
-            Surgical case tracking and analytics
-          </p>
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
+            <p className="text-sm text-muted-foreground">Quarterly analytics and surgeon performance metrics</p>
+          </div>
+          <DateRangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            placeholder="Select Date Range"
+          />
         </div>
-        {hasActiveFilters && (
-          <Badge variant="secondary" className="w-fit gap-1.5">
-            <Filter className="h-3 w-3" />
-            Showing {filteredCount} of {totalCases} cases
-          </Badge>
-        )}
-      </div>
 
-      {/* Filters Section */}
-      <div className="mb-6 rounded-lg border border-border/50 bg-card/50 p-4">
-        <CaseFiltersComponent
-          filters={filters}
-          onFiltersChange={setFilters}
-          specialties={specialties}
-          territories={territories}
-          surgeons={surgeons}
-          showSearch={false}
-        />
-      </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <Card className="border-none bg-gradient-to-br from-[#1d99ac] to-[#16818f] shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/90">Total Cases</p>
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">280</p>
+              <p className="text-xs text-white/80 font-medium mt-1">↑ 12% from last quarter</p>
+            </CardContent>
+          </Card>
+          <Card className="border-none bg-gradient-to-br from-[#10b981] to-[#059669] shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/90">Active Surgeons</p>
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">22</p>
+              <p className="text-xs text-white/80 font-medium mt-1">↑ 4 new this quarter</p>
+            </CardContent>
+          </Card>
+          <Card className="border-none bg-gradient-to-br from-[#f59e0b] to-[#d97706] shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/90">Avg Productivity</p>
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">4.5</p>
+              <p className="text-xs text-white/80 font-medium mt-1">↑ 0.3 from last quarter</p>
+            </CardContent>
+          </Card>
+          <Card className="border-none bg-gradient-to-br from-[#ec4899] to-[#db2777] shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/90">Nerves Treated</p>
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">1,260</p>
+              <p className="text-xs text-white/80 font-medium mt-1">↑ 15% from last quarter</p>
+            </CardContent>
+          </Card>
+          <Card className="border-none bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/90">Active Sites</p>
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">18</p>
+              <p className="text-xs text-white/80 font-medium mt-1">Across all regions</p>
+            </CardContent>
+          </Card>
+          <Card className="border-none bg-gradient-to-br from-[#06b6d4] to-[#0891b2] shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/90">Neuroma Cases</p>
+                <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">150</p>
+              <p className="text-xs text-white/80 font-medium mt-1">53% of total</p>
+            </CardContent>
+          </Card>
+        </div>
 
-      <StatsCards stats={stats} />
+        {/* QoQ Growth */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">QoQ Case Growth</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[200px] w-full">
+                <AreaChart data={qoqGrowthData}>
+                  <defs>
+                    <linearGradient id="casesGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="cases" stroke="#1d99ac" strokeWidth={2} fill="url(#casesGradient)" />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-      {/* Top Row - Surgeon Focus */}
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <SurgeonProductivityChart data={bySurgeon} allSurgeons={surgeons} />
-        <CasesBySpecialtyChart data={bySpecialty} />
-      </div>
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">QoQ Surgeon Growth</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[200px] w-full">
+                <AreaChart data={qoqGrowthData}>
+                  <defs>
+                    <linearGradient id="surgeonsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="surgeons" stroke="#10b981" strokeWidth={2} fill="url(#surgeonsGradient)" />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-      {/* Middle Row - Case Analytics */}
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <TopPerformingSurgeons data={bySurgeon} allSurgeons={surgeons} />
-        <CasesByTypeChart data={byType} />
-        <ExtremityChart data={byExtremity} />
-      </div>
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">QoQ Productivity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[200px] w-full">
+                <AreaChart data={qoqGrowthData}>
+                  <defs>
+                    <linearGradient id="productivityGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="productivity" stroke="#f59e0b" strokeWidth={2} fill="url(#productivityGradient)" />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Bottom Row - Time & Territory */}
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <CasesOverTimeChart data={byMonth} />
-        <CasesByTerritoryChart data={byTerritory} />
+        {/* Productivity by User Type & Time to 2nd Case */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Productivity by User Type (QoQ)</CardTitle>
+                <div className="flex gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full bg-[#1d99ac]" />
+                    <span className="text-xs text-muted-foreground">EST</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full bg-[#10b981]" />
+                    <span className="text-xs text-muted-foreground">IN</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full bg-[#f59e0b]" />
+                    <span className="text-xs text-muted-foreground">VAL</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <AreaChart data={productivityByUserTypeData}>
+                  <defs>
+                    <linearGradient id="estGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.05} />
+                    </linearGradient>
+                    <linearGradient id="inGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
+                    </linearGradient>
+                    <linearGradient id="valGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="EST" stroke="#1d99ac" strokeWidth={2} fill="url(#estGradient)" />
+                  <Area type="monotone" dataKey="IN" stroke="#10b981" strokeWidth={2} fill="url(#inGradient)" />
+                  <Area type="monotone" dataKey="VAL" stroke="#f59e0b" strokeWidth={2} fill="url(#valGradient)" />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Time to Surgeon's 2nd Case (Days, QoQ)</CardTitle>
+                <div className="flex gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full bg-[#1d99ac]" />
+                    <span className="text-xs text-muted-foreground">Average</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full bg-[#10b981]" />
+                    <span className="text-xs text-muted-foreground">Median</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full bg-[#f59e0b]" />
+                    <span className="text-xs text-muted-foreground">Max</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <AreaChart data={timeToSecondCaseData}>
+                  <defs>
+                    <linearGradient id="avgGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.05} />
+                    </linearGradient>
+                    <linearGradient id="medianGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
+                    </linearGradient>
+                    <linearGradient id="maxGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="avg" stroke="#1d99ac" strokeWidth={2} fill="url(#avgGradient)" name="Average" />
+                  <Area type="monotone" dataKey="median" stroke="#10b981" strokeWidth={2} fill="url(#medianGradient)" name="Median" />
+                  <Area type="monotone" dataKey="max" stroke="#f59e0b" strokeWidth={2} fill="url(#maxGradient)" name="Max" />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cases per Region, Surgeons by Specialty, Surgeons by Case Load */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Cases per Region</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <BarChart data={casesByRegionData}>
+                  <XAxis dataKey="region" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="cases" fill="#1d99ac" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Surgeons by Specialty</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <PieChart>
+                  <Pie data={surgeonsBySpecialtyData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>
+                    {surgeonsBySpecialtyData.map((entry, index) => (
+                      <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Surgeons by Case Load</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <PieChart>
+                  <Pie data={surgeonsByCaseLoadData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>
+                    {surgeonsByCaseLoadData.map((entry, index) => (
+                      <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Top 10 Lists */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Top 10 by Case Load</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[300px] w-full">
+                <BarChart data={top10ByCaseLoadData} layout="vertical">
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="cases" fill="#1d99ac" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Top 10 by Neuroma Cases</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[300px] w-full">
+                <BarChart data={top10ByNeuromaData} layout="vertical">
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="cases" fill="#10b981" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Top 10 by Monthly Productivity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[300px] w-full">
+                <BarChart data={top10ByProductivityData} layout="vertical">
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="productivity" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
     </ProtectedRoute>
   )
 }

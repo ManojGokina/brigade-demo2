@@ -43,7 +43,7 @@ const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 export function DateRangePicker({
   value,
   onChange,
-  placeholder = "Pick a date range",
+  placeholder = "Select Date Range",
   className,
   minDate,
   maxDate,
@@ -186,6 +186,7 @@ export function DateRangePicker({
     setEndDate(null)
     setSelectedPreset("custom")
     onChange?.({ from: undefined, to: undefined })
+    setOpen(false)
   }
 
   const renderCalendar = (month: Date, isLeft: boolean) => {

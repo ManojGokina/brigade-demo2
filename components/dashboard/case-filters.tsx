@@ -32,11 +32,8 @@ export function CaseFiltersComponent({
 }: CaseFiltersComponentProps) {
   const hasActiveFilters =
     filters.type !== "all" ||
-    filters.specialty ||
-    filters.region ||
     filters.ueOrLe !== "all" ||
     filters.userStatus !== "all" ||
-    filters.surgeon ||
     filters.search ||
     filters.dateFrom ||
     filters.dateTo
@@ -44,11 +41,8 @@ export function CaseFiltersComponent({
   const clearFilters = () => {
     onFiltersChange({
       type: "all",
-      specialty: undefined,
-      region: undefined,
       ueOrLe: "all",
       userStatus: "all",
-      surgeon: undefined,
       search: "",
       dateFrom: undefined,
       dateTo: undefined,
@@ -72,29 +66,8 @@ export function CaseFiltersComponent({
       <DateRangePicker
         value={{ from: filters.dateFrom, to: filters.dateTo }}
         onChange={(range) => onFiltersChange({ ...filters, dateFrom: range.from, dateTo: range.to })}
-        placeholder="Select date range"
+        placeholder="Select Date Range"
       />
-
-      <Select
-        value={filters.surgeon || "all"}
-        onValueChange={(value) =>
-          onFiltersChange({ ...filters, surgeon: value === "all" ? undefined : value })
-        }
-      >
-        <SelectTrigger className={`w-[140px] bg-white border-border text-foreground cursor-pointer ${
-          filters.surgeon ? "ring-2 ring-primary border-primary" : ""
-        }`}>
-          <SelectValue placeholder="Surgeon" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all" className="cursor-pointer">All Surgeons</SelectItem>
-          {(surgeons || []).map((s, index) => (
-            <SelectItem key={`${s}-${index}`} value={s} className="cursor-pointer">
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
 
       <Select
         value={filters.type || "all"}
@@ -111,48 +84,6 @@ export function CaseFiltersComponent({
           <SelectItem value="all" className="cursor-pointer">All Types</SelectItem>
           <SelectItem value="Primary" className="cursor-pointer">Primary</SelectItem>
           <SelectItem value="Revision" className="cursor-pointer">Revision</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filters.specialty || "all"}
-        onValueChange={(value) =>
-          onFiltersChange({ ...filters, specialty: value === "all" ? undefined : value })
-        }
-      >
-        <SelectTrigger className={`w-[140px] bg-white border-border text-foreground cursor-pointer ${
-          filters.specialty ? "ring-2 ring-primary border-primary" : ""
-        }`}>
-          <SelectValue placeholder="Specialty" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all" className="cursor-pointer">All Specialties</SelectItem>
-          {(specialties || []).map((s) => (
-            <SelectItem key={s} value={s} className="cursor-pointer">
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filters.region || "all"}
-        onValueChange={(value) =>
-          onFiltersChange({ ...filters, region: value === "all" ? undefined : value })
-        }
-      >
-        <SelectTrigger className={`w-[140px] bg-white border-border text-foreground cursor-pointer ${
-          filters.region ? "ring-2 ring-primary border-primary" : ""
-        }`}>
-          <SelectValue placeholder="Region" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all" className="cursor-pointer">All Regions</SelectItem>
-          {(regions || []).map((r, index) => (
-            <SelectItem key={`${r}-${index}`} value={r} className="cursor-pointer">
-              {r}
-            </SelectItem>
-          ))}
         </SelectContent>
       </Select>
 

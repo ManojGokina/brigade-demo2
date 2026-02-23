@@ -160,7 +160,7 @@ export default function SelectDashboardPage() {
                 Dashboard Hub
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-                Welcome back, {user?.username?.split(" ")[0]}
+                Welcome back, {user?.username?.split(" ")[0].charAt(0).toUpperCase() + user?.username?.split(" ")[0].slice(1).toLowerCase()}
               </h1>
               <p className="mt-2 text-muted-foreground">
                 {hasAccess ? "Select a module to access your healthcare analytics workspace" : "Contact your administrator for dashboard access"}

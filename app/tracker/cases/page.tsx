@@ -234,9 +234,9 @@ export default function CasesPage() {
       <CaseFiltersComponent
         filters={filters}
         onFiltersChange={handleFiltersChange}
-        specialties={specialties || []}
-        regions={regions || []}
-        surgeons={surgeons || []}
+        specialties={[]}
+        regions={[]}
+        surgeons={[]}
       />
 
       <div className="mt-4">
