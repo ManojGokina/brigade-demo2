@@ -93,6 +93,53 @@ const top10ByProductivityData = [
   { name: "Dr. Anderson", productivity: 3.7 },
 ]
 
+// New data for missing metrics
+const surgeonProductivityOverTimeData = [
+  { month: "Jan", cases: 12 },
+  { month: "Feb", cases: 18 },
+  { month: "Mar", cases: 15 },
+  { month: "Apr", cases: 22 },
+  { month: "May", cases: 28 },
+  { month: "Jun", cases: 25 },
+]
+
+const daysToCaseMilestonesData = [
+  { milestone: "2nd Case", avg: 35, median: 30 },
+  { milestone: "3rd Case", avg: 52, median: 45 },
+  { milestone: "6th Case", avg: 95, median: 82 },
+  { milestone: "10th Case", avg: 145, median: 128 },
+]
+
+const secondCaseBookingData = [
+  { category: "Overall", percentage: 68 },
+  { category: "EST", percentage: 72 },
+  { category: "IN", percentage: 58 },
+  { category: "VAL", percentage: 85 },
+  { category: "Podiatry", percentage: 75 },
+  { category: "Hand", percentage: 65 },
+]
+
+const timeMetricsData = [
+  { surgeon: "Dr. Smith", timeActive: 245, timeInactive: 12, monthsSince1st: 8, monthsSince2nd: 7 },
+  { surgeon: "Dr. Johnson", timeActive: 198, timeInactive: 5, monthsSince1st: 6, monthsSince2nd: 5 },
+  { surgeon: "Dr. Williams", timeActive: 312, timeInactive: 18, monthsSince1st: 10, monthsSince2nd: 9 },
+  { surgeon: "Dr. Brown", timeActive: 156, timeInactive: 8, monthsSince1st: 5, monthsSince2nd: 4 },
+  { surgeon: "Dr. Davis", timeActive: 278, timeInactive: 15, monthsSince1st: 9, monthsSince2nd: 8 },
+]
+
+const timeMilestonesData = [
+  { surgeon: "Dr. Smith", monthsTo2PerMonth: 4, monthsTo2PerMonth3Consecutive: 6 },
+  { surgeon: "Dr. Johnson", monthsTo2PerMonth: 3, monthsTo2PerMonth3Consecutive: 5 },
+  { surgeon: "Dr. Williams", monthsTo2PerMonth: 5, monthsTo2PerMonth3Consecutive: 7 },
+  { surgeon: "Dr. Brown", monthsTo2PerMonth: 6, monthsTo2PerMonth3Consecutive: 8 },
+  { surgeon: "Dr. Davis", monthsTo2PerMonth: 4, monthsTo2PerMonth3Consecutive: 6 },
+]
+
+const gracePeriodData = [
+  { status: "In Grace Period", count: 8 },
+  { status: "Past Grace Period", count: 14 },
+]
+
 export default function OverviewPage() {
   const [dateRange, setDateRange] = useState<DateRange>({})
 
@@ -469,6 +516,140 @@ export default function OverviewPage() {
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="productivity" fill="#f59e0b" radius={[0, 4, 4, 0]} />
                 </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* NEW: Surgeon Productivity Over Time */}
+        <Card className="border-border/50 bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Surgeon Productivity - Cases Performed Over Time</CardTitle>
+            <p className="text-xs text-muted-foreground">Sliceable by date range, case number, and user status</p>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={{}} className="h-[250px] w-full">
+              <LineChart data={surgeonProductivityOverTimeData}>
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line type="monotone" dataKey="cases" stroke="#1d99ac" strokeWidth={2} />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* NEW: Days to Case Milestones & Second Case Booking % */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Days to Case Milestones</CardTitle>
+              <p className="text-xs text-muted-foreground">Average time to reach case milestones</p>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <BarChart data={daysToCaseMilestonesData}>
+                  <XAxis dataKey="milestone" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Average" />
+                  <Bar dataKey="median" fill="#10b981" radius={[4, 4, 0, 0]} name="Median" />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">% of Surgeons Booking Second Cases</CardTitle>
+              <p className="text-xs text-muted-foreground">Breakdown by type, region, and specialty</p>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <BarChart data={secondCaseBookingData}>
+                  <XAxis dataKey="category" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="percentage" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* NEW: Time Metrics - Active/Inactive/Normalized */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Time Active vs Inactive (Days)</CardTitle>
+              <p className="text-xs text-muted-foreground">From first case and most recent case</p>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <BarChart data={timeMetricsData}>
+                  <XAxis dataKey="surgeon" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="timeActive" fill="#10b981" radius={[4, 4, 0, 0]} name="Active" />
+                  <Bar dataKey="timeInactive" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Inactive" />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Time Normalized (Months)</CardTitle>
+              <p className="text-xs text-muted-foreground">Months since 1st and 2nd case</p>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <BarChart data={timeMetricsData}>
+                  <XAxis dataKey="surgeon" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="monthsSince1st" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Since 1st Case" />
+                  <Bar dataKey="monthsSince2nd" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Since 2nd Case" />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* NEW: Time Milestones & Grace Period */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Time Milestones (Months)</CardTitle>
+              <p className="text-xs text-muted-foreground">Months to 2 cases/month and 3 consecutive months</p>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <BarChart data={timeMilestonesData}>
+                  <XAxis dataKey="surgeon" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="monthsTo2PerMonth" fill="#ec4899" radius={[4, 4, 0, 0]} name="To 2/month" />
+                  <Bar dataKey="monthsTo2PerMonth3Consecutive" fill="#f59e0b" radius={[4, 4, 0, 0]} name="To 3 consecutive" />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Grace Period Status</CardTitle>
+              <p className="text-xs text-muted-foreground">Surgeons with first case in last 45 days</p>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="h-[250px] w-full">
+                <PieChart>
+                  <Pie data={gracePeriodData} cx="50%" cy="50%" outerRadius={80} dataKey="count" label>
+                    <Cell fill="#10b981" />
+                    <Cell fill="#f59e0b" />
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
               </ChartContainer>
             </CardContent>
           </Card>
