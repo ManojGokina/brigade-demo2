@@ -2,8 +2,14 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus } from "lucide-react"
+import { Plus, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { CaseFiltersComponent } from "@/components/dashboard/case-filters"
 import { CasesTable } from "@/components/dashboard/cases-table"
 import { fetchCases, mapCaseRowToCase, type CasesApiParams } from "@/lib/cases-api"
@@ -12,6 +18,7 @@ import type { CaseFilters, Case, SortField, SortDirection } from "@/types/case"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
+import { api } from "@/lib/api"
 
 const DEFAULT_PAGE_SIZE = 20
 
@@ -202,6 +209,55 @@ export default function CasesPage() {
     // loadCases will be triggered by useEffect
   }, [])
 
+  // Handle export
+  const handleExport = async (period: string) => {
+    try {
+      const params: any = {}
+      const now = new Date()
+      
+      switch (period) {
+        case 'last10days':
+          params.operationDateFrom = new Date(now.setDate(now.getDate() - 10)).toISOString().split('T')[0]
+          break
+        case 'lastmonth':
+          params.operationDateFrom = new Date(now.setMonth(now.getMonth() - 1)).toISOString().split('T')[0]
+          break
+        case 'last3months':
+          params.operationDateFrom = new Date(now.setMonth(now.getMonth() - 3)).toISOString().split('T')[0]
+          break
+        case 'last6months':
+          params.operationDateFrom = new Date(now.setMonth(now.getMonth() - 6)).toISOString().split('T')[0]
+          break
+        case 'lastyear':
+          params.operationDateFrom = new Date(now.setFullYear(now.getFullYear() - 1)).toISOString().split('T')[0]
+          break
+        case 'all':
+          // No date filter
+          break
+      }
+
+      const response = await api.get('/users/cases/export', { params, responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `cases_${period}_${new Date().toISOString().split('T')[0]}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      
+      toast({
+        title: "Export successful",
+        description: "Cases data has been exported",
+      })
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: error?.response?.data?.message || "Failed to export cases",
+      })
+    }
+  }
+
   return (
     <ProtectedRoute>
     <div className="h-full flex flex-col p-6">
@@ -220,13 +276,43 @@ export default function CasesPage() {
                 {pagination.offset > 0 && ` (showing ${pagination.offset + 1}-${Math.min(pagination.offset + pagination.limit, pagination.total)} of ${pagination.total})`}
               </p>
             </div>
-            <Button
-              onClick={() => router.push('/tracker/cases/new')}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add New Case
-            </Button>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="cursor-pointer flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport('last10days')} className="cursor-pointer">
+                    Last 10 Days
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('lastmonth')} className="cursor-pointer">
+                    Last Month
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('last3months')} className="cursor-pointer">
+                    Last 3 Months
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('last6months')} className="cursor-pointer">
+                    Last 6 Months
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('lastyear')} className="cursor-pointer">
+                    Last Year
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('all')} className="cursor-pointer">
+                    Export All
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                onClick={() => router.push('/tracker/cases/new')}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add New Case
+              </Button>
+            </div>
           </div>
         )}
       </div>

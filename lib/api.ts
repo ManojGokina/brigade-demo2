@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://tulavi-backend.kindtree-01686ea2.southindia.azurecontainerapps.io/api/v1';
-
+//const API_BASE_URL = 'https://tulavi-backend.kindtree-01686ea2.southindia.azurecontainerapps.io/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9000/api/v1';
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
