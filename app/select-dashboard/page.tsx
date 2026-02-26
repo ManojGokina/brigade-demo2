@@ -111,7 +111,7 @@ export default function SelectDashboardPage() {
         router.push('/login')
       } else {
         // For other errors, still navigate to the dashboard
-        const route = DASHBOARD_ROUTES[name] || "/tracker/cases/new"
+        const route = DASHBOARD_ROUTES_BY_ID[dashboardId] || "/tracker/cases/new"
         await router.push(route)
       }
     }
@@ -160,45 +160,14 @@ export default function SelectDashboardPage() {
                 Dashboard Hub
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-                Welcome back, {user?.username?.split(" ")[0].charAt(0).toUpperCase() + user?.username?.split(" ")[0].slice(1).toLowerCase()}
+                Welcome back, {(() => {
+                  const firstName = user?.username?.split(" ")[0]
+                  return firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase() : 'User'
+                })()}
               </h1>
               <p className="mt-2 text-muted-foreground">
                 {hasAccess ? "Select a module to access your healthcare analytics workspace" : "Contact your administrator for dashboard access"}
               </p>
-              
-              {/* Platform Overview as chips */}
-              {hasAccess && (
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
-              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#1d99ac" }} />
-                  <span className="text-sm font-semibold" style={{ color: "#1d99ac" }}>
-                      {caseDataLoaded && stats ? stats.totalCases : "..."}
-                    </span>
-                    <span className="text-xs text-muted-foreground">Total Cases</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#10b981" }} />
-                    <span className="text-sm font-semibold" style={{ color: "#10b981" }}>
-                      {caseDataLoaded && stats ? stats.uniqueSurgeons : "..."}
-                    </span>
-                    <span className="text-xs text-muted-foreground">Active Surgeons</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
-                    <span className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
-                      {caseDataLoaded && stats ? stats.uniqueSites : "..."}
-                    </span>
-                    <span className="text-xs text-muted-foreground">Active Sites</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border/50 shadow-sm">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#8b5cf6" }} />
-                    <span className="text-sm font-semibold" style={{ color: "#8b5cf6" }}>
-                      {caseDataLoaded && stats ? stats.totalNervesTreated : "..."}
-                    </span>
-                    <span className="text-xs text-muted-foreground">Nerves Treated</span>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>

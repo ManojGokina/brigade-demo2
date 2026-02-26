@@ -35,7 +35,7 @@ export default function CasesPage() {
     search: "",
   })
 
-  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortField, setSortField] = useState<SortField | undefined>(undefined)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
 
   const { toast } = useToast()
@@ -56,8 +56,10 @@ export default function CasesPage() {
       system: 'systemName',
       training: 'training',
       surgeryPerformed: 'surgeryPerformed',
+      typeOfSurgery: 'useCase',
       neuromaCase: 'isNeuromaCase',
       caseStudy: 'isCaseStudy',
+      tbd: 'tbd',
       survivalDays: 'operationDate',
       survivalWeeks: 'operationDate',
     }
@@ -65,7 +67,7 @@ export default function CasesPage() {
   }
 
   // Convert frontend filters to API params
-  const getApiParams = useCallback((currentFilters: CaseFilters, currentOffset: number = 0, currentSortField?: SortField | null, currentSortDirection?: SortDirection): CasesApiParams => {
+  const getApiParams = useCallback((currentFilters: CaseFilters, currentOffset: number = 0, currentSortField?: SortField, currentSortDirection?: SortDirection): CasesApiParams => {
     const params: CasesApiParams = {
       limit: pagination.limit,
       offset: currentOffset,
@@ -99,6 +101,10 @@ export default function CasesPage() {
       params.region = currentFilters.region
     }
 
+    if (currentFilters.site) {
+      params.site = currentFilters.site
+    }
+
     if (currentFilters.dateFrom) {
       params.operationDateFrom = currentFilters.dateFrom
     }
@@ -117,7 +123,7 @@ export default function CasesPage() {
   }, [pagination.limit])
 
   // Fetch cases from API
-  const loadCases = useCallback(async (currentFilters: CaseFilters, offset: number = 0, currentSortField?: SortField | null, currentSortDirection?: SortDirection) => {
+  const loadCases = useCallback(async (currentFilters: CaseFilters, offset: number = 0, currentSortField?: SortField, currentSortDirection?: SortDirection) => {
     setIsLoading(true)
     setError(null)
 
@@ -234,9 +240,9 @@ export default function CasesPage() {
       <CaseFiltersComponent
         filters={filters}
         onFiltersChange={handleFiltersChange}
-        specialties={[]}
-        regions={[]}
-        surgeons={[]}
+        specialties={specialties}
+        regions={regions}
+        surgeons={surgeons}
       />
 
       <div className="mt-4">

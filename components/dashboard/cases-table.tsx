@@ -257,7 +257,7 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                 <span className="text-xs font-bold text-muted-foreground">Date</span>
               </th>
               <th className="w-[120px] px-3 py-2 text-left border-r border-border/50">
-                <span className="text-xs font-bold text-muted-foreground">Type</span>
+                <span className="text-xs font-bold text-muted-foreground">Case Type</span>
               </th>
               <th className="w-[150px] px-3 py-2 text-left border-r border-border/50">
                 <span className="text-xs font-bold text-muted-foreground">Surgeon</span>
@@ -269,10 +269,10 @@ export function CasesTable({ cases, pagination, sortField: externalSortField, so
                 <span className="text-xs font-bold text-muted-foreground">Specialty</span>
               </th>
               <th className="w-[300px] px-3 py-2 text-left border-r border-border/50">
-                <span className="text-xs font-bold text-muted-foreground">Surgery</span>
+                <span className="text-xs font-bold text-muted-foreground">Surgery Performed</span>
               </th>
               <th className="w-[100px] px-3 py-2 text-left border-r border-border/50">
-                <span className="text-xs font-bold text-muted-foreground">Ext</span>
+                <span className="text-xs font-bold text-muted-foreground">Extremity</span>
               </th>
               <th className="w-[100px] px-3 py-2 text-left border-r border-border/50">
                 <Button

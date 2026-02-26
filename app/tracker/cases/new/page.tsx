@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Save, CheckCircle2, AlertTriangle } from "lucide-react"
+import { fetchCases } from "@/lib/cases-api"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -335,10 +336,10 @@ const REGION_OPTIONS: string[] = [
 ] // M column - Region options (falls back to regions from useCaseStats if empty)
 const TYPE_OF_SURGERY_OPTIONS: string[] = [
   "Capping",
-  "Other",
   "TMR / TMR Adjunct",
   "Sheet",
-  "Wrap"
+  "Wrap",
+  "Other"
 ] // N column - Type of Surgery options
 
 export default function AddCasePage() {
@@ -353,6 +354,22 @@ export default function AddCasePage() {
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [newCaseNo, setNewCaseNo] = useState<number | null>(null)
+  const [latestCaseNo, setLatestCaseNo] = useState<number | null>(null)
+
+  // Fetch latest case number on mount
+  React.useEffect(() => {
+    const fetchLatestCase = async () => {
+      try {
+        const response = await fetchCases({ limit: 1, sortBy: 'caseNumber', sortOrder: 'desc' })
+        if (response.items.length > 0 && response.items[0].caseNumber) {
+          setLatestCaseNo(response.items[0].caseNumber)
+        }
+      } catch (error) {
+        console.error('Failed to fetch latest case:', error)
+      }
+    }
+    fetchLatestCase()
+  }, [])
 
   // Compute dropdown options to avoid key warnings
   const specialtyOptions = SPECIALTY_OPTIONS.length > 0 ? SPECIALTY_OPTIONS : specialties
@@ -495,7 +512,9 @@ export default function AddCasePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Add New Case</h1>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">
+            Add New Case {latestCaseNo !== null && `(Case # ${latestCaseNo + 1})`}
+          </h1>
           <p className="text-xs text-muted-foreground">
             Enter case details to add to the tracker
           </p>

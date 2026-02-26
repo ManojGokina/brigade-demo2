@@ -27,6 +27,7 @@ export interface CaseFilters {
   ueOrLe?: "UE" | "LE" | "all"
   userStatus?: "EST" | "IN" | "VAL" | "all"
   surgeon?: string
+  site?: string
   search?: string
   dateFrom?: string
   dateTo?: string

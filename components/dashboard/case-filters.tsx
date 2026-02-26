@@ -13,6 +13,35 @@ import { Search, X } from "lucide-react"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import type { CaseFilters } from "@/types/case"
 
+const SURGEON_LIST = [
+  "Adams", "Barron", "Benson", "Bozenka", "Brancheau", "Braver", "Brown", "Buczek", "Buczek Jr",
+  "C. Hoover", "Catalano", "Chang", "Chim", "Coleman", "Coye", "D. Wilson", "Dauphinee",
+  "DeGrace", "Desai", "Diamond", "Dowlatshahi", "Drury", "Eberlin", "Eward", "Fallucco",
+  "Felder", "Gatta", "Graves", "Hoover", "Huntsman", "Iyer", "Jack", "Jain", "Janowak",
+  "Kachooie", "Klein", "Knapp", "Kobraei", "Kolovich", "Leversedge", "Li", "Lin", "Liu",
+  "Lorenzana", "Minh Nguyen", "Miranda", "Mithani", "Monin", "Murdock", "Nguyen", "Parker",
+  "Patel", "Quinnan", "Radacanu", "Reeves", "Rekant", "Rodrigues", "Rogers", "Saltzman",
+  "Shane", "Sharma", "Sibley", "Simmons", "Smith", "Styron", "Szipala", "Thomjan",
+  "Victor Greco", "Visgauss", "Wilson", "Wilton", "Yang", "Yurkanin", "Zuniga",
+  "D. Bickley", "Monir", "Neidermeyer", "Park"
+]
+
+const SITE_LIST = [
+  "Advent", "Advent  Apopka", "Advent East", "Advent Health", "Apopka", "ASC Alamo Heights",
+  "Atlanticare", "Austin ASC", "Bayfront", "Bear Creek", "Beaumont", "Brook Army Medical",
+  "BS&W Temple", "BSW Surgicare ASC", "Carrolton Regional", "Center for Outpatient",
+  "Center for Special Surgery", "Center One ASC", "Cincinnati", "Cleveland Clinic", "Deaconess",
+  "Deridder", "Duke ASC", "Duke Main", "Hackensack ASC", "Hankensack Surgery Center",
+  "Holy Cross", "Horizons West", "Hunt Regional", "Innovation Tower", "Inspira Vineland",
+  "IPASC", "Jefferson", "Jewett Orthopedic", "Jewettt Orthopedic", "King of Prussia",
+  "KPRC", "KPSJC", "Lehigh Valley", "LSU", "Memorial Village ASC", "MGH", "Mt Sinai",
+  "Mullica Hill", "Northside", "Optim", "Orlando Health", "ORMC", "Overlook Medical",
+  "Palms of Pasadena", "PENN", "Riverside", "St. Anthonys", "St. Lukes", "St. Marys",
+  "Stanford", "Sturdy", "Temple VA", "Toledo", "Townsend", "Univ of Colorado",
+  "University Hospital", "UT Southwestern", "Valley Regional", "Wake Med Cary", "WESC",
+  "Wood County"
+]
+
 interface CaseFiltersComponentProps {
   filters: CaseFilters
   onFiltersChange: (filters: CaseFilters) => void
@@ -36,7 +65,11 @@ export function CaseFiltersComponent({
     filters.userStatus !== "all" ||
     filters.search ||
     filters.dateFrom ||
-    filters.dateTo
+    filters.dateTo ||
+    filters.surgeon ||
+    filters.site ||
+    filters.specialty ||
+    filters.region
 
   const clearFilters = () => {
     onFiltersChange({
@@ -46,6 +79,10 @@ export function CaseFiltersComponent({
       search: "",
       dateFrom: undefined,
       dateTo: undefined,
+      surgeon: undefined,
+      site: undefined,
+      specialty: undefined,
+      region: undefined,
     })
   }
 
@@ -70,38 +107,59 @@ export function CaseFiltersComponent({
       />
 
       <Select
-        value={filters.type || "all"}
+        value={filters.surgeon || "all"}
         onValueChange={(value) =>
-          onFiltersChange({ ...filters, type: value as CaseFilters["type"] })
+          onFiltersChange({ ...filters, surgeon: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className={`w-[130px] bg-white border-border text-foreground cursor-pointer ${
-          filters.type !== "all" ? "ring-2 ring-primary border-primary" : ""
+        <SelectTrigger className={`w-[150px] bg-white border-border text-foreground cursor-pointer ${
+          filters.surgeon ? "ring-2 ring-primary border-primary" : ""
         }`}>
-          <SelectValue placeholder="Type" />
+          <SelectValue placeholder="Surgeon" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="cursor-pointer">All Types</SelectItem>
-          <SelectItem value="Primary" className="cursor-pointer">Primary</SelectItem>
-          <SelectItem value="Revision" className="cursor-pointer">Revision</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All Surgeons</SelectItem>
+          {SURGEON_LIST.map((surgeon) => (
+            <SelectItem key={surgeon} value={surgeon} className="cursor-pointer">{surgeon}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
       <Select
-        value={filters.ueOrLe || "all"}
+        value={filters.site || "all"}
         onValueChange={(value) =>
-          onFiltersChange({ ...filters, ueOrLe: value as CaseFilters["ueOrLe"] })
+          onFiltersChange({ ...filters, site: value === "all" ? undefined : value })
         }
       >
-        <SelectTrigger className={`w-[120px] bg-white border-border text-foreground cursor-pointer ${
-          filters.ueOrLe !== "all" ? "ring-2 ring-primary border-primary" : ""
+        <SelectTrigger className={`w-[130px] bg-white border-border text-foreground cursor-pointer ${
+          filters.site ? "ring-2 ring-primary border-primary" : ""
         }`}>
-          <SelectValue placeholder="Extremity" />
+          <SelectValue placeholder="Site" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="cursor-pointer">All</SelectItem>
-          <SelectItem value="UE" className="cursor-pointer">Upper (UE)</SelectItem>
-          <SelectItem value="LE" className="cursor-pointer">Lower (LE)</SelectItem>
+          <SelectItem value="all" className="cursor-pointer">All Sites</SelectItem>
+          {SITE_LIST.map((site) => (
+            <SelectItem key={site} value={site} className="cursor-pointer">{site}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={filters.specialty || "all"}
+        onValueChange={(value) =>
+          onFiltersChange({ ...filters, specialty: value === "all" ? undefined : value })
+        }
+      >
+        <SelectTrigger className={`w-[140px] bg-white border-border text-foreground cursor-pointer ${
+          filters.specialty ? "ring-2 ring-primary border-primary" : ""
+        }`}>
+          <SelectValue placeholder="Specialty" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all" className="cursor-pointer">All Specialties</SelectItem>
+          {specialties.map((specialty) => (
+            <SelectItem key={specialty} value={specialty} className="cursor-pointer">{specialty}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
