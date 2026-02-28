@@ -185,8 +185,7 @@ export function DateRangePicker({
     setStartDate(null)
     setEndDate(null)
     setSelectedPreset("custom")
-    onChange?.({ from: undefined, to: undefined })
-    setOpen(false)
+    onChange?.({})  
   }
 
   const renderCalendar = (month: Date, isLeft: boolean) => {

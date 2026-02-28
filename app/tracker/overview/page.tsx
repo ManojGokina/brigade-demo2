@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import type { DateRange } from "@/components/ui/date-range-picker"
@@ -35,19 +36,36 @@ export default function OverviewPage() {
 
   // Get unique surgeons, regions, specialties
   const surgeonsList = useMemo(() => {
-    const surgeons = new Set(casesData.map((c: any) => c.surgeon).filter(Boolean))
+    let filteredCases = casesData
+    if (dateRange.from) filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
+    if (dateRange.to) filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
+    const surgeons = new Set(filteredCases.map((c: any) => c.surgeon).filter(Boolean))
     return Array.from(surgeons).sort()
-  }, [])
+  }, [dateRange])
 
   const regionsList = useMemo(() => {
-    const regions = new Set(casesData.map((c: any) => c.region).filter(Boolean))
+    let filteredCases = casesData
+    if (dateRange.from) filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
+    if (dateRange.to) filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
+    const regions = new Set(filteredCases.map((c: any) => c.region).filter(Boolean))
     return Array.from(regions).sort()
-  }, [])
+  }, [dateRange])
 
   const specialtiesList = useMemo(() => {
-    const specialties = new Set(casesData.map((c: any) => c.specialty).filter(Boolean))
+    let filteredCases = casesData
+    if (dateRange.from) filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
+    if (dateRange.to) filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
+    const specialties = new Set(filteredCases.map((c: any) => c.specialty).filter(Boolean))
     return Array.from(specialties).sort()
-  }, [])
+  }, [dateRange])
+
+  // Filtered cases data based on date range
+  const filteredCasesData = useMemo(() => {
+    let filtered = casesData
+    if (dateRange.from) filtered = filtered.filter((c: any) => c.operationDate >= dateRange.from!)
+    if (dateRange.to) filtered = filtered.filter((c: any) => c.operationDate <= dateRange.to!)
+    return filtered
+  }, [dateRange])
 
   // QoQ Growth Data
   const qoqYears = useMemo(() => {
@@ -516,14 +534,26 @@ export default function OverviewPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
             <p className="text-sm text-muted-foreground">Quarterly analytics and surgeon performance metrics</p>
           </div>
-          <DateRangePicker
-            value={dateRange}
-            onChange={setDateRange}
-            placeholder="Select Date Range"
-          />
+          <div className="flex gap-2 items-center">
+            <DateRangePicker
+              value={dateRange}
+              onChange={setDateRange}
+              placeholder="Select Date Range"
+            />
+            {(dateRange.from || dateRange.to) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDateRange({})}
+                className="h-9"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
-        <StatsCards data={casesData} />
+        <StatsCards data={filteredCasesData} />
 
         <SurgeonProductivityOverTime 
           data={surgeonProductivityOverTimeData} 
