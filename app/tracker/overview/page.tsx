@@ -70,16 +70,16 @@ export default function OverviewPage() {
   // QoQ Growth Data
   const qoqYears = useMemo(() => {
     const years = new Set<number>()
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (c.operationDate) years.add(new Date(c.operationDate).getFullYear())
     })
     const currentYear = new Date().getFullYear()
     return Array.from(years).filter(y => y <= currentYear).sort().map(String)
-  }, [])
+  }, [filteredCasesData])
 
   const qoqGrowthData = useMemo(() => {
     const quarterlyData: Record<string, { cases: number; surgeons: Set<string> }> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.operationDate) return
       const date = new Date(c.operationDate)
       const year = date.getFullYear()
@@ -98,12 +98,12 @@ export default function OverviewPage() {
       surgeons: quarterlyData[quarter]?.surgeons.size || 0,
       productivity: quarterlyData[quarter] ? +(quarterlyData[quarter].cases / quarterlyData[quarter].surgeons.size).toFixed(2) : 0
     }))
-  }, [qoqYear])
+  }, [qoqYear, filteredCasesData])
 
   // Cases by Region
   const casesByRegionData = useMemo(() => {
     const regionData: Record<string, { cases: number; surgeons: Set<string> }> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.region) return
       if (!regionData[c.region]) regionData[c.region] = { cases: 0, surgeons: new Set() }
       regionData[c.region].cases++
@@ -114,12 +114,12 @@ export default function OverviewPage() {
       cases: data.cases,
       surgeons: data.surgeons.size
     }))
-  }, [])
+  }, [filteredCasesData])
 
   // Productivity by User Type
   const productivityByUserTypeData = useMemo(() => {
     const quarterlyUserData: Record<string, Record<string, { cases: number; surgeons: Set<string> }>> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.operationDate || !c.userStatus) return
       const date = new Date(c.operationDate)
       const quarter = `Q${Math.floor(date.getMonth() / 3) + 1}`
@@ -137,23 +137,23 @@ export default function OverviewPage() {
         IN: userData.IN ? +(userData.IN.cases / userData.IN.surgeons.size).toFixed(1) : 0,
         VAL: userData.VAL ? +(userData.VAL.cases / userData.VAL.surgeons.size).toFixed(1) : 0
       }))
-  }, [])
+  }, [filteredCasesData])
 
   // Surgeons by Specialty
   const surgeonsBySpecialtyData = useMemo(() => {
     const specialtyData: Record<string, Set<string>> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.specialty || !c.surgeon) return
       if (!specialtyData[c.specialty]) specialtyData[c.specialty] = new Set()
       specialtyData[c.specialty].add(c.surgeon)
     })
     return Object.entries(specialtyData).map(([name, surgeons]) => ({ name, value: surgeons.size }))
-  }, [])
+  }, [filteredCasesData])
 
   // Surgeons by Case Load
   const surgeonsByCaseLoadData = useMemo(() => {
     const surgeonCases: Record<string, number> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon) return
       surgeonCases[c.surgeon] = (surgeonCases[c.surgeon] || 0) + 1
     })
@@ -165,11 +165,11 @@ export default function OverviewPage() {
       else ranges["21+ cases"]++
     })
     return Object.entries(ranges).map(([name, value]) => ({ name, value }))
-  }, [])
+  }, [filteredCasesData])
 
   // Top 10 by Case Load
   const top10ByCaseLoadData = useMemo(() => {
-    let filteredCases = casesData
+    let filteredCases = filteredCasesData
     if (topPerformersRegion !== "all") filteredCases = filteredCases.filter((c: any) => c.region === topPerformersRegion)
     if (topPerformersSpecialty !== "all") filteredCases = filteredCases.filter((c: any) => c.specialty === topPerformersSpecialty)
     
@@ -182,12 +182,12 @@ export default function OverviewPage() {
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([name, cases]) => ({ name, cases }))
-  }, [topPerformersRegion, topPerformersSpecialty])
+  }, [topPerformersRegion, topPerformersSpecialty, filteredCasesData])
 
   // Top 10 by Neuroma Cases
   const top10ByNeuromaData = useMemo(() => {
     const surgeonNeuroma: Record<string, number> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.isNeuromaCase) return
       surgeonNeuroma[c.surgeon] = (surgeonNeuroma[c.surgeon] || 0) + 1
     })
@@ -195,12 +195,12 @@ export default function OverviewPage() {
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([name, cases]) => ({ name, cases }))
-  }, [])
+  }, [filteredCasesData])
 
   // Top 10 by Productivity
   const top10ByProductivityData = useMemo(() => {
     const surgeonData: Record<string, { cases: number; months: Set<string> }> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (!surgeonData[c.surgeon]) surgeonData[c.surgeon] = { cases: 0, months: new Set() }
       surgeonData[c.surgeon].cases++
@@ -211,11 +211,11 @@ export default function OverviewPage() {
       .map(([name, data]) => ({ name, productivity: +(data.cases / data.months.size).toFixed(1) }))
       .sort((a, b) => b.productivity - a.productivity)
       .slice(0, 10)
-  }, [])
+  }, [filteredCasesData])
 
   // Combined Top Performers Data
   const topPerformersTableData = useMemo(() => {
-    let filteredCases = casesData
+    let filteredCases = filteredCasesData
     if (topPerformersRegion !== "all") filteredCases = filteredCases.filter((c: any) => c.region === topPerformersRegion)
     if (topPerformersSpecialty !== "all") filteredCases = filteredCases.filter((c: any) => c.specialty === topPerformersSpecialty)
 
@@ -249,12 +249,12 @@ export default function OverviewPage() {
       specialty: stats.specialty,
       productivity: stats.months.size > 0 ? +(stats.totalCases / stats.months.size) : 0
     }))
-  }, [topPerformersRegion, topPerformersSpecialty])
+  }, [topPerformersRegion, topPerformersSpecialty, filteredCasesData])
 
   // Days to Case Milestones
   const daysToCaseMilestonesData = useMemo(() => {
     const surgeonCases: Record<string, string[]> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (daysToCaseSurgeon !== "all" && c.surgeon !== daysToCaseSurgeon) return
       if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
@@ -275,13 +275,13 @@ export default function OverviewPage() {
       const median = days.length > 0 ? days.sort((a, b) => a - b)[Math.floor(days.length / 2)] : 0
       return { milestone: `${milestone}${milestone === 2 ? 'nd' : milestone === 3 ? 'rd' : 'th'} Case`, avg, median }
     })
-  }, [daysToCaseSurgeon])
+  }, [daysToCaseSurgeon, filteredCasesData])
 
   // Days Between Cases - Sequential for selected surgeon
   const daysBetweenCasesData = useMemo(() => {
     if (daysBetweenCasesSurgeon === "all") return []
     
-    const surgeonCases = casesData
+    const surgeonCases = filteredCasesData
       .filter((c: any) => c.surgeon === daysBetweenCasesSurgeon && c.operationDate)
       .map((c: any) => c.operationDate)
       .sort()
@@ -305,7 +305,7 @@ export default function OverviewPage() {
       })
     }
     return result
-  }, [daysBetweenCasesSurgeon])
+  }, [daysBetweenCasesSurgeon, filteredCasesData])
 
   // Second Case Booking Data - Sequential
   const secondCaseBookingData = useMemo(() => {
@@ -314,7 +314,7 @@ export default function OverviewPage() {
     cutoffDate.setDate(cutoffDate.getDate() - excludeDays)
     
     let surgeonCases: Record<string, any[]> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (secondCaseStatus !== "all" && c.userStatus !== secondCaseStatus) return
       if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
@@ -361,13 +361,13 @@ export default function OverviewPage() {
       let withSecond = Object.values(surgeons).filter(cases => cases.length >= 2).length
       return { category, percentage: total > 0 ? Math.round((withSecond / total) * 100) : 0 }
     }).sort((a, b) => b.percentage - a.percentage)
-  }, [secondCaseExcludeDays, secondCaseStatus, secondCaseBreakdown])
+  }, [secondCaseExcludeDays, secondCaseStatus, secondCaseBreakdown, filteredCasesData])
 
   // Time to Second Case (QoQ)
   const timeToSecondCaseData = useMemo(() => {
     const quarterlyData: Record<string, number[]> = {}
     const surgeonCases: Record<string, any[]> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
       surgeonCases[c.surgeon].push(c)
@@ -393,12 +393,12 @@ export default function OverviewPage() {
         median: days.sort((a, b) => a - b)[Math.floor(days.length / 2)],
         max: Math.max(...days)
       }))
-  }, [])
+  }, [filteredCasesData])
 
   // Time Metrics & Milestones (placeholder - complex calculations)
   const timeMetricsData = useMemo(() => {
     const surgeonData: Record<string, { firstCase: string; lastCase: string }> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (!surgeonData[c.surgeon]) {
         surgeonData[c.surgeon] = { firstCase: c.operationDate, lastCase: c.operationDate }
@@ -431,13 +431,13 @@ export default function OverviewPage() {
       })
       .sort((a, b) => b.timeActive - a.timeActive)
       .slice(0, 10)
-  }, [timeUnit])
+  }, [timeUnit, filteredCasesData])
   const timeMilestonesData = useMemo(() => [], [])
   const gracePeriodData = useMemo(() => {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - 45)
     const surgeonFirstCase: Record<string, string> = {}
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (!surgeonFirstCase[c.surgeon] || c.operationDate < surgeonFirstCase[c.surgeon]) {
         surgeonFirstCase[c.surgeon] = c.operationDate
@@ -449,13 +449,13 @@ export default function OverviewPage() {
       else pastGrace++
     })
     return [{ status: "In Grace Period", count: inGrace }, { status: "Past Grace Period", count: pastGrace }]
-  }, [])
+  }, [filteredCasesData])
 
   // Survival Time Data
   const survivalTimeData = useMemo(() => {
     const surgeonData: Record<string, number[]> = {}
     const today = new Date()
-    casesData.forEach((c: any) => {
+    filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (!surgeonData[c.surgeon]) surgeonData[c.surgeon] = []
       const daysSince = Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24))
@@ -468,7 +468,7 @@ export default function OverviewPage() {
       }))
       .sort((a, b) => b.avgDays - a.avgDays)
       .slice(0, 10)
-  }, [])
+  }, [filteredCasesData])
 
   // Calculate Surgeon Productivity Over Time from real data
   const surgeonProductivityOverTimeData = useMemo(() => {
