@@ -9,7 +9,7 @@ import casesData from "@/data/cases.json"
 import { QoQGrowthProgression } from "@/components/overview/qoq-growth-charts"
 import { ProductivityByUserType, TimeToSecondCase } from "@/components/overview/productivity-charts"
 import { CasesByRegion, SurgeonsBySpecialty, SurgeonsByCaseLoad } from "@/components/overview/region-specialty-charts"
-import { Top10ByCaseLoad, Top10ByNeuroma, Top10ByProductivity } from "@/components/overview/top-performers-charts"
+import { TopPerformersTable } from "@/components/overview/top-performers-table"
 import { SurgeonProductivityOverTime } from "@/components/overview/surgeon-productivity-chart"
 import { DaysToCaseMilestones, DaysBetweenCases } from "@/components/overview/milestone-charts"
 import { SecondCaseBooking } from "@/components/overview/second-case-booking-chart"
@@ -22,6 +22,7 @@ export default function OverviewPage() {
   const [caseFilter, setCaseFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [surgeonFilter, setSurgeonFilter] = useState<string>("all")
+  const [topPerformersView, setTopPerformersView] = useState<string>("caseLoad")
   const [topPerformersRegion, setTopPerformersRegion] = useState<string>("all")
   const [topPerformersSpecialty, setTopPerformersSpecialty] = useState<string>("all")
   const [secondCaseExcludeDays, setSecondCaseExcludeDays] = useState<string>("0")
@@ -29,6 +30,8 @@ export default function OverviewPage() {
   const [secondCaseBreakdown, setSecondCaseBreakdown] = useState<string>("overall")
   const [timeUnit, setTimeUnit] = useState<string>("days")
   const [qoqYear, setQoqYear] = useState<string>(new Date().getFullYear().toString())
+  const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string>("all")
+  const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string>("all")
 
   // Get unique surgeons, regions, specialties
   const surgeonsList = useMemo(() => {
@@ -192,11 +195,50 @@ export default function OverviewPage() {
       .slice(0, 10)
   }, [])
 
+  // Combined Top Performers Data
+  const topPerformersTableData = useMemo(() => {
+    let filteredCases = casesData
+    if (topPerformersRegion !== "all") filteredCases = filteredCases.filter((c: any) => c.region === topPerformersRegion)
+    if (topPerformersSpecialty !== "all") filteredCases = filteredCases.filter((c: any) => c.specialty === topPerformersSpecialty)
+
+    const surgeonStats: Record<string, { totalCases: number; neuromaCases: number; region: string; specialty: string; months: Set<string> }> = {}
+    
+    filteredCases.forEach((c: any) => {
+      if (!c.surgeon) return
+      if (!surgeonStats[c.surgeon]) {
+        surgeonStats[c.surgeon] = {
+          totalCases: 0,
+          neuromaCases: 0,
+          region: c.region || "Unknown",
+          specialty: c.specialty || "Unknown",
+          months: new Set()
+        }
+      }
+      surgeonStats[c.surgeon].totalCases++
+      if (c.isNeuromaCase) surgeonStats[c.surgeon].neuromaCases++
+      if (c.operationDate) {
+        const monthKey = c.operationDate.substring(0, 7)
+        surgeonStats[c.surgeon].months.add(monthKey)
+      }
+    })
+
+    return Object.entries(surgeonStats).map(([surgeon, stats], index) => ({
+      rank: index + 1,
+      surgeon,
+      totalCases: stats.totalCases,
+      neuromaCases: stats.neuromaCases,
+      region: stats.region,
+      specialty: stats.specialty,
+      productivity: stats.months.size > 0 ? +(stats.totalCases / stats.months.size) : 0
+    }))
+  }, [topPerformersRegion, topPerformersSpecialty])
+
   // Days to Case Milestones
   const daysToCaseMilestonesData = useMemo(() => {
     const surgeonCases: Record<string, string[]> = {}
     casesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
+      if (daysToCaseSurgeon !== "all" && c.surgeon !== daysToCaseSurgeon) return
       if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
       surgeonCases[c.surgeon].push(c.operationDate)
     })
@@ -215,34 +257,39 @@ export default function OverviewPage() {
       const median = days.length > 0 ? days.sort((a, b) => a - b)[Math.floor(days.length / 2)] : 0
       return { milestone: `${milestone}${milestone === 2 ? 'nd' : milestone === 3 ? 'rd' : 'th'} Case`, avg, median }
     })
-  }, [])
+  }, [daysToCaseSurgeon])
 
-  // Days Between Cases
+  // Days Between Cases - Sequential for selected surgeon
   const daysBetweenCasesData = useMemo(() => {
-    const surgeonCases: Record<string, string[]> = {}
-    casesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
-      surgeonCases[c.surgeon].push(c.operationDate)
-    })
+    if (daysBetweenCasesSurgeon === "all") return []
     
-    const ranges = [{ from: 2, to: 6, label: "2nd to 6th" }, { from: 6, to: 10, label: "6th to 10th" }, { from: 1, to: 3, label: "1st to 3rd" }, { from: 3, to: 6, label: "3rd to 6th" }]
-    return ranges.map(({ from, to, label }) => {
-      const days: number[] = []
-      Object.values(surgeonCases).forEach(dates => {
-        if (dates.length >= to) {
-          const sorted = dates.sort()
-          const daysDiff = Math.floor((new Date(sorted[to - 1]).getTime() - new Date(sorted[from - 1]).getTime()) / (1000 * 60 * 60 * 24))
-          days.push(daysDiff)
-        }
+    const surgeonCases = casesData
+      .filter((c: any) => c.surgeon === daysBetweenCasesSurgeon && c.operationDate)
+      .map((c: any) => c.operationDate)
+      .sort()
+    
+    if (surgeonCases.length < 1) return []
+    
+    const result = [
+      {
+        caseNumber: "Case 1",
+        days: 0,
+        date: surgeonCases[0]
+      }
+    ]
+    
+    for (let i = 1; i < surgeonCases.length; i++) {
+      const days = Math.floor((new Date(surgeonCases[i]).getTime() - new Date(surgeonCases[i - 1]).getTime()) / (1000 * 60 * 60 * 24))
+      result.push({
+        caseNumber: `Case ${i + 1}`,
+        days,
+        date: surgeonCases[i]
       })
-      const avg = days.length > 0 ? Math.round(days.reduce((a, b) => a + b, 0) / days.length) : 0
-      const median = days.length > 0 ? days.sort((a, b) => a - b)[Math.floor(days.length / 2)] : 0
-      return { milestone: label, avg, median }
-    })
-  }, [])
+    }
+    return result
+  }, [daysBetweenCasesSurgeon])
 
-  // Second Case Booking Data
+  // Second Case Booking Data - Sequential
   const secondCaseBookingData = useMemo(() => {
     const excludeDays = parseInt(secondCaseExcludeDays)
     const cutoffDate = new Date()
@@ -256,21 +303,33 @@ export default function OverviewPage() {
       surgeonCases[c.surgeon].push(c)
     })
     
+    // Filter surgeons based on exclude days
+    const eligibleSurgeons = Object.entries(surgeonCases).filter(([surgeon, cases]) => {
+      const sorted = cases.sort((a, b) => a.operationDate.localeCompare(b.operationDate))
+      return excludeDays === 0 || new Date(sorted[0].operationDate) < cutoffDate
+    })
+    
     if (secondCaseBreakdown === "overall") {
-      let total = 0, withSecond = 0
-      Object.values(surgeonCases).forEach(cases => {
-        const sorted = cases.sort((a, b) => a.operationDate.localeCompare(b.operationDate))
-        if (excludeDays === 0 || new Date(sorted[0].operationDate) < cutoffDate) {
-          total++
-          if (sorted.length >= 2) withSecond++
-        }
-      })
-      return [{ category: "Overall", percentage: total > 0 ? Math.round((withSecond / total) * 100) : 0 }]
+      // Sequential: Show % who reached 2nd, 3rd, 4th, etc. case
+      const maxCases = Math.max(...eligibleSurgeons.map(([, cases]) => cases.length))
+      const result = []
+      
+      for (let i = 2; i <= Math.min(maxCases, 10); i++) {
+        const surgeonsWithCase = eligibleSurgeons.filter(([, cases]) => cases.length >= i).length
+        const percentage = eligibleSurgeons.length > 0 ? Math.round((surgeonsWithCase / eligibleSurgeons.length) * 100) : 0
+        result.push({
+          category: `${i}${i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Case`,
+          percentage
+        })
+      }
+      return result
     }
     
+    // Breakdown by type/region/specialty
     const groupKey = secondCaseBreakdown === "userType" ? "userStatus" : secondCaseBreakdown === "region" ? "region" : "specialty"
     const grouped: Record<string, Record<string, any[]>> = {}
-    Object.entries(surgeonCases).forEach(([surgeon, cases]) => {
+    
+    eligibleSurgeons.forEach(([surgeon, cases]) => {
       cases.forEach(c => {
         const key = c[groupKey] || "Unknown"
         if (!grouped[key]) grouped[key] = {}
@@ -280,14 +339,8 @@ export default function OverviewPage() {
     })
     
     return Object.entries(grouped).map(([category, surgeons]) => {
-      let total = 0, withSecond = 0
-      Object.values(surgeons).forEach(cases => {
-        const sorted = cases.sort((a, b) => a.operationDate.localeCompare(b.operationDate))
-        if (excludeDays === 0 || new Date(sorted[0].operationDate) < cutoffDate) {
-          total++
-          if (sorted.length >= 2) withSecond++
-        }
-      })
+      let total = Object.keys(surgeons).length
+      let withSecond = Object.values(surgeons).filter(cases => cases.length >= 2).length
       return { category, percentage: total > 0 ? Math.round((withSecond / total) * 100) : 0 }
     }).sort((a, b) => b.percentage - a.percentage)
   }, [secondCaseExcludeDays, secondCaseStatus, secondCaseBreakdown])
@@ -440,8 +493,16 @@ export default function OverviewPage() {
     // Apply case number filter
     if (caseFilter === "since1st") {
       return sortedData
+    } else if (caseFilter === "since2nd" && sortedData.length > 1) {
+      return sortedData.slice(1)
     } else if (caseFilter === "since3rd" && sortedData.length > 2) {
       return sortedData.slice(2)
+    } else if (caseFilter === "since4th" && sortedData.length > 3) {
+      return sortedData.slice(3)
+    } else if (caseFilter === "since5th" && sortedData.length > 4) {
+      return sortedData.slice(4)
+    } else if (caseFilter === "since6th" && sortedData.length > 5) {
+      return sortedData.slice(5)
     }
 
     return sortedData
@@ -475,39 +536,32 @@ export default function OverviewPage() {
           onStatusChange={setStatusFilter} 
         />
 
-        <QoQGrowthProgression data={qoqGrowthData} year={qoqYear} years={qoqYears} onYearChange={setQoqYear} />
-
         <div className="grid gap-4 md:grid-cols-2">
-          <ProductivityByUserType data={productivityByUserTypeData} />
-          <TimeToSecondCase data={timeToSecondCaseData} />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <CasesByRegion data={casesByRegionData} />
-          <SurgeonsBySpecialty data={surgeonsBySpecialtyData} />
-          <SurgeonsByCaseLoad data={surgeonsByCaseLoadData} />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <Top10ByCaseLoad 
-            data={top10ByCaseLoadData} 
-            regions={regionsList} 
-            specialties={specialtiesList} 
-            regionFilter={topPerformersRegion} 
-            specialtyFilter={topPerformersSpecialty} 
-            onRegionChange={setTopPerformersRegion} 
-            onSpecialtyChange={setTopPerformersSpecialty} 
+          <DaysToCaseMilestones 
+            data={daysToCaseMilestonesData} 
+            surgeons={surgeonsList} 
+            surgeonFilter={daysToCaseSurgeon} 
+            onSurgeonChange={setDaysToCaseSurgeon} 
           />
-          <Top10ByNeuroma data={top10ByNeuromaData} />
-          <Top10ByProductivity data={top10ByProductivityData} />
+          <DaysBetweenCases 
+            data={daysBetweenCasesData} 
+            surgeons={surgeonsList} 
+            surgeonFilter={daysBetweenCasesSurgeon} 
+            onSurgeonChange={setDaysBetweenCasesSurgeon} 
+          />
         </div>
 
-        
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <DaysToCaseMilestones data={daysToCaseMilestonesData} />
-          <DaysBetweenCases data={daysBetweenCasesData} />
-        </div>
+        <TopPerformersTable 
+          data={topPerformersTableData} 
+          regions={regionsList} 
+          specialties={specialtiesList} 
+          viewType={topPerformersView} 
+          regionFilter={topPerformersRegion} 
+          specialtyFilter={topPerformersSpecialty} 
+          onViewTypeChange={setTopPerformersView} 
+          onRegionChange={setTopPerformersRegion} 
+          onSpecialtyChange={setTopPerformersSpecialty} 
+        />
 
         <SecondCaseBooking 
           data={secondCaseBookingData} 
@@ -522,6 +576,19 @@ export default function OverviewPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
           <TimeNormalized data={timeMetricsData} />
+        </div>
+
+        <QoQGrowthProgression data={qoqGrowthData} year={qoqYear} years={qoqYears} onYearChange={setQoqYear} />
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <ProductivityByUserType data={productivityByUserTypeData} />
+          <TimeToSecondCase data={timeToSecondCaseData} />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <CasesByRegion data={casesByRegionData} />
+          <SurgeonsBySpecialty data={surgeonsBySpecialtyData} />
+          <SurgeonsByCaseLoad data={surgeonsByCaseLoadData} />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
