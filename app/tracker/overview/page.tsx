@@ -33,6 +33,7 @@ export default function OverviewPage() {
   const [qoqYear, setQoqYear] = useState<string>(new Date().getFullYear().toString())
   const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string>("all")
   const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string>("all")
+  const [survivalTimeSurgeon, setSurvivalTimeSurgeon] = useState<string>("all")
 
   // Get unique surgeons, regions, specialties
   const surgeonsList = useMemo(() => {
@@ -430,7 +431,6 @@ export default function OverviewPage() {
         }
       })
       .sort((a, b) => b.timeActive - a.timeActive)
-      .slice(0, 10)
   }, [timeUnit, filteredCasesData])
   const timeMilestonesData = useMemo(() => [], [])
   const gracePeriodData = useMemo(() => {
@@ -457,6 +457,7 @@ export default function OverviewPage() {
     const today = new Date()
     filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
+      if (survivalTimeSurgeon !== "all" && c.surgeon !== survivalTimeSurgeon) return
       if (!surgeonData[c.surgeon]) surgeonData[c.surgeon] = []
       const daysSince = Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24))
       surgeonData[c.surgeon].push(daysSince)
@@ -467,8 +468,7 @@ export default function OverviewPage() {
         avgDays: Math.round(days.reduce((a, b) => a + b, 0) / days.length)
       }))
       .sort((a, b) => b.avgDays - a.avgDays)
-      .slice(0, 10)
-  }, [filteredCasesData])
+  }, [filteredCasesData, survivalTimeSurgeon])
 
   // Calculate Surgeon Productivity Over Time from real data
   const surgeonProductivityOverTimeData = useMemo(() => {
@@ -607,6 +607,12 @@ export default function OverviewPage() {
           <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
           <TimeNormalized data={timeMetricsData} />
         </div>
+        <SurvivalTime 
+          data={survivalTimeData} 
+          surgeons={surgeonsList} 
+          surgeonFilter={survivalTimeSurgeon} 
+          onSurgeonChange={setSurvivalTimeSurgeon} 
+        />
 
         <QoQGrowthProgression data={qoqGrowthData} year={qoqYear} years={qoqYears} onYearChange={setQoqYear} />
 
@@ -626,7 +632,7 @@ export default function OverviewPage() {
           <GracePeriodStatus data={gracePeriodData} />
         </div>
 
-        <SurvivalTime data={survivalTimeData} />
+       
       </div>
     </ProtectedRoute>
   )
