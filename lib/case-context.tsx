@@ -74,7 +74,7 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
       setCases(storedCases)
     } else {
       // Use initial data from JSON
-      setCases(initialCasesData as Case[])
+      setCases(initialCasesData as any)
     }
     setIsLoaded(true)
   }, [])
@@ -114,7 +114,7 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const resetToInitial = useCallback((): void => {
-    setCases(initialCasesData as Case[])
+    setCases(initialCasesData as any)
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEY)
     }
@@ -145,11 +145,12 @@ export function useCases() {
 }
 
 // Hook for computed stats and aggregations with optional filters
+// Hook for computed stats and aggregations with optional filters
 export function useCaseStats(filters?: CaseFilters) {
   const { cases, isLoaded } = useCases()
 
   return useMemo(() => {
-    if (!isLoaded || cases.length === 0) {
+    if (!isLoaded || !cases || cases.length === 0) {
       return {
         isLoaded,
         stats: null,
@@ -168,28 +169,72 @@ export function useCaseStats(filters?: CaseFilters) {
       }
     }
 
-    // Get all unique values from ALL cases (not filtered) for filter dropdowns
-    const allSpecialties = [...new Set(cases.map((c) => c.specialty))].sort()
-    const allRegions = [...new Set(cases.map((c) => c.region))].sort()
-    const allSurgeons = [...new Set(cases.map((c) => c.surgeon))].sort()
-    const allSites = [...new Set(cases.map((c) => c.site))].sort()
+    // ---------- Helpers (important for safety) ----------
+    const safeString = (val: any, fallback = "Unknown") =>
+      typeof val === "string" && val.trim() ? val : fallback
 
-    // Apply filters if provided
+    const safeNumber = (val: any) =>
+      typeof val === "number" && !isNaN(val) ? val : 0
+
+    const getMonthFromDate = (date?: string) => {
+      if (!date || typeof date !== "string") return null
+      const [month] = date.split("/")
+      const monthNum = parseInt(month)
+      if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) return null
+
+      return new Date(2024, monthNum - 1).toLocaleString("en-US", {
+        month: "short",
+      })
+    }
+
+    // ---------- Unique values for filters ----------
+    const allSpecialties = [
+      ...new Set(cases.map((c) => safeString(c.specialty))),
+    ].sort()
+
+    const allRegions = [
+      ...new Set(cases.map((c) => safeString(c.region))),
+    ].sort()
+
+    const allSurgeons = [
+      ...new Set(cases.map((c) => safeString(c.surgeon))),
+    ].sort()
+
+    const allSites = [
+      ...new Set(cases.map((c) => safeString(c.site))),
+    ].sort()
+
+    // ---------- Apply filters ----------
     const filteredCases = filters ? filterCases(cases, filters) : cases
 
-    const uniqueSurgeons = [...new Set(filteredCases.map((c) => c.surgeon))]
-    const uniqueSites = [...new Set(filteredCases.map((c) => c.site))]
+    const uniqueSurgeons = [
+      ...new Set(filteredCases.map((c) => safeString(c.surgeon))),
+    ]
 
+    const uniqueSites = [
+      ...new Set(filteredCases.map((c) => safeString(c.site))),
+    ]
+
+    // ---------- Core Stats ----------
     const stats = {
       totalCases: filteredCases.length,
-      totalNervesTreated: filteredCases.reduce((sum, c) => sum + c.nervesTreated, 0),
+      totalNervesTreated: filteredCases.reduce(
+        (sum, c) => sum + safeNumber(c.nervesTreated),
+        0
+      ),
       primaryCases: filteredCases.filter((c) => c.type === "Primary").length,
       revisionCases: filteredCases.filter((c) => c.type === "Revision").length,
       neuromaCases: filteredCases.filter((c) => c.neuromaCase).length,
       caseStudies: filteredCases.filter((c) => c.caseStudy).length,
-      avgSurvivalDays: filteredCases.length > 0 
-        ? Math.round(filteredCases.reduce((sum, c) => sum + c.survivalDays, 0) / filteredCases.length)
-        : 0,
+      avgSurvivalDays:
+        filteredCases.length > 0
+          ? Math.round(
+              filteredCases.reduce(
+                (sum, c) => sum + safeNumber(c.survivalDays),
+                0
+              ) / filteredCases.length
+            )
+          : 0,
       uniqueSurgeons: uniqueSurgeons.length,
       uniqueSites: uniqueSites.length,
     }
@@ -199,11 +244,16 @@ export function useCaseStats(filters?: CaseFilters) {
       { name: "Revision", value: stats.revisionCases },
     ]
 
+    // ---------- Specialty & Region ----------
     const specialtyCounts: Record<string, number> = {}
     const regionCounts: Record<string, number> = {}
+
     filteredCases.forEach((c) => {
-      specialtyCounts[c.specialty] = (specialtyCounts[c.specialty] || 0) + 1
-      regionCounts[c.region] = (regionCounts[c.region] || 0) + 1
+      const specialty = safeString(c.specialty)
+      const region = safeString(c.region)
+
+      specialtyCounts[specialty] = (specialtyCounts[specialty] || 0) + 1
+      regionCounts[region] = (regionCounts[region] || 0) + 1
     })
 
     const bySpecialty = Object.entries(specialtyCounts)
@@ -215,38 +265,75 @@ export function useCaseStats(filters?: CaseFilters) {
       .sort((a, b) => b.value - a.value)
 
     const byExtremity = [
-      { name: "Upper (UE)", value: filteredCases.filter((c) => c.ueOrLe === "UE").length },
-      { name: "Lower (LE)", value: filteredCases.filter((c) => c.ueOrLe === "LE").length },
+      {
+        name: "Upper (UE)",
+        value: filteredCases.filter((c) => c.ueOrLe === "UE").length,
+      },
+      {
+        name: "Lower (LE)",
+        value: filteredCases.filter((c) => c.ueOrLe === "LE").length,
+      },
     ]
 
-    // Surgeon productivity data
-    const surgeonCounts: Record<string, { cases: number; nerves: number; primary: number; revision: number }> = {}
+    // ---------- Surgeon productivity ----------
+    const surgeonCounts: Record<
+      string,
+      { cases: number; nerves: number; primary: number; revision: number }
+    > = {}
+
     filteredCases.forEach((c) => {
-      if (!surgeonCounts[c.surgeon]) {
-        surgeonCounts[c.surgeon] = { cases: 0, nerves: 0, primary: 0, revision: 0 }
+      const surgeon = safeString(c.surgeon)
+
+      if (!surgeonCounts[surgeon]) {
+        surgeonCounts[surgeon] = {
+          cases: 0,
+          nerves: 0,
+          primary: 0,
+          revision: 0,
+        }
       }
-      surgeonCounts[c.surgeon].cases += 1
-      surgeonCounts[c.surgeon].nerves += c.nervesTreated
-      if (c.type === "Primary") surgeonCounts[c.surgeon].primary += 1
-      else surgeonCounts[c.surgeon].revision += 1
+
+      surgeonCounts[surgeon].cases += 1
+      surgeonCounts[surgeon].nerves += safeNumber(c.nervesTreated)
+
+      if (c.type === "Primary") surgeonCounts[surgeon].primary += 1
+      else surgeonCounts[surgeon].revision += 1
     })
 
     const bySurgeon = Object.entries(surgeonCounts)
       .map(([name, data]) => ({ name, ...data }))
       .sort((a, b) => b.cases - a.cases)
 
-    // Cases by month
-    const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    // ---------- Cases by Month (FIXED ERROR HERE) ----------
+    const monthOrder = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ]
+
     const monthCounts: Record<string, { cases: number; nerves: number }> = {}
+
     filteredCases.forEach((c) => {
-      const [month] = c.opDate.split("/")
-      const monthName = new Date(2024, parseInt(month) - 1).toLocaleString("en-US", { month: "short" })
+      const monthName = getMonthFromDate(c.opDate)
+      if (!monthName) return
+
       if (!monthCounts[monthName]) {
         monthCounts[monthName] = { cases: 0, nerves: 0 }
       }
+
       monthCounts[monthName].cases += 1
-      monthCounts[monthName].nerves += c.nervesTreated
+      monthCounts[monthName].nerves += safeNumber(c.nervesTreated)
     })
+
     const byMonth = monthOrder
       .filter((m) => monthCounts[m])
       .map((name) => ({
