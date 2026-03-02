@@ -1,26 +1,223 @@
+"use client"
+
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList, Label, AreaChart, Area } from "recharts"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Maximize2, X, Download } from "lucide-react"
 
 const COLORS = ["#1d99ac", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#84cc16", "#f97316", "#6366f1"]
 
-export function CasesByRegion({ data }: { data: any[] }) {
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
+  const RADIAN = Math.PI / 180
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
   return (
+    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={11} fontWeight="bold">
+      {`${name}: ${(percent * 100).toFixed(0)}%`}
+    </text>
+  )
+}
+
+export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, viewType, onRegionChange, onViewTypeChange }: { 
+  data: any[], 
+  timeSeriesData: any[], 
+  regions: string[], 
+  selectedRegion: string, 
+  viewType: string, 
+  onRegionChange: (value: string) => void, 
+  onViewTypeChange: (value: string) => void 
+}) {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const handleExport = () => {
+    if (selectedRegion === "all") {
+      const headers = ['#', 'Region', 'Cases']
+      const rows = data.map((item, index) => [index + 1, item.region, item.cases])
+      const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'cases-by-region.csv'
+      a.click()
+    } else {
+      const headers = ['#', 'Month', 'Cases', 'Surgeons', 'Productivity']
+      const rows = timeSeriesData.map((item, index) => [
+        index + 1,
+        item.month,
+        item.cases,
+        item.surgeons,
+        item.productivity
+      ])
+      const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cases-${selectedRegion}.csv`
+      a.click()
+    }
+  }
+
+  return (
+    <>
     <Card className="border-border/50 bg-card">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Cases per Region</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium">Cases per Region</CardTitle>
+          <div className="flex gap-2">
+            <Select value={selectedRegion} onValueChange={onRegionChange}>
+              <SelectTrigger className="w-[140px] h-8 text-xs border-gray-300 focus:border-gray-500">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                {regions.map((r) => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedRegion !== "all" && (
+              <Select value={viewType} onValueChange={onViewTypeChange}>
+                <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cases">Cases</SelectItem>
+                  <SelectItem value="surgeons">Surgeons</SelectItem>
+                  <SelectItem value="productivity">Productivity</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
+              <Maximize2 className="h-3 w-3 mr-1" />
+              See All
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <ChartContainer config={{}} className="h-[250px] w-full">
-          <BarChart data={data}>
-            <XAxis dataKey="region" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="cases" fill="#1d99ac" radius={[4, 4, 0, 0]} />
-          </BarChart>
+          {selectedRegion === "all" ? (
+            <BarChart data={data}>
+              <XAxis dataKey="region" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="cases" fill="#1d99ac" radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="cases" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
+              </Bar>
+            </BarChart>
+          ) : (
+            <AreaChart data={timeSeriesData}>
+              <defs>
+                <linearGradient id="casesGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="surgeonsGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="productivityGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Area 
+                type="monotone" 
+                dataKey={viewType} 
+                stroke={viewType === "cases" ? "#1d99ac" : viewType === "surgeons" ? "#10b981" : "#f59e0b"} 
+                strokeWidth={2}
+                fill={viewType === "cases" ? "url(#casesGradient)" : viewType === "surgeons" ? "url(#surgeonsGradient)" : "url(#productivityGradient)"}
+                name={viewType === "cases" ? "Cases" : viewType === "surgeons" ? "Surgeons" : "Productivity"}
+              />
+            </AreaChart>
+          )}
         </ChartContainer>
       </CardContent>
     </Card>
+
+    <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <SheetContent side="right" className="w-full sm:max-w-4xl overflow-y-auto bg-white p-0">
+        <SheetHeader className="px-6 py-4 border-b bg-white sticky top-0 z-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <SheetTitle className="text-lg font-semibold">Cases per Region - Full Data</SheetTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                <strong>Calculation:</strong> {selectedRegion === "all" 
+                  ? "Cases = Total cases per region. Surgeons = Unique surgeons per region." 
+                  : "Time series by month. Cases = Total cases in month. Surgeons = Unique surgeons in month. Productivity = Cases / Surgeons (average cases per surgeon per month)."}
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setDrawerOpen(false)} className="-mt-2 -mr-2">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </SheetHeader>
+        <div className="px-6 py-6 bg-white">
+          <div className="mb-3 flex justify-end">
+            <Button onClick={handleExport} size="sm" variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
+          <div className="border rounded-lg overflow-hidden shadow-lg bg-white">
+            <table className="w-full text-sm bg-white">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left p-3 font-medium">#</th>
+                  <th className="text-left p-3 font-medium">{selectedRegion === "all" ? "Region" : "Month"}</th>
+                  <th className="text-right p-3 font-medium">Cases</th>
+                  {selectedRegion !== "all" && (
+                    <>
+                      <th className="text-right p-3 font-medium">Surgeons</th>
+                      <th className="text-right p-3 font-medium">Productivity</th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {(selectedRegion === "all" ? data : timeSeriesData).map((item, index) => (
+                  <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
+                    <td className="p-3 text-muted-foreground">{index + 1}</td>
+                    <td className="p-3 font-medium text-gray-900">{selectedRegion === "all" ? item.region : item.month}</td>
+                    <td className="p-3 text-right font-medium">
+                      <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
+                        {item.cases}
+                      </span>
+                    </td>
+                    {selectedRegion !== "all" && (
+                      <>
+                        <td className="p-3 text-right font-medium">
+                          <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
+                            {item.surgeons}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right font-medium">
+                          <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 rounded font-semibold">
+                            {item.productivity}
+                          </span>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+    </>
   )
 }
 
@@ -33,7 +230,7 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
       <CardContent>
         <ChartContainer config={{}} className="h-[250px] w-full">
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>
+            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={renderCustomizedLabel} labelLine={false}>
               {data.map((entry, index) => (
                 <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
               ))}
@@ -55,7 +252,7 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
       <CardContent>
         <ChartContainer config={{}} className="h-[250px] w-full">
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>
+            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={renderCustomizedLabel} labelLine={false}>
               {data.map((entry, index) => (
                 <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
               ))}

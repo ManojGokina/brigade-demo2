@@ -3,29 +3,34 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, LabelList } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, LabelList, Legend, CartesianGrid } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
 
-export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onYearChange, onSurgeonChange }: { data: any[], year: string, years: string[], surgeons: string[], surgeon: string, onYearChange: (value: string) => void, onSurgeonChange: (value: string) => void }) {
+export function TimeToSecondCase({ data, sites, selectedSite, onSiteChange }: { 
+  data: any[], 
+  sites: string[], 
+  selectedSite: string, 
+  onSiteChange: (value: string) => void 
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
-    const headers = ['Quarter', 'Cases', 'Surgeons', 'Productivity']
+    const headers = ['Site', 'Avg Days', 'Median Days', 'Max Days']
     const rows = data.map(item => [
-      item.quarter,
-      item.cases,
-      item.surgeons,
-      item.productivity
+      item.site,
+      item.avg,
+      item.median,
+      item.max
     ])
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `qoq-growth-${year}.csv`
+    a.download = 'time-to-second-case.csv'
     a.click()
   }
 
@@ -34,40 +39,29 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
     <Card className="border-border/50 bg-card">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">QoQ Growth Progression - Quaterly</CardTitle>
+          <div>
+            <CardTitle className="text-sm font-medium">Time to Surgeon's 2nd Case (Days, QoQ)</CardTitle>
+            <p className="text-xs text-muted-foreground">Avg / Median / Max times by site</p>
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex gap-3">
               <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-[#1d99ac]" />
-                <span className="text-xs text-muted-foreground">Cases</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-[#10b981]" />
-                <span className="text-xs text-muted-foreground">Surgeons</span>
+                <div className="h-2 w-2 rounded-full bg-[#3b82f6]" />
+                <span className="text-xs text-muted-foreground">Avg</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="h-2 w-2 rounded-full bg-[#f59e0b]" />
-                <span className="text-xs text-muted-foreground">Productivity</span>
+                <span className="text-xs text-muted-foreground">Max</span>
               </div>
             </div>
-            <Select value={surgeon} onValueChange={onSurgeonChange}>
-              <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
+            <Select value={selectedSite} onValueChange={onSiteChange}>
+              <SelectTrigger className="w-[140px] h-8 text-xs border-gray-300 focus:border-gray-500">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Surgeons</SelectItem>
-                {surgeons.map((s) => (
+                <SelectItem value="all">All Sites</SelectItem>
+                {sites.map((s) => (
                   <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={year} onValueChange={onYearChange}>
-              <SelectTrigger className="w-[100px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((y) => (
-                  <SelectItem key={y} value={y}>{y}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -79,19 +73,18 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[250px] w-full">
+        <ChartContainer config={{}} className="h-[300px] w-full">
           <BarChart data={data}>
-            <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="site" tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 11 }} label={{ value: "Days", angle: -90, position: "insideLeft" }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="cases" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Cases">
-              <LabelList dataKey="cases" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
+            <Legend />
+            <Bar dataKey="avg" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Avg Days to 2nd Case">
+              <LabelList dataKey="avg" position="top" style={{ fontSize: 9, fill: "#3b82f6" }} />
             </Bar>
-            <Bar dataKey="surgeons" fill="#10b981" radius={[4, 4, 0, 0]} name="Surgeons">
-              <LabelList dataKey="surgeons" position="top" style={{ fontSize: 10, fill: "#10b981" }} />
-            </Bar>
-            <Bar dataKey="productivity" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Productivity">
-              <LabelList dataKey="productivity" position="top" style={{ fontSize: 10, fill: "#f59e0b" }} />
+            <Bar dataKey="max" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Max Days to 2nd Case">
+              <LabelList dataKey="max" position="top" style={{ fontSize: 9, fill: "#f59e0b" }} />
             </Bar>
           </BarChart>
         </ChartContainer>
@@ -103,12 +96,11 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
         <SheetHeader className="px-6 py-4 border-b bg-white sticky top-0 z-10">
           <div className="flex items-start justify-between">
             <div>
-              <SheetTitle className="text-lg font-semibold">QoQ Growth Progression - Full Data</SheetTitle>
+              <SheetTitle className="text-lg font-semibold">Time to Surgeon's 2nd Case - Full Data</SheetTitle>
               <p className="text-sm text-muted-foreground mt-2">
-                <strong>Calculation:</strong> Cases = Total cases per quarter. 
-                Surgeons = Unique surgeons per quarter. 
-                Productivity = Cases / Surgeons (average cases per surgeon per quarter). 
-                Quarter determined by operation date: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec).
+                <strong>Calculation:</strong> For each surgeon, calculate days between 1st and 2nd case. 
+                Avg = Average of all surgeons' times. Median = Middle value. Max = Longest time. 
+                Grouped by site/center.
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setDrawerOpen(false)} className="-mt-2 -mr-2">
@@ -119,12 +111,8 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
         <div className="px-6 py-6 bg-white">
           <div className="flex flex-wrap gap-2 mb-4">
             <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-xs font-medium">
-              <span className="font-semibold">Year:</span>
-              <span>{year}</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-medium">
-              <span className="font-semibold">Surgeon:</span>
-              <span>{surgeon === "all" ? "All Surgeons" : surgeon}</span>
+              <span className="font-semibold">Site:</span>
+              <span>{selectedSite === "all" ? "All Sites" : selectedSite}</span>
             </div>
           </div>
           <div className="mb-3 flex justify-end">
@@ -137,29 +125,31 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
             <table className="w-full text-sm bg-white">
               <thead className="bg-muted">
                 <tr>
-                  <th className="text-left p-3 font-medium">Quarter</th>
-                  <th className="text-right p-3 font-medium">Cases</th>
-                  <th className="text-right p-3 font-medium">Surgeons</th>
-                  <th className="text-right p-3 font-medium">Productivity</th>
+                  <th className="text-left p-3 font-medium">#</th>
+                  <th className="text-left p-3 font-medium">Site</th>
+                  <th className="text-right p-3 font-medium">Avg Days</th>
+                  <th className="text-right p-3 font-medium">Median Days</th>
+                  <th className="text-right p-3 font-medium">Max Days</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
                 {data.map((item, index) => (
                   <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
-                    <td className="p-3 font-medium text-gray-900">{item.quarter}</td>
+                    <td className="p-3 text-muted-foreground">{index + 1}</td>
+                    <td className="p-3 font-medium text-gray-900">{item.site}</td>
                     <td className="p-3 text-right font-medium">
-                      <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
-                        {item.cases}
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
+                        {item.avg}
                       </span>
                     </td>
                     <td className="p-3 text-right font-medium">
-                      <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
-                        {item.surgeons}
+                      <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded font-semibold">
+                        {item.median}
                       </span>
                     </td>
                     <td className="p-3 text-right font-medium">
                       <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 rounded font-semibold">
-                        {item.productivity}
+                        {item.max}
                       </span>
                     </td>
                   </tr>

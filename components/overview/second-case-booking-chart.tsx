@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -157,7 +157,9 @@ export function SecondCaseBooking({
               label={{ value: "Percentage (%)", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="percentage" fill="#10b981" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="percentage" fill="#10b981" radius={[4, 4, 0, 0]}>
+              <LabelList dataKey="percentage" position="top" formatter={(value: number) => `${value}%`} style={{ fontSize: 10, fill: "#10b981" }} />
+            </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>

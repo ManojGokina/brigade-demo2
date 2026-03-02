@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, LineChart, Line } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, LineChart, Line, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Maximize2, Download, X, Info } from "lucide-react"
@@ -183,8 +183,12 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
               label={{ value: "Days", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Average" />
-            <Bar dataKey="median" fill="#10b981" radius={[4, 4, 0, 0]} name="Median" />
+            <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Average">
+              <LabelList dataKey="avg" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
+            </Bar>
+            <Bar dataKey="median" fill="#10b981" radius={[4, 4, 0, 0]} name="Median">
+              <LabelList dataKey="median" position="top" style={{ fontSize: 10, fill: "#10b981" }} />
+            </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
@@ -376,7 +380,9 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
                 label={{ value: "Days Since Previous Case", angle: -90, position: "insideLeft", offset: 25, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Line type="monotone" dataKey="days" stroke="#ec4899" strokeWidth={2} dot={{ fill: "#ec4899", r: 4 }} name="Days" />
+              <Line type="monotone" dataKey="days" stroke="#ec4899" strokeWidth={2} dot={{ fill: "#ec4899", r: 4 }} name="Days">
+                <LabelList dataKey="days" position="top" style={{ fontSize: 10, fill: "#ec4899" }} />
+              </Line>
             </LineChart>
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">

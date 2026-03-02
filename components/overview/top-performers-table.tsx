@@ -65,6 +65,7 @@ export function TopPerformersTable({
 
   const sortedData = getSortedData()
   const top5Data = sortedData.slice(0, 5)
+  const next5Data = sortedData.slice(5, 10)
 
   const getValueForView = (item: TopPerformerData) => {
     if (viewType === "caseLoad") return item.totalCases
@@ -204,47 +205,84 @@ export function TopPerformersTable({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 px-3 font-semibold bg-gradient-to-r from-blue-50 to-blue-100">Rank</th>
-                  <th className="text-left py-2 px-3 font-semibold bg-gradient-to-r from-blue-50 to-blue-100">Surgeon</th>
-                  <th className="text-right py-2 px-3 font-semibold bg-gradient-to-r from-blue-50 to-blue-100">{getColumnHeader()}</th>
-                  <th className="text-left py-2 px-3 font-semibold bg-gradient-to-r from-blue-50 to-blue-100">Region</th>
-                  <th className="text-left py-2 px-3 font-semibold bg-gradient-to-r from-blue-50 to-blue-100">Specialty</th>
-                </tr>
-              </thead>
-              <tbody>
-                {top5Data.map((item, index) => (
-                  <tr 
-                    key={index} 
-                    className={`border-b border-border/50 hover:bg-muted/50 transition-colors ${
-                      index < 3 ? 'bg-gradient-to-r from-yellow-50/30 to-amber-50/30' : ''
-                    }`}
-                  >
-                    <td className="py-2 px-3">
-                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                        index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                        index === 1 ? 'bg-gray-300 text-gray-800' :
-                        index === 2 ? 'bg-orange-300 text-orange-900' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {index + 1}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 font-medium">{item.surgeon}</td>
-                    <td className="py-2 px-3 text-right">
-                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
-                        {getValueForView(item)}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 text-muted-foreground">{item.region}</td>
-                    <td className="py-2 px-3 text-muted-foreground">{item.specialty}</td>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Rank</th>
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Surgeon</th>
+                    <th className="text-right py-2 px-3 font-semibold bg-muted">{getColumnHeader()}</th>
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Region</th>
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Specialty</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {top5Data.map((item, index) => (
+                    <tr 
+                      key={index} 
+                      className={`border-b border-border/50 hover:bg-muted/50 transition-colors ${
+                        index < 3 ? 'bg-gradient-to-r from-yellow-50/30 to-amber-50/30' : ''
+                      }`}
+                    >
+                      <td className="py-2 px-3">
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                          index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                          index === 1 ? 'bg-gray-300 text-gray-800' :
+                          index === 2 ? 'bg-orange-300 text-orange-900' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {index + 1}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 font-medium">{item.surgeon}</td>
+                      <td className="py-2 px-3 text-right">
+                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
+                          {getValueForView(item)}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-muted-foreground">{item.region}</td>
+                      <td className="py-2 px-3 text-muted-foreground">{item.specialty}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Rank</th>
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Surgeon</th>
+                    <th className="text-right py-2 px-3 font-semibold bg-muted">{getColumnHeader()}</th>
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Region</th>
+                    <th className="text-left py-2 px-3 font-semibold bg-muted">Specialty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {next5Data.map((item, index) => (
+                    <tr 
+                      key={index} 
+                      className="border-b border-border/50 hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="py-2 px-3">
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                          {index + 6}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 font-medium">{item.surgeon}</td>
+                      <td className="py-2 px-3 text-right">
+                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
+                          {getValueForView(item)}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-muted-foreground">{item.region}</td>
+                      <td className="py-2 px-3 text-muted-foreground">{item.specialty}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </CardContent>
       </Card>

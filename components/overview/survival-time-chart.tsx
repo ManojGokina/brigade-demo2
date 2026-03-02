@@ -51,15 +51,8 @@ export function SurvivalTime({ data, surgeons, surgeonFilter, onSurgeonChange }:
       <CardContent>
         <ChartContainer config={{}} className="h-[250px] w-full">
           <BarChart data={top10Data}>
-            <XAxis 
-              dataKey="surgeon" 
-              tick={{ fontSize: 10 }} 
-              label={{ value: "Surgeon", position: "insideBottom", offset: 0, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-            />
-            <YAxis 
-              tick={{ fontSize: 11 }} 
-              label={{ value: "Days", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-            />
+            <XAxis dataKey="surgeon" tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 11 }} label={{ value: "Days", angle: -90, position: "insideLeft" }} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar dataKey="avgDays" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Avg Days" />
           </BarChart>

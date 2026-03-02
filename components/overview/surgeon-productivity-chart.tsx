@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { AreaChart, Area, XAxis, YAxis } from "recharts"
+import { AreaChart, Area, XAxis, YAxis, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Maximize2, Download, X, Info } from "lucide-react"
@@ -120,7 +120,7 @@ export function SurgeonProductivityOverTime({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-sm font-medium">Surgeon Productivity - Cases Performed Over Time</CardTitle>
+            <CardTitle className="text-sm font-medium">Cases Performed Over Time</CardTitle>
             <p className="text-xs text-muted-foreground">Sliceable by date range, case number, and user status</p>
           </div>
           <div className="flex gap-2 items-center">
@@ -281,7 +281,9 @@ export function SurgeonProductivityOverTime({
               label={{ value: "Number of Cases", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Area type="monotone" dataKey="cases" stroke="#1d99ac" strokeWidth={2} fill="url(#productivityAreaGradient)" />
+            <Area type="monotone" dataKey="cases" stroke="#1d99ac" strokeWidth={2} fill="url(#productivityAreaGradient)">
+              <LabelList dataKey="cases" position="top" style={{ fontSize: 10, fill: "#1d99ac", fontWeight: "bold" }} />
+            </Area>
           </AreaChart>
         </ChartContainer>
       </CardContent>
