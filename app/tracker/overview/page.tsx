@@ -20,6 +20,7 @@ import { StatsCards } from "@/components/overview/stats-cards"
 import { TimeActiveInactive, TimeNormalized } from "@/components/overview/time-metrics-charts"
 import { SurvivalTime } from "@/components/overview/survival-time-chart"
 import { GracePeriodCard } from "@/components/overview/milestone-cards"
+import { TimeMilestonesTable } from "@/components/overview/time-milestones-table"
 
 export default function OverviewPage() {
   const [dateRange, setDateRange] = useState<DateRange>({})
@@ -41,6 +42,8 @@ export default function OverviewPage() {
   const [regionChartRegion, setRegionChartRegion] = useState<string>("all")
   const [regionChartView, setRegionChartView] = useState<string>("cases")
   const [timeToSecondCaseSite, setTimeToSecondCaseSite] = useState<string>("all")
+  const [timeMilestonesSurgeon, setTimeMilestonesSurgeon] = useState<string>("all")
+  const [timeMilestonesYear, setTimeMilestonesYear] = useState<string>(new Date().getFullYear().toString())
 
   // Get unique surgeons, regions, specialties
   const surgeonsList = useMemo(() => {
@@ -163,7 +166,7 @@ export default function OverviewPage() {
 
   // Productivity by User Type Data
   const productivityByUserTypeData = useMemo(() => {
-    const quarterlyData: Record<string, Record<string, { cases: number; firstCases: number; months: Set<string> }>> = {}
+    const quarterlyData: Record<string, Record<string, { cases: number; firstCases: number; months: Set<string>; [key: string]: any }>> = {}
     
     filteredCasesData.forEach((c: any) => {
       if (!c.operationDate || !c.userStatus) return
@@ -376,6 +379,31 @@ export default function OverviewPage() {
       surgeonCases[c.surgeon].push(c.operationDate)
     })
     
+    // If specific surgeon selected, show all their cases
+    if (daysToCaseSurgeon !== "all") {
+      const dates = surgeonCases[daysToCaseSurgeon] || []
+      if (dates.length === 0) return []
+      
+      const sorted = dates.sort()
+      return sorted.map((date, index) => {
+        if (index === 0) {
+          return {
+            milestone: `1st Case`,
+            avg: 0,
+            date: sorted[0]
+          }
+        }
+        const daysDiff = Math.floor((new Date(sorted[index]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
+        const caseNum = index + 1
+        return {
+          milestone: `${caseNum}${caseNum === 2 ? 'nd' : caseNum === 3 ? 'rd' : 'th'} Case`,
+          avg: daysDiff,
+          date: sorted[index]
+        }
+      })
+    }
+    
+    // If all surgeons, show milestone averages
     const milestones = [2, 3, 6, 10]
     return milestones.map(milestone => {
       const days: number[] = []
@@ -387,8 +415,7 @@ export default function OverviewPage() {
         }
       })
       const avg = days.length > 0 ? Math.round(days.reduce((a, b) => a + b, 0) / days.length) : 0
-      const median = days.length > 0 ? days.sort((a, b) => a - b)[Math.floor(days.length / 2)] : 0
-      return { milestone: `${milestone}${milestone === 2 ? 'nd' : milestone === 3 ? 'rd' : 'th'} Case`, avg, median }
+      return { milestone: `${milestone}${milestone === 2 ? 'nd' : milestone === 3 ? 'rd' : 'th'} Case`, avg }
     })
   }, [daysToCaseSurgeon, filteredCasesData])
 
@@ -557,6 +584,67 @@ export default function OverviewPage() {
       .sort((a, b) => a.surgeon.localeCompare(b.surgeon))
   }, [filteredCasesData])
 
+  // Time Milestones Years
+  const timeMilestonesYears = useMemo(() => {
+    const years = new Set<number>()
+    filteredCasesData.forEach((c: any) => {
+      if (c.operationDate) years.add(new Date(c.operationDate).getFullYear())
+    })
+    return Array.from(years).sort((a, b) => b - a).map(String)
+  }, [filteredCasesData])
+
+  // Time Milestones Data
+  const timeMilestonesData = useMemo(() => {
+    const surgeonMonthly: Record<string, Record<string, number>> = {}
+    
+    filteredCasesData.forEach((c: any) => {
+      if (!c.surgeon || !c.operationDate) return
+      const date = new Date(c.operationDate)
+      if (date.getFullYear().toString() !== timeMilestonesYear) return
+      if (timeMilestonesSurgeon !== "all" && c.surgeon !== timeMilestonesSurgeon) return
+      
+      if (!surgeonMonthly[c.surgeon]) surgeonMonthly[c.surgeon] = {}
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      surgeonMonthly[c.surgeon][monthKey] = (surgeonMonthly[c.surgeon][monthKey] || 0) + 1
+    })
+    
+    return Object.entries(surgeonMonthly).map(([surgeon, months]) => {
+      // Count months with 2+ cases
+      const monthsWith2Plus = Object.values(months).filter(count => count >= 2).length
+      
+      // Count 3-month consecutive streaks with 3+ cases
+      const sortedMonths = Object.entries(months).sort(([a], [b]) => a.localeCompare(b))
+      let consecutiveStreaks = 0
+      let currentStreak = 0
+      
+      for (let i = 0; i < sortedMonths.length; i++) {
+        const [monthKey, count] = sortedMonths[i]
+        
+        if (count >= 3) {
+          currentStreak++
+          if (currentStreak === 3) {
+            consecutiveStreaks++
+          }
+        } else {
+          currentStreak = 0
+        }
+        
+        // Check if next month is consecutive
+        if (i < sortedMonths.length - 1) {
+          const currentDate = new Date(monthKey + '-01')
+          const nextDate = new Date(sortedMonths[i + 1][0] + '-01')
+          const monthDiff = (nextDate.getFullYear() - currentDate.getFullYear()) * 12 + 
+                           (nextDate.getMonth() - currentDate.getMonth())
+          if (monthDiff !== 1) {
+            currentStreak = 0
+          }
+        }
+      }
+      
+      return { surgeon, monthsWith2Plus, consecutiveStreaks }
+    }).sort((a, b) => b.monthsWith2Plus - a.monthsWith2Plus)
+  }, [filteredCasesData, timeMilestonesSurgeon, timeMilestonesYear])
+
   // Survival Time Data
   const survivalTimeData = useMemo(() => {
     const surgeonData: Record<string, number[]> = {}
@@ -709,16 +797,30 @@ export default function OverviewPage() {
           onBreakdownChange={setSecondCaseBreakdown} 
         />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
-          <TimeNormalized data={timeMetricsData} />
-        </div>
         <SurvivalTime 
           data={survivalTimeData} 
           surgeons={surgeonsList} 
           surgeonFilter={survivalTimeSurgeon} 
           onSurgeonChange={setSurvivalTimeSurgeon} 
         />
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
+          <TimeNormalized data={timeMetricsData} />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <TimeMilestonesTable 
+            data={timeMilestonesData}
+            surgeons={surgeonsList}
+            years={timeMilestonesYears}
+            surgeonFilter={timeMilestonesSurgeon}
+            yearFilter={timeMilestonesYear}
+            onSurgeonChange={setTimeMilestonesSurgeon}
+            onYearChange={setTimeMilestonesYear}
+          />
+          <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />
+        </div>
 
         <QoQGrowthProgression data={qoqGrowthData} year={qoqYear} years={qoqYears} surgeons={surgeonsList} surgeon={qoqSurgeon} onYearChange={setQoqYear} onSurgeonChange={setQoqSurgeon} />
 
@@ -745,9 +847,6 @@ export default function OverviewPage() {
           <SurgeonsBySpecialty data={surgeonsBySpecialtyData} />
           <SurgeonsByCaseLoad data={surgeonsByCaseLoadData} />
         </div>
-
-        <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />
-
        
       </div>
     </ProtectedRoute>

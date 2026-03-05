@@ -18,8 +18,12 @@ import {
 export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonChange }: { data: any[], surgeons: string[], surgeonFilter: string, onSurgeonChange: (value: string) => void }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
+  // For chart: show only 2nd to 6th case when surgeon is selected
+  const chartData = surgeonFilter !== "all" ? data.slice(1, 6) : data
+
   const exportToExcel = () => {
     const surgeonLabel = surgeonFilter === "all" ? "All Surgeons" : surgeonFilter
+    const hasDate = data[0]?.date
     
     const wb = XLSX.utils.book_new()
     const wsData: any[][] = [
@@ -28,8 +32,13 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
       ["Surgeon", surgeonLabel, ""],
       ["Export Date", new Date().toLocaleString(), ""],
       ["", "", ""],
-      ["Case Milestone", "Average Days", "Median Days"],
-      ...data.map((row) => [row.milestone, row.avg, row.median]),
+      hasDate 
+        ? ["Case Milestone", "Case Date", "Days from 1st Case"]
+        : ["Case Milestone", "Days from 1st Case", ""],
+      ...data.map((row) => hasDate 
+        ? [row.milestone, new Date(row.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }), row.avg]
+        : [row.milestone, row.avg, ""]
+      ),
     ]
     
     const ws = XLSX.utils.aoa_to_sheet(wsData)
@@ -101,7 +110,9 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
                     <div>
                       <h2 className="text-lg font-semibold">Days to Case Milestones - Full Data</h2>
                       <p className="text-sm text-muted-foreground mt-2">
-                        This shows the average and median days taken to reach specific case milestones from the first case.
+                        {surgeonFilter === "all" 
+                          ? "Shows average days from 1st case to reach milestone cases (2nd, 3rd, 6th, 10th). Calculated by averaging days across all surgeons who reached each milestone."
+                          : "Shows days from 1st case to each subsequent case for the selected surgeon. Calculated as: (Case Date - 1st Case Date) in days."}
                       </p>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => setIsDrawerOpen(false)} className="-mt-2 -mr-2">
@@ -129,9 +140,19 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs z-[110]">
                             <div className="space-y-2 text-xs">
-                              <p><strong>Average Days:</strong> Mean time from 1st case to reach milestone</p>
-                              <p><strong>Median Days:</strong> Middle value of all surgeons' times to milestone</p>
-                              <p className="text-muted-foreground italic">Example: 2nd Case milestone shows days from 1st to 2nd case</p>
+                              {surgeonFilter === "all" ? (
+                                <>
+                                  <p><strong>Milestone Averages:</strong> Average days from 1st case to reach 2nd, 3rd, 6th, and 10th cases</p>
+                                  <p><strong>Calculation:</strong> For each milestone, calculate days for all surgeons who reached it, then average</p>
+                                  <p className="text-muted-foreground italic">Example: If 10 surgeons reached 2nd case in 20, 25, 30... days, average is shown</p>
+                                </>
+                              ) : (
+                                <>
+                                  <p><strong>Days from 1st Case:</strong> Calendar days from surgeon's first case to each subsequent case</p>
+                                  <p><strong>Calculation:</strong> (Case N Date - 1st Case Date) in days</p>
+                                  <p className="text-muted-foreground italic">Example: If 1st case on Jan 1 and 3rd case on Jan 31, shows 30 days</p>
+                                </>
+                              )}
                             </div>
                           </TooltipContent>
                         </Tooltip>
@@ -148,16 +169,20 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
                         <thead className="bg-muted">
                           <tr>
                             <th className="text-left p-3 font-medium">Case Milestone</th>
-                            <th className="text-right p-3 font-medium">Average Days</th>
-                            <th className="text-right p-3 font-medium">Median Days</th>
+                            {data[0]?.date && <th className="text-left p-3 font-medium">Case Date</th>}
+                            <th className="text-right p-3 font-medium">Days from 1st Case</th>
                           </tr>
                         </thead>
                         <tbody>
                           {data.map((row, index) => (
                             <tr key={index} className="border-t hover:bg-muted/50">
                               <td className="p-3">{row.milestone}</td>
+                              {row.date && (
+                                <td className="p-3">
+                                  {new Date(row.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                </td>
+                              )}
                               <td className="p-3 text-right font-medium">{row.avg}</td>
-                              <td className="p-3 text-right font-medium">{row.median}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -172,7 +197,7 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
       </CardHeader>
       <CardContent>
         <ChartContainer config={{}} className="h-[250px] w-full">
-          <BarChart data={data}>
+          <BarChart data={chartData}>
             <XAxis 
               dataKey="milestone" 
               tick={{ fontSize: 11 }} 
@@ -181,13 +206,11 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
             <YAxis 
               tick={{ fontSize: 11 }} 
               label={{ value: "Days", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+              domain={[0, (dataMax: number) => Math.ceil(dataMax) + 10]}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Average">
+            <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Days from 1st Case">
               <LabelList dataKey="avg" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
-            </Bar>
-            <Bar dataKey="median" fill="#10b981" radius={[4, 4, 0, 0]} name="Median">
-              <LabelList dataKey="median" position="top" style={{ fontSize: 10, fill: "#10b981" }} />
             </Bar>
           </BarChart>
         </ChartContainer>
@@ -378,6 +401,7 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
               <YAxis 
                 tick={{ fontSize: 11 }} 
                 label={{ value: "Days Since Previous Case", angle: -90, position: "insideLeft", offset: 25, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+                domain={[0, (dataMax: number) => Math.ceil(dataMax) + 10]}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Line type="monotone" dataKey="days" stroke="#ec4899" strokeWidth={2} dot={{ fill: "#ec4899", r: 4 }} name="Days">

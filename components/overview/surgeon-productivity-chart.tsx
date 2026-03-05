@@ -263,7 +263,7 @@ export function SurgeonProductivityOverTime({
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[250px] w-full">
+        <ChartContainer config={{}} className="h-[300px] w-full">
           <AreaChart data={data}>
             <defs>
               <linearGradient id="productivityAreaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -279,6 +279,7 @@ export function SurgeonProductivityOverTime({
             <YAxis 
               tick={{ fontSize: 11 }} 
               label={{ value: "Number of Cases", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+              domain={[0, (dataMax: number) => Math.ceil(dataMax) + 10]}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Area type="monotone" dataKey="cases" stroke="#1d99ac" strokeWidth={2} fill="url(#productivityAreaGradient)">

@@ -139,7 +139,17 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
                 strokeWidth={2}
                 fill={viewType === "cases" ? "url(#casesGradient)" : viewType === "surgeons" ? "url(#surgeonsGradient)" : "url(#productivityGradient)"}
                 name={viewType === "cases" ? "Cases" : viewType === "surgeons" ? "Surgeons" : "Productivity"}
-              />
+              >
+                <LabelList 
+                  dataKey={viewType} 
+                  position="top" 
+                  style={{ 
+                    fontSize: 10, 
+                    fill: viewType === "cases" ? "#1d99ac" : viewType === "surgeons" ? "#10b981" : "#f59e0b",
+                    fontWeight: "bold"
+                  }} 
+                />
+              </Area>
             </AreaChart>
           )}
         </ChartContainer>

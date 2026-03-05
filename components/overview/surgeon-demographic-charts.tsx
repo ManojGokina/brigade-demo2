@@ -50,9 +50,10 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
                 data={dataWithPercent}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
+                labelLine={true}
                 label={({ percent }) => `${percent}%`}
                 outerRadius={80}
+                innerRadius={50}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -63,7 +64,7 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
-                formatter={(value, entry: any) => `${value} (${entry.payload.value})`}
+                formatter={(value, entry: any) => `${value} - ${entry.payload.percent}% (${entry.payload.value})`}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
             </PieChart>
@@ -169,9 +170,10 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
                 data={dataWithPercent}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
+                labelLine={true}
                 label={({ percent }) => `${percent}%`}
                 outerRadius={80}
+                innerRadius={50}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -182,7 +184,7 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
-                formatter={(value, entry: any) => `${value} (${entry.payload.value})`}
+                formatter={(value, entry: any) => `${value} - ${entry.payload.percent}% (${entry.payload.value})`}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
             </PieChart>
