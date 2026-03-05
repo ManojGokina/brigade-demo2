@@ -88,13 +88,13 @@ export default function OverviewPage() {
 
   // QoQ Growth Data
   const qoqYears = useMemo(() => {
-    const years = new Set<number>()
-    filteredCasesData.forEach((c: any) => {
-      if (c.operationDate) years.add(new Date(c.operationDate).getFullYear())
-    })
     const currentYear = new Date().getFullYear()
-    return Array.from(years).filter(y => y <= currentYear).sort().map(String)
-  }, [filteredCasesData])
+    const years: string[] = []
+    for (let year = 2020; year <= currentYear; year++) {
+      years.push(year.toString())
+    }
+    return years
+  }, [])
 
   const qoqGrowthData = useMemo(() => {
     let filteredCases = filteredCasesData
@@ -586,12 +586,13 @@ export default function OverviewPage() {
 
   // Time Milestones Years
   const timeMilestonesYears = useMemo(() => {
-    const years = new Set<number>()
-    filteredCasesData.forEach((c: any) => {
-      if (c.operationDate) years.add(new Date(c.operationDate).getFullYear())
-    })
-    return Array.from(years).sort((a, b) => b - a).map(String)
-  }, [filteredCasesData])
+    const currentYear = new Date().getFullYear()
+    const years: string[] = []
+    for (let year = 2020; year <= currentYear; year++) {
+      years.push(year.toString())
+    }
+    return years.reverse()
+  }, [])
 
   // Time Milestones Data
   const timeMilestonesData = useMemo(() => {
