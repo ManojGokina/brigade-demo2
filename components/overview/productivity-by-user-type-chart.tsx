@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, LabelList, Legend } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, LabelList, Legend, ResponsiveContainer } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
@@ -28,6 +28,28 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
     a.click()
   }
 
+  // Group data by category → year → quarter and sort
+  const sortedData = [...data].sort((a, b) => {
+    const [qA, yearA] = a.quarter.split(' ')
+    const [qB, yearB] = b.quarter.split(' ')
+    
+    // First sort by region
+    if (a.region !== b.region) return a.region.localeCompare(b.region)
+    // Then by year
+    if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB)
+    // Then by quarter
+    return qA.localeCompare(qB)
+  })
+
+  const groupedData: Record<string, Record<string, any[]>> = {}
+  sortedData.forEach(item => {
+    const [q, year] = item.quarter.split(' ')
+    const category = item.region
+    if (!groupedData[category]) groupedData[category] = {}
+    if (!groupedData[category][year]) groupedData[category][year] = []
+    groupedData[category][year].push({ ...item, q })
+  })
+
   return (
     <>
     <Card className="border-border/50 bg-card">
@@ -38,16 +60,6 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
             <p className="text-xs text-muted-foreground">Standard vs Excluding First Case by Region</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex gap-3">
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-[#60a5fa]" />
-                <span className="text-xs text-muted-foreground">Standard</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-[#1d4ed8]" />
-                <span className="text-xs text-muted-foreground">Excl. 1st Case</span>
-              </div>
-            </div>
             <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
               <Maximize2 className="h-3 w-3 mr-1" />
               See All
@@ -56,26 +68,75 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[300px] w-full">
-          <BarChart data={data}>
-            <XAxis 
-              dataKey="label" 
-              tick={{ fontSize: 10 }} 
-              angle={-45}
-              textAnchor="end"
-              height={80}
-            />
-            <YAxis tick={{ fontSize: 11 }} label={{ value: "Cases per Month", angle: -90, position: "insideLeft" }} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Legend />
-            <Bar dataKey="standard" fill="#60a5fa" radius={[4, 4, 0, 0]} name="Standard Productivity">
-              <LabelList dataKey="standard" position="top" style={{ fontSize: 9, fill: "#60a5fa" }} />
-            </Bar>
-            <Bar dataKey="excludingFirst" fill="#1d4ed8" radius={[4, 4, 0, 0]} name="Excluding First Case">
-              <LabelList dataKey="excludingFirst" position="top" style={{ fontSize: 9, fill: "#1d4ed8" }} />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+        <div className="relative">
+          <ChartContainer config={{}} className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={sortedData} margin={{ bottom: 0 }}>
+                <XAxis 
+                  dataKey="q" 
+                  tick={(props) => {
+                    const { x, y, payload } = props
+                    const item = sortedData[payload.index]
+                    const [q] = item.quarter.split(' ')
+                    
+                    return (
+                      <g transform={`translate(${x},${y})`}>
+                        <text x={0} y={0} dy={16} textAnchor="middle" fontSize={10}>{q}</text>
+                      </g>
+                    )
+                  }}
+                  height={50}
+                />
+                <YAxis tick={{ fontSize: 11 }} label={{ value: "Cases per Month", angle: -90, position: "insideLeft" }} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="standard" fill="#60a5fa" radius={[4, 4, 0, 0]} name="Standard Productivity">
+                  <LabelList dataKey="standard" position="top" style={{ fontSize: 9, fill: "#60a5fa" }} />
+                </Bar>
+                <Bar dataKey="excludingFirst" fill="#1d4ed8" radius={[4, 4, 0, 0]} name="Excluding First Case">
+                  <LabelList dataKey="excludingFirst" position="top" style={{ fontSize: 9, fill: "#1d4ed8" }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+          <div className="absolute bottom-0 left-0 right-0 h-16 flex items-start" style={{ marginLeft: '60px', marginRight: '20px' }}>
+            {Object.entries(groupedData).map(([region, years], regionIdx) => {
+              const regionItems = sortedData.filter(d => d.region === region)
+              const regionWidth = (regionItems.length / sortedData.length) * 100
+              const isLast = regionIdx === Object.keys(groupedData).length - 1
+              
+              return (
+                <div key={region} className="relative" style={{ width: `${regionWidth}%` }}>
+                  {!isLast && (
+                    <div className="absolute right-0 top-0 h-12 border-r-2 border-dashed border-gray-400" />
+                  )}
+                  <div className="flex">
+                    {Object.entries(years).map(([year, quarters]) => {
+                      const yearWidth = (quarters.length / regionItems.length) * 100
+                      return (
+                        <div key={year} className="text-center" style={{ width: `${yearWidth}%` }}>
+                          <div className="text-xs text-gray-600">{year}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="text-center pt-6">
+                    <div className="text-xs font-bold text-gray-700">{region}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex gap-4 justify-center mt-[50px]">
+            {/* <div className="flex items-center gap-1.5">
+              <div className="h-2 w-2 rounded-full bg-[#60a5fa]" />
+              <span className="text-xs text-muted-foreground">Standard Productivity</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-2 w-2 rounded-full bg-[#1d4ed8]" />
+              <span className="text-xs text-muted-foreground">Excluding First Case</span>
+            </div> */}
+          </div>
+        </div>
       </CardContent>
     </Card>
 
