@@ -682,7 +682,7 @@ export default function OverviewPage() {
       .map((c: any, index: number) => {
         const daysSince = Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24))
         return {
-          caseId: c.caseId || `Case-${index + 1}`,
+          caseId: c.caseNumber || `Case-${index + 1}`,
           surgeon: c.surgeon,
           specialty: c.specialty || 'Unknown',
           operationDate: c.operationDate,
