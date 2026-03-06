@@ -44,8 +44,8 @@ export function TimeMilestonesTable({
       ["Year", yearFilter, ""],
       ["Export Date", new Date().toLocaleString(), ""],
       ["", "", ""],
-      ["Surgeon", "Months with 2+ Cases", "3-Month Streaks (3+ Cases)"],
-      ...data.map((row) => [row.surgeon, row.monthsWith2Plus, row.consecutiveStreaks]),
+      ["Surgeon", "Months to 2 Cases/Mo", "Months to 2 Cases/Mo (3 Consecutive)"],
+      ...data.map((row) => [row.surgeon, row.monthsTo2Cases !== null ? row.monthsTo2Cases : '-', row.monthsTo3Consecutive !== null ? row.monthsTo3Consecutive : '-']),
     ]
     
     const ws = XLSX.utils.aoa_to_sheet(wsData)
@@ -159,9 +159,9 @@ export function TimeMilestonesTable({
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs z-[110]">
                             <div className="space-y-2 text-xs">
-                              <p><strong>Months with 2+ Cases:</strong> Count of months in selected year where surgeon performed 2 or more cases</p>
-                              <p><strong>3-Month Streaks (3+ Cases):</strong> Count of times surgeon achieved 3+ cases per month for 3 consecutive months without interruption</p>
-                              <p className="text-muted-foreground italic">Example: If surgeon did 3 cases in Jan, 4 in Feb, 3 in Mar = 1 streak</p>
+                              <p><strong>Months to 2 Cases/Mo:</strong> Time (in months) from first case until surgeon performed 2 cases in a single month</p>
+                              <p><strong>Months to 2 Cases/Mo (3 Consecutive):</strong> Time (in months) from first case until surgeon achieved 2+ cases per month for 3 consecutive months</p>
+                              <p className="text-muted-foreground italic">Example: First case on 8/29, second case on 9/25 (same month) = 0.9 months</p>
                             </div>
                           </TooltipContent>
                         </Tooltip>
@@ -179,8 +179,8 @@ export function TimeMilestonesTable({
                           <tr>
                             <th className="text-left p-3 font-medium">#</th>
                             <th className="text-left p-3 font-medium">Surgeon</th>
-                            <th className="text-center p-3 font-medium">Months with 2+ Cases</th>
-                            <th className="text-center p-3 font-medium">3-Month Streaks (3+ Cases)</th>
+                            <th className="text-center p-3 font-medium">Months to 2 Cases/Mo</th>
+                            <th className="text-center p-3 font-medium">Months to 2 Cases/Mo (3 Consecutive)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -190,12 +190,12 @@ export function TimeMilestonesTable({
                               <td className="p-3 font-medium">{row.surgeon}</td>
                               <td className="p-3 text-center">
                                 <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
-                                  {row.monthsWith2Plus}
+                                  {row.monthsTo2Cases !== null ? row.monthsTo2Cases : '-'}
                                 </span>
                               </td>
                               <td className="p-3 text-center">
                                 <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
-                                  {row.consecutiveStreaks}
+                                  {row.monthsTo3Consecutive !== null ? row.monthsTo3Consecutive : '-'}
                                 </span>
                               </td>
                             </tr>
@@ -217,8 +217,8 @@ export function TimeMilestonesTable({
               <tr>
                 <th className="text-left p-1.5 font-medium">#</th>
                 <th className="text-left p-1.5 font-medium">Surgeon</th>
-                <th className="text-center p-1.5 font-medium">2+ Cases/Mo</th>
-                <th className="text-center p-1.5 font-medium">3-Mo Streaks</th>
+                <th className="text-center p-1.5 font-medium">Mo to 2/Mo</th>
+                <th className="text-center p-1.5 font-medium">Mo to 3 Consec</th>
               </tr>
             </thead>
             <tbody>
@@ -229,12 +229,12 @@ export function TimeMilestonesTable({
                     <td className="p-1.5 font-medium">{row.surgeon}</td>
                     <td className="p-1.5 text-center">
                       <span className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
-                        {row.monthsWith2Plus}
+                        {row.monthsTo2Cases !== null ? row.monthsTo2Cases : '-'}
                       </span>
                     </td>
                     <td className="p-1.5 text-center">
                       <span className="inline-block px-1.5 py-0.5 bg-green-100 text-green-800 rounded text-xs font-semibold">
-                        {row.consecutiveStreaks}
+                        {row.monthsTo3Consecutive !== null ? row.monthsTo3Consecutive : '-'}
                       </span>
                     </td>
                   </tr>

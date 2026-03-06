@@ -39,6 +39,7 @@ export default function OverviewPage() {
   const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string>("all")
   const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string>("all")
   const [survivalTimeSurgeon, setSurvivalTimeSurgeon] = useState<string>("all")
+  const [survivalTimeSpecialty, setSurvivalTimeSpecialty] = useState<string>("all")
   const [regionChartRegion, setRegionChartRegion] = useState<string>("all")
   const [regionChartView, setRegionChartView] = useState<string>("cases")
   const [timeToSecondCaseSite, setTimeToSecondCaseSite] = useState<string>("all")
@@ -596,74 +597,100 @@ export default function OverviewPage() {
 
   // Time Milestones Data
   const timeMilestonesData = useMemo(() => {
-    const surgeonMonthly: Record<string, Record<string, number>> = {}
+    const surgeonData: Record<string, { firstCase: string; cases: { date: string; monthKey: string }[] }> = {}
     
-    filteredCasesData.forEach((c: any) => {
+    // Collect ALL cases for each surgeon (not filtered by year)
+    casesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
-      const date = new Date(c.operationDate)
-      if (date.getFullYear().toString() !== timeMilestonesYear) return
       if (timeMilestonesSurgeon !== "all" && c.surgeon !== timeMilestonesSurgeon) return
       
-      if (!surgeonMonthly[c.surgeon]) surgeonMonthly[c.surgeon] = {}
+      if (!surgeonData[c.surgeon]) {
+        surgeonData[c.surgeon] = { firstCase: c.operationDate, cases: [] }
+      }
+      if (c.operationDate < surgeonData[c.surgeon].firstCase) {
+        surgeonData[c.surgeon].firstCase = c.operationDate
+      }
+      const date = new Date(c.operationDate)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      surgeonMonthly[c.surgeon][monthKey] = (surgeonMonthly[c.surgeon][monthKey] || 0) + 1
+      surgeonData[c.surgeon].cases.push({ date: c.operationDate, monthKey })
     })
     
-    return Object.entries(surgeonMonthly).map(([surgeon, months]) => {
-      // Count months with 2+ cases
-      const monthsWith2Plus = Object.values(months).filter(count => count >= 2).length
+    return Object.entries(surgeonData).map(([surgeon, data]) => {
+      const sortedCases = data.cases.sort((a, b) => a.date.localeCompare(b.date))
       
-      // Count 3-month consecutive streaks with 3+ cases
-      const sortedMonths = Object.entries(months).sort(([a], [b]) => a.localeCompare(b))
-      let consecutiveStreaks = 0
-      let currentStreak = 0
+      // Find first month with 2+ cases
+      const monthCounts: Record<string, number> = {}
+      sortedCases.forEach(c => {
+        monthCounts[c.monthKey] = (monthCounts[c.monthKey] || 0) + 1
+      })
       
-      for (let i = 0; i < sortedMonths.length; i++) {
-        const [monthKey, count] = sortedMonths[i]
-        
-        if (count >= 3) {
-          currentStreak++
-          if (currentStreak === 3) {
-            consecutiveStreaks++
-          }
-        } else {
-          currentStreak = 0
+      let monthsTo2Cases = null
+      for (const caseData of sortedCases) {
+        if (monthCounts[caseData.monthKey] >= 2) {
+          const days = Math.floor((new Date(caseData.date).getTime() - new Date(data.firstCase).getTime()) / (1000 * 60 * 60 * 24))
+          monthsTo2Cases = +(days / 30).toFixed(1)
+          break
         }
+      }
+      
+      // Find first 3 consecutive months with 2+ cases each
+      const sortedMonths = Object.entries(monthCounts).sort(([a], [b]) => a.localeCompare(b))
+      let monthsTo3Consecutive = null
+      
+      for (let i = 0; i <= sortedMonths.length - 3; i++) {
+        const [month1, count1] = sortedMonths[i]
+        const [month2, count2] = sortedMonths[i + 1]
+        const [month3, count3] = sortedMonths[i + 2]
         
-        // Check if next month is consecutive
-        if (i < sortedMonths.length - 1) {
-          const currentDate = new Date(monthKey + '-01')
-          const nextDate = new Date(sortedMonths[i + 1][0] + '-01')
-          const monthDiff = (nextDate.getFullYear() - currentDate.getFullYear()) * 12 + 
-                           (nextDate.getMonth() - currentDate.getMonth())
-          if (monthDiff !== 1) {
-            currentStreak = 0
+        if (count1 >= 2 && count2 >= 2 && count3 >= 2) {
+          const date1 = new Date(month1 + '-01')
+          const date2 = new Date(month2 + '-01')
+          const date3 = new Date(month3 + '-01')
+          
+          const diff1 = (date2.getFullYear() - date1.getFullYear()) * 12 + (date2.getMonth() - date1.getMonth())
+          const diff2 = (date3.getFullYear() - date2.getFullYear()) * 12 + (date3.getMonth() - date2.getMonth())
+          
+          if (diff1 === 1 && diff2 === 1) {
+            const lastCaseInMonth3 = sortedCases.filter(c => c.monthKey === month3).pop()
+            if (lastCaseInMonth3) {
+              const days = Math.floor((new Date(lastCaseInMonth3.date).getTime() - new Date(data.firstCase).getTime()) / (1000 * 60 * 60 * 24))
+              monthsTo3Consecutive = +(days / 30).toFixed(1)
+            }
+            break
           }
         }
       }
       
-      return { surgeon, monthsWith2Plus, consecutiveStreaks }
-    }).sort((a, b) => b.monthsWith2Plus - a.monthsWith2Plus)
-  }, [filteredCasesData, timeMilestonesSurgeon, timeMilestonesYear])
+      return { surgeon, monthsTo2Cases, monthsTo3Consecutive }
+    }).sort((a, b) => {
+      if (a.monthsTo2Cases === null) return 1
+      if (b.monthsTo2Cases === null) return -1
+      return b.monthsTo2Cases - a.monthsTo2Cases
+    })
+  }, [timeMilestonesSurgeon, timeMilestonesYear])
 
   // Survival Time Data
   const survivalTimeData = useMemo(() => {
-    const surgeonData: Record<string, number[]> = {}
     const today = new Date()
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (survivalTimeSurgeon !== "all" && c.surgeon !== survivalTimeSurgeon) return
-      if (!surgeonData[c.surgeon]) surgeonData[c.surgeon] = []
-      const daysSince = Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24))
-      surgeonData[c.surgeon].push(daysSince)
-    })
-    return Object.entries(surgeonData)
-      .map(([surgeon, days]) => ({
-        surgeon,
-        avgDays: Math.round(days.reduce((a, b) => a + b, 0) / days.length)
-      }))
-      .sort((a, b) => b.avgDays - a.avgDays)
-  }, [filteredCasesData, survivalTimeSurgeon])
+    return filteredCasesData
+      .filter((c: any) => {
+        if (!c.operationDate) return false
+        if (survivalTimeSurgeon !== "all" && c.surgeon !== survivalTimeSurgeon) return false
+        if (survivalTimeSpecialty !== "all" && c.specialty !== survivalTimeSpecialty) return false
+        return true
+      })
+      .map((c: any, index: number) => {
+        const daysSince = Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24))
+        return {
+          caseId: c.caseId || `Case-${index + 1}`,
+          surgeon: c.surgeon,
+          specialty: c.specialty || 'Unknown',
+          operationDate: c.operationDate,
+          daysSinceSurgery: daysSince
+        }
+      })
+      .sort((a, b) => b.daysSinceSurgery - a.daysSinceSurgery)
+  }, [filteredCasesData, survivalTimeSurgeon, survivalTimeSpecialty])
 
   // Calculate Surgeon Productivity Over Time from real data
   const surgeonProductivityOverTimeData = useMemo(() => {
@@ -800,9 +827,12 @@ export default function OverviewPage() {
 
         <SurvivalTime 
           data={survivalTimeData} 
-          surgeons={surgeonsList} 
-          surgeonFilter={survivalTimeSurgeon} 
-          onSurgeonChange={setSurvivalTimeSurgeon} 
+          surgeons={surgeonsList}
+          specialties={specialtiesList}
+          surgeonFilter={survivalTimeSurgeon}
+          specialtyFilter={survivalTimeSpecialty}
+          onSurgeonChange={setSurvivalTimeSurgeon}
+          onSpecialtyChange={setSurvivalTimeSpecialty}
         />
 
         <div className="grid gap-4 md:grid-cols-2">
