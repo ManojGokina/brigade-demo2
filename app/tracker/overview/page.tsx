@@ -615,77 +615,67 @@ export default function OverviewPage() {
 
   // Time Milestones Data
   const timeMilestonesData = useMemo(() => {
-    const surgeonData: Record<string, { firstCase: string; cases: { date: string; monthKey: string }[] }> = {}
+    const surgeonData: Record<string, string[]> = {}
     
-    // Collect ALL cases for each surgeon from all years
     casesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (timeMilestonesSurgeon !== "all" && c.surgeon !== timeMilestonesSurgeon) return
-      
-      if (!surgeonData[c.surgeon]) {
-        surgeonData[c.surgeon] = { firstCase: c.operationDate, cases: [] }
-      }
-      if (c.operationDate < surgeonData[c.surgeon].firstCase) {
-        surgeonData[c.surgeon].firstCase = c.operationDate
-      }
-      const date = new Date(c.operationDate)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      surgeonData[c.surgeon].cases.push({ date: c.operationDate, monthKey })
+      if (!surgeonData[c.surgeon]) surgeonData[c.surgeon] = []
+      surgeonData[c.surgeon].push(c.operationDate)
     })
     
-    return Object.entries(surgeonData).map(([surgeon, data]) => {
-      const sortedCases = data.cases.sort((a, b) => a.date.localeCompare(b.date))
+    return Object.entries(surgeonData).map(([surgeon, dates]) => {
+      const sorted = dates.sort()
+      const firstCaseDate = new Date(sorted[0])
       
-      // Find first month with 2+ cases
-      const monthCounts: Record<string, number> = {}
-      sortedCases.forEach(c => {
-        monthCounts[c.monthKey] = (monthCounts[c.monthKey] || 0) + 1
+      // Group by month and count
+      const monthCounts: Record<string, string[]> = {}
+      sorted.forEach(date => {
+        const d = new Date(date)
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        if (!monthCounts[key]) monthCounts[key] = []
+        monthCounts[key].push(date)
       })
       
-      let monthsTo2Cases = null
-      for (const caseData of sortedCases) {
-        if (monthCounts[caseData.monthKey] >= 2) {
-          const days = Math.floor((new Date(caseData.date).getTime() - new Date(data.firstCase).getTime()) / (1000 * 60 * 60 * 24))
+      // Mo to 2/Mo: Find first month with 2+ cases, use 2nd case date
+      let monthsTo2Cases = 0
+      const sortedMonths = Object.keys(monthCounts).sort()
+      for (const month of sortedMonths) {
+        if (monthCounts[month].length >= 2) {
+          const secondCaseDate = new Date(monthCounts[month].sort()[1])
+          const days = Math.floor((secondCaseDate.getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
           monthsTo2Cases = +(days / 30).toFixed(1)
           break
         }
       }
       
-      // Find first 3 consecutive months with 2+ cases each
-      const sortedMonths = Object.entries(monthCounts).sort(([a], [b]) => a.localeCompare(b))
-      let monthsTo3Consecutive = null
-      
+      // Mo to 3 Consecutive: Find 3 consecutive months with 2+ cases each, use 2nd case of 3rd month
+      let monthsTo3Consecutive = 0
       for (let i = 0; i <= sortedMonths.length - 3; i++) {
-        const [month1, count1] = sortedMonths[i]
-        const [month2, count2] = sortedMonths[i + 1]
-        const [month3, count3] = sortedMonths[i + 2]
+        const m1 = sortedMonths[i]
+        const m2 = sortedMonths[i + 1]
+        const m3 = sortedMonths[i + 2]
         
-        if (count1 >= 2 && count2 >= 2 && count3 >= 2) {
-          const date1 = new Date(month1 + '-01')
-          const date2 = new Date(month2 + '-01')
-          const date3 = new Date(month3 + '-01')
+        if (monthCounts[m1].length >= 2 && monthCounts[m2].length >= 2 && monthCounts[m3].length >= 2) {
+          const d1 = new Date(m1 + '-01')
+          const d2 = new Date(m2 + '-01')
+          const d3 = new Date(m3 + '-01')
           
-          const diff1 = (date2.getFullYear() - date1.getFullYear()) * 12 + (date2.getMonth() - date1.getMonth())
-          const diff2 = (date3.getFullYear() - date2.getFullYear()) * 12 + (date3.getMonth() - date2.getMonth())
+          const diff1 = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth())
+          const diff2 = (d3.getFullYear() - d2.getFullYear()) * 12 + (d3.getMonth() - d2.getMonth())
           
           if (diff1 === 1 && diff2 === 1) {
-            const lastCaseInMonth3 = sortedCases.filter(c => c.monthKey === month3).pop()
-            if (lastCaseInMonth3) {
-              const days = Math.floor((new Date(lastCaseInMonth3.date).getTime() - new Date(data.firstCase).getTime()) / (1000 * 60 * 60 * 24))
-              monthsTo3Consecutive = +(days / 30).toFixed(1)
-            }
+            const secondCaseInMonth3 = monthCounts[m3].sort()[1]
+            const days = Math.floor((new Date(secondCaseInMonth3).getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
+            monthsTo3Consecutive = +(days / 30).toFixed(1)
             break
           }
         }
       }
       
       return { surgeon, monthsTo2Cases, monthsTo3Consecutive }
-    }).sort((a, b) => {
-      if (a.monthsTo2Cases === null) return 1
-      if (b.monthsTo2Cases === null) return -1
-      return b.monthsTo2Cases - a.monthsTo2Cases
-    })
-  }, [timeMilestonesSurgeon, timeMilestonesYear])
+    }).sort((a, b) => b.monthsTo2Cases - a.monthsTo2Cases)
+  }, [timeMilestonesSurgeon])
 
   // Survival Time Data
   const survivalTimeData = useMemo(() => {
