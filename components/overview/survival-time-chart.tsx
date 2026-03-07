@@ -18,7 +18,8 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const top10Data = data.slice(0, 10)
-  const totalDays = data.reduce((sum, item) => sum + item.daysSinceSurgery, 0)
+  const totalCases = data.length
+  const averageDays = totalCases > 0 ? Math.round(data.reduce((sum, item) => sum + item.daysSinceSurgery, 0) / totalCases) : 0
 
   const handleExport = () => {
     const headers = ['Case ID', 'Surgeon', 'Specialty', 'Operation Date', 'Days Since Surgery']
@@ -94,10 +95,20 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
                 </tr>
               ))}
               <tr className="border-t bg-muted font-bold">
-                <td colSpan={4} className="p-2 text-right">Total:</td>
+                <td colSpan={3} className="p-2"></td>
+                <td className="p-2 text-right">Total Cases:</td>
                 <td className="p-2 text-right">
                   <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
-                    {totalDays}
+                    {totalCases}
+                  </span>
+                </td>
+              </tr>
+              <tr className="bg-muted font-bold">
+                <td colSpan={3} className="p-2"></td>
+                <td className="p-2 text-right">Avg Days:</td>
+                <td className="p-2 text-right">
+                  <span className="inline-block px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-semibold">
+                    {averageDays}
                   </span>
                 </td>
               </tr>
@@ -168,10 +179,20 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
                   </tr>
                 ))}
                 <tr className="border-t bg-muted font-bold">
-                  <td colSpan={5} className="p-3 text-right">Total:</td>
+                  <td colSpan={4} className="p-3"></td>
+                  <td className="p-3 text-right">Total Cases:</td>
                   <td className="p-3 text-right">
                     <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
-                      {totalDays}
+                      {totalCases}
+                    </span>
+                  </td>
+                </tr>
+                <tr className="bg-muted font-bold">
+                  <td colSpan={4} className="p-3"></td>
+                  <td className="p-3 text-right">Avg Days:</td>
+                  <td className="p-3 text-right">
+                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
+                      {averageDays}
                     </span>
                   </td>
                 </tr>
