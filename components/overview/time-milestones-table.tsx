@@ -42,7 +42,6 @@ export function TimeMilestonesTable({
       ["Time Milestones Report", "", ""],
       ["", "", ""],
       ["Surgeon", surgeonLabel, ""],
-      ["Year", selectedYears.join(', '), ""],
       ["Export Date", new Date().toLocaleString(), ""],
       ["", "", ""],
       ["Surgeon", "Months to 2 Cases/Mo", "Months to 2 Cases/Mo (3 Consecutive)"],
@@ -65,13 +64,13 @@ export function TimeMilestonesTable({
             fill: { fgColor: { rgb: "1d99ac" } },
             alignment: { horizontal: "center", vertical: "center" }
           }
-        } else if (R >= 2 && R <= 4) {
+        } else if (R >= 2 && R <= 3) {
           ws[cellAddress].s = {
             font: { bold: C === 0, sz: 11 },
             fill: { fgColor: { rgb: "E3F2FD" } },
             alignment: { vertical: "center" }
           }
-        } else if (R === 6) {
+        } else if (R === 5) {
           ws[cellAddress].s = {
             font: { bold: true, color: { rgb: "FFFFFF" } },
             fill: { fgColor: { rgb: "1d99ac" } },
@@ -82,7 +81,7 @@ export function TimeMilestonesTable({
     }
     
     XLSX.utils.book_append_sheet(wb, ws, "Time Milestones")
-    XLSX.writeFile(wb, `time-milestones-${selectedYears.join('-')}-${new Date().toISOString().split('T')[0]}.xlsx`)
+    XLSX.writeFile(wb, `time-milestones-${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
   return (
@@ -106,13 +105,6 @@ export function TimeMilestonesTable({
                 ))}
               </SelectContent>
             </Select>
-            <MultiSelect
-              options={years}
-              selected={selectedYears}
-              onChange={onYearsChange}
-              placeholder="Select Years"
-              className="w-[140px]"
-            />
           </div>
         </div>
       </CardHeader>
@@ -187,10 +179,6 @@ export function TimeMilestonesTable({
           
           <div className="p-6">
             <div className="mb-4 flex flex-wrap gap-2">
-              <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
-                <span className="font-semibold">Years:</span>
-                <span>{selectedYears.join(', ')}</span>
-              </div>
               <div className="inline-flex items-center gap-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-3 py-1.5 rounded-full text-xs font-medium">
                 <span className="font-semibold">Surgeon:</span>
                 <span>{surgeonFilter === "all" ? "All Surgeons" : surgeonFilter}</span>

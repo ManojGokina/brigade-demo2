@@ -617,13 +617,10 @@ export default function OverviewPage() {
   const timeMilestonesData = useMemo(() => {
     const surgeonData: Record<string, { firstCase: string; cases: { date: string; monthKey: string }[] }> = {}
     
-    // Collect ALL cases for each surgeon (not filtered by year)
+    // Collect ALL cases for each surgeon from all years
     casesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (timeMilestonesSurgeon !== "all" && c.surgeon !== timeMilestonesSurgeon) return
-      
-      const caseYear = new Date(c.operationDate).getFullYear().toString()
-      if (!timeMilestonesYear.includes(caseYear)) return
       
       if (!surgeonData[c.surgeon]) {
         surgeonData[c.surgeon] = { firstCase: c.operationDate, cases: [] }
