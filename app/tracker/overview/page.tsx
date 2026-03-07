@@ -42,7 +42,7 @@ export default function OverviewPage() {
   const [survivalTimeSpecialty, setSurvivalTimeSpecialty] = useState<string>("all")
   const [regionChartRegion, setRegionChartRegion] = useState<string>("all")
   const [regionChartView, setRegionChartView] = useState<string>("cases")
-  const [timeToSecondCaseSite, setTimeToSecondCaseSite] = useState<string>("all")
+  const [timeToSecondCaseSurgeon, setTimeToSecondCaseSurgeon] = useState<string>("all")
   const [timeMilestonesSurgeon, setTimeMilestonesSurgeon] = useState<string>("all")
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
 
@@ -225,41 +225,54 @@ export default function OverviewPage() {
 
   // Time to Second Case Data
   const timeToSecondCaseData = useMemo(() => {
-    const surgeonCases: Record<string, { dates: string[]; site: string }> = {}
+    const surgeonCases: Record<string, string[]> = {}
     
     filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate || !c.site) return
-      if (timeToSecondCaseSite !== "all" && c.site !== timeToSecondCaseSite) return
+      if (!c.surgeon || !c.operationDate) return
+      if (timeToSecondCaseSurgeon !== "all" && c.surgeon !== timeToSecondCaseSurgeon) return
       
       if (!surgeonCases[c.surgeon]) {
-        surgeonCases[c.surgeon] = { dates: [], site: c.site }
+        surgeonCases[c.surgeon] = []
       }
-      surgeonCases[c.surgeon].dates.push(c.operationDate)
+      surgeonCases[c.surgeon].push(c.operationDate)
     })
     
-    const siteTimes: Record<string, number[]> = {}
-    
-    Object.values(surgeonCases).forEach(({ dates, site }) => {
-      if (dates.length >= 2) {
+    const surgeonTimes = Object.entries(surgeonCases)
+      .filter(([, dates]) => dates.length >= 2)
+      .map(([surgeon, dates]) => {
         const sorted = dates.sort()
-        const days = Math.floor((new Date(sorted[1]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
-        if (!siteTimes[site]) siteTimes[site] = []
-        siteTimes[site].push(days)
-      }
+        const firstCaseDate = new Date(sorted[0])
+        const days = Math.floor((new Date(sorted[1]).getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
+        const year = firstCaseDate.getFullYear()
+        const quarter = Math.floor(firstCaseDate.getMonth() / 3) + 1
+        const quarterKey = `Q${quarter} ${year}`
+        return { surgeon, days, quarterKey, year, quarter }
+      })
+    
+    // Group by quarter
+    const quarterlyData: Record<string, { days: number[] }> = {}
+    surgeonTimes.forEach(({ quarterKey, days }) => {
+      if (!quarterlyData[quarterKey]) quarterlyData[quarterKey] = { days: [] }
+      quarterlyData[quarterKey].days.push(days)
     })
     
-    return Object.entries(siteTimes)
-      .map(([site, times]) => {
-        const sorted = times.sort((a, b) => a - b)
+    return Object.entries(quarterlyData)
+      .map(([quarter, data]) => {
+        const sorted = data.days.sort((a, b) => a - b)
         return {
-          site,
-          avg: Math.round(times.reduce((a, b) => a + b, 0) / times.length),
+          quarter,
+          avg: Math.round(data.days.reduce((a, b) => a + b, 0) / data.days.length),
           median: sorted[Math.floor(sorted.length / 2)],
-          max: Math.max(...times)
+          max: Math.max(...data.days)
         }
       })
-      .sort((a, b) => a.avg - b.avg)
-  }, [filteredCasesData, timeToSecondCaseSite])
+      .sort((a, b) => {
+        const [qA, yearA] = a.quarter.split(' ')
+        const [qB, yearB] = b.quarter.split(' ')
+        if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB)
+        return qA.localeCompare(qB)
+      })
+  }, [filteredCasesData, timeToSecondCaseSurgeon])
 
 
 
@@ -877,9 +890,9 @@ export default function OverviewPage() {
 
         <TimeToSecondCase 
           data={timeToSecondCaseData} 
-          sites={sitesList} 
-          selectedSite={timeToSecondCaseSite} 
-          onSiteChange={setTimeToSecondCaseSite} 
+          surgeons={surgeonsList} 
+          selectedSurgeon={timeToSecondCaseSurgeon} 
+          onSurgeonChange={setTimeToSecondCaseSurgeon} 
         />
 
         <div className="grid gap-4 md:grid-cols-2">
