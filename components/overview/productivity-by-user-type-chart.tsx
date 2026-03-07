@@ -90,7 +90,7 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
                   }}
                   height={50}
                 />
-                <YAxis tick={{ fontSize: 11 }} label={{ value: "Cases per Month", angle: -90, position: "insideLeft" }} />
+                <YAxis tick={{ fontSize: 11 }} label={{ value: "Cases per Month", angle: -90, position: "insideLeft" }} domain={[0, (dataMax: number) => Math.ceil(dataMax) + 5]} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="standard" fill="#60a5fa" radius={[4, 4, 0, 0]} name="Standard Productivity">
                   <LabelList dataKey="standard" position="top" style={{ fontSize: 9, fill: "#60a5fa" }} />
