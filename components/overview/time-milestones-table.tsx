@@ -197,9 +197,9 @@ export function TimeMilestonesTable({
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs z-[110]">
                     <div className="space-y-2 text-xs">
-                      <p><strong>Months to 2 Cases/Mo:</strong> Time (in months) from first case until surgeon performed 2 cases in a single month</p>
-                      <p><strong>Months to 2 Cases/Mo (3 Consecutive):</strong> Time (in months) from first case until surgeon achieved 2+ cases per month for 3 consecutive months</p>
-                      <p className="text-muted-foreground italic">Example: First case on 8/29, second case on 9/25 (same month) = 0.9 months</p>
+                      <p><strong>Mo to 2/Mo:</strong> Time from first case until the date of the 2nd case in the first month with 2+ cases. Uses 2nd case date of that month.</p>
+                      <p><strong>Mo to 3 Consec:</strong> Time from first case until the date of the 2nd case in the 3rd month of the first streak of 3 consecutive months with 2+ cases each.</p>
+                      <p className="text-muted-foreground italic">Calculation: days difference ÷ 30 = months (rounded to 1 decimal)</p>
                     </div>
                   </TooltipContent>
                 </Tooltip>
