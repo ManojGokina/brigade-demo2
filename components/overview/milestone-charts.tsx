@@ -98,8 +98,8 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" className="h-8" onClick={() => setIsDrawerOpen(true)}>
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
+              <Download className="h-3 w-3 mr-1" />
+              Export
             </Button>
 
             {isDrawerOpen && (
@@ -299,8 +299,8 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
               onClick={() => setIsDrawerOpen(true)}
               disabled={surgeonFilter === "all" || data.length === 0}
             >
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
+              <Download className="h-3 w-3 mr-1" />
+              Export
             </Button>
 
             {isDrawerOpen && (

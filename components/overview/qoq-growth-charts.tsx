@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
 
-export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onYearChange, onSurgeonChange }: { data: any[], year: string, years: string[], surgeons: string[], surgeon: string, onYearChange: (value: string) => void, onSurgeonChange: (value: string) => void }) {
+import { MultiSelect } from "@/components/ui/multi-select"
+
+export function QoQGrowthProgression({ data, years, selectedYears, surgeons, surgeon, onYearsChange, onSurgeonChange }: { data: any[], years: string[], selectedYears: string[], surgeons: string[], surgeon: string, onYearsChange: (values: string[]) => void, onSurgeonChange: (value: string) => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
@@ -25,7 +27,7 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `qoq-growth-${year}.csv`
+    a.download = `qoq-growth-${selectedYears.join('-')}.csv`
     a.click()
   }
 
@@ -34,7 +36,9 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
     <Card className="border-border/50 bg-card">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">QoQ Growth Progression - Quaterly</CardTitle>
+          <div>
+            <CardTitle className="text-sm font-medium">QoQ Growth Progression - Quaterly</CardTitle>
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex gap-3">
               <div className="flex items-center gap-1.5">
@@ -61,16 +65,13 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
                 ))}
               </SelectContent>
             </Select>
-            <Select value={year} onValueChange={onYearChange}>
-              <SelectTrigger className="w-[100px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((y) => (
-                  <SelectItem key={y} value={y}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={years}
+              selected={selectedYears}
+              onChange={onYearsChange}
+              placeholder="Select Years"
+              className="w-[120px]"
+            />
             <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
               <Maximize2 className="h-3 w-3 mr-1" />
               See All
@@ -119,8 +120,8 @@ export function QoQGrowthProgression({ data, year, years, surgeons, surgeon, onY
         <div className="px-6 py-6 bg-white">
           <div className="flex flex-wrap gap-2 mb-4">
             <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-xs font-medium">
-              <span className="font-semibold">Year:</span>
-              <span>{year}</span>
+              <span className="font-semibold">Years:</span>
+              <span>{selectedYears.join(', ')}</span>
             </div>
             <div className="inline-flex items-center gap-1.5 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-medium">
               <span className="font-semibold">Surgeon:</span>

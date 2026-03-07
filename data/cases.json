@@ -90,24 +90,6 @@
     "tbd": "Primary"
   },
   {
-    "caseNumber": 362,
-    "operationDate": "2024-01-15",
-    "nervesTreated": 2,
-    "systemName": "SystemX",
-    "site": "Hospital A",
-    "surgeon": "Dr. Smith",
-    "region": "North",
-    "userStatus": "Active",
-    "ueLe": "UE",
-    "surgeryPerformed": "",
-    "useCase": "Copping",
-    "isNeuromaCase": false,
-    "isCaseStudy": false,
-    "specialty": "Hand",
-    "training": "Plastic",
-    "tbd": "Notes here"
-  },
-  {
     "caseNumber": 361,
     "operationDate": "2025-12-23",
     "nervesTreated": 0,

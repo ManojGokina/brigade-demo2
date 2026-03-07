@@ -161,8 +161,8 @@ export function SurgeonProductivityOverTime({
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" className="h-8" onClick={() => setIsDrawerOpen(true)}>
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
+              <Download className="h-3 w-3 mr-1" />
+              Export
             </Button>
             
             {/* Side Drawer */}

@@ -64,10 +64,6 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
-            </Button>
           </div>
         </div>
       </CardHeader>
@@ -107,6 +103,17 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
               </tr>
             </tbody>
           </table>
+          {data.length > 10 && (
+            <div className="bg-muted/50 px-3 py-2 text-xs text-center border-t">
+              Showing 10 of {data.length} cases •{' '}
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="text-primary hover:underline font-medium"
+              >
+                View all {data.length}
+              </button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

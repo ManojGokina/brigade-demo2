@@ -34,7 +34,7 @@ export default function OverviewPage() {
   const [secondCaseStatus, setSecondCaseStatus] = useState<string>("all")
   const [secondCaseBreakdown, setSecondCaseBreakdown] = useState<string>("overall")
   const [timeUnit, setTimeUnit] = useState<string>("days")
-  const [qoqYear, setQoqYear] = useState<string>(new Date().getFullYear().toString())
+  const [qoqYear, setQoqYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [qoqSurgeon, setQoqSurgeon] = useState<string>("all")
   const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string>("all")
   const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string>("all")
@@ -44,7 +44,7 @@ export default function OverviewPage() {
   const [regionChartView, setRegionChartView] = useState<string>("cases")
   const [timeToSecondCaseSite, setTimeToSecondCaseSite] = useState<string>("all")
   const [timeMilestonesSurgeon, setTimeMilestonesSurgeon] = useState<string>("all")
-  const [timeMilestonesYear, setTimeMilestonesYear] = useState<string>(new Date().getFullYear().toString())
+  const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
 
   // Get unique surgeons, regions, specialties
   const surgeonsList = useMemo(() => {
@@ -91,7 +91,7 @@ export default function OverviewPage() {
   const qoqYears = useMemo(() => {
     const currentYear = new Date().getFullYear()
     const years: string[] = []
-    for (let year = 2020; year <= currentYear; year++) {
+    for (let year = 2024; year <= currentYear; year++) {
       years.push(year.toString())
     }
     return years
@@ -108,7 +108,7 @@ export default function OverviewPage() {
       if (!c.operationDate) return
       const date = new Date(c.operationDate)
       const year = date.getFullYear()
-      if (year.toString() !== qoqYear) return
+      if (!qoqYear.includes(year.toString())) return
       const quarter = Math.floor(date.getMonth() / 3) + 1
       const quarterKey = `${year} - ${quarter}`
       if (!quarterlyData[quarterKey]) quarterlyData[quarterKey] = { cases: 0, surgeons: new Set() }
@@ -116,7 +116,12 @@ export default function OverviewPage() {
       if (c.surgeon) quarterlyData[quarterKey].surgeons.add(c.surgeon)
     })
     
-    const allQuarters = [`${qoqYear} - 1`, `${qoqYear} - 2`, `${qoqYear} - 3`, `${qoqYear} - 4`]
+    const allQuarters: string[] = []
+    qoqYear.forEach(year => {
+      for (let q = 1; q <= 4; q++) {
+        allQuarters.push(`${year} - ${q}`)
+      }
+    })
     return allQuarters.map(quarter => ({
       quarter,
       cases: quarterlyData[quarter]?.cases || 0,
@@ -589,7 +594,7 @@ export default function OverviewPage() {
   const timeMilestonesYears = useMemo(() => {
     const currentYear = new Date().getFullYear()
     const years: string[] = []
-    for (let year = 2020; year <= currentYear; year++) {
+    for (let year = 2024; year <= currentYear; year++) {
       years.push(year.toString())
     }
     return years.reverse()
@@ -603,6 +608,9 @@ export default function OverviewPage() {
     casesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
       if (timeMilestonesSurgeon !== "all" && c.surgeon !== timeMilestonesSurgeon) return
+      
+      const caseYear = new Date(c.operationDate).getFullYear().toString()
+      if (!timeMilestonesYear.includes(caseYear)) return
       
       if (!surgeonData[c.surgeon]) {
         surgeonData[c.surgeon] = { firstCase: c.operationDate, cases: [] }
@@ -846,14 +854,14 @@ export default function OverviewPage() {
             surgeons={surgeonsList}
             years={timeMilestonesYears}
             surgeonFilter={timeMilestonesSurgeon}
-            yearFilter={timeMilestonesYear}
+            selectedYears={timeMilestonesYear}
             onSurgeonChange={setTimeMilestonesSurgeon}
-            onYearChange={setTimeMilestonesYear}
+            onYearsChange={setTimeMilestonesYear}
           />
           <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />
         </div>
 
-        <QoQGrowthProgression data={qoqGrowthData} year={qoqYear} years={qoqYears} surgeons={surgeonsList} surgeon={qoqSurgeon} onYearChange={setQoqYear} onSurgeonChange={setQoqSurgeon} />
+        <QoQGrowthProgression data={qoqGrowthData} years={qoqYears} selectedYears={qoqYear} surgeons={surgeonsList} surgeon={qoqSurgeon} onYearsChange={setQoqYear} onSurgeonChange={setQoqSurgeon} />
 
         <CasesByRegion 
           data={casesByRegionData} 

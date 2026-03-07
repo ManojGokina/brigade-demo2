@@ -40,8 +40,8 @@ export function GracePeriodCard({ surgeons, surgeonDetails }: { surgeons: string
             </div>
             {surgeons.length > 0 && (
               <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-                <Maximize2 className="h-3 w-3 mr-1" />
-                See All
+                <Download className="h-3 w-3 mr-1" />
+                Export
               </Button>
             )}
           </div>

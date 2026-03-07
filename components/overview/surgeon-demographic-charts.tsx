@@ -37,8 +37,8 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Surgeons by Specialty</CardTitle>
           <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-            <Maximize2 className="h-3 w-3 mr-1" />
-            See All
+            <Download className="h-3 w-3 mr-1" />
+            Export
           </Button>
         </div>
       </CardHeader>
@@ -157,8 +157,8 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Surgeons by Case Load</CardTitle>
           <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-            <Maximize2 className="h-3 w-3 mr-1" />
-            See All
+            <Download className="h-3 w-3 mr-1" />
+            Export
           </Button>
         </div>
       </CardHeader>

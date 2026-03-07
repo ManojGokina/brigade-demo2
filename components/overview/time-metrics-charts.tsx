@@ -42,8 +42,8 @@ export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange }: { data:
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
+              <Download className="h-3 w-3 mr-1" />
+              Export
             </Button>
           </div>
         </div>
@@ -168,8 +168,8 @@ export function TimeNormalized({ data }: { data: any[] }) {
             <p className="text-xs text-muted-foreground">Months since 1st and 2nd case</p>
           </div>
           <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-            <Maximize2 className="h-3 w-3 mr-1" />
-            See All
+            <Download className="h-3 w-3 mr-1" />
+            Export
           </Button>
         </div>
       </CardHeader>

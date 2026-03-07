@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Download, Info, Maximize2, X } from "lucide-react"
 import * as XLSX from "xlsx-js-style"
+import { MultiSelect } from "@/components/ui/multi-select"
 import {
   Tooltip,
   TooltipContent,
@@ -18,17 +19,17 @@ export function TimeMilestonesTable({
   surgeons, 
   years,
   surgeonFilter, 
-  yearFilter,
+  selectedYears,
   onSurgeonChange,
-  onYearChange
+  onYearsChange
 }: { 
   data: any[], 
   surgeons: string[],
   years: string[],
   surgeonFilter: string,
-  yearFilter: string,
+  selectedYears: string[],
   onSurgeonChange: (value: string) => void,
-  onYearChange: (value: string) => void
+  onYearsChange: (values: string[]) => void
 }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const top10Data = data.slice(0, 10)
@@ -41,7 +42,7 @@ export function TimeMilestonesTable({
       ["Time Milestones Report", "", ""],
       ["", "", ""],
       ["Surgeon", surgeonLabel, ""],
-      ["Year", yearFilter, ""],
+      ["Year", selectedYears.join(', '), ""],
       ["Export Date", new Date().toLocaleString(), ""],
       ["", "", ""],
       ["Surgeon", "Months to 2 Cases/Mo", "Months to 2 Cases/Mo (3 Consecutive)"],
@@ -81,10 +82,11 @@ export function TimeMilestonesTable({
     }
     
     XLSX.utils.book_append_sheet(wb, ws, "Time Milestones")
-    XLSX.writeFile(wb, `time-milestones-${yearFilter}-${new Date().toISOString().split('T')[0]}.xlsx`)
+    XLSX.writeFile(wb, `time-milestones-${selectedYears.join('-')}-${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
   return (
+    <>
     <Card className="border-border/50 bg-card">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
@@ -104,109 +106,13 @@ export function TimeMilestonesTable({
                 ))}
               </SelectContent>
             </Select>
-            <Select value={yearFilter} onValueChange={onYearChange}>
-              <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setIsDrawerOpen(true)}>
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
-            </Button>
-
-            {isDrawerOpen && (
-              <>
-                <div className="fixed inset-0 bg-black/50 z-[100]" onClick={() => setIsDrawerOpen(false)} />
-                <div className="fixed right-0 top-0 h-full w-[90vw] sm:w-[700px] bg-white dark:bg-gray-900 shadow-2xl z-[101] overflow-y-auto animate-in slide-in-from-right duration-300">
-                  <div className="sticky top-0 bg-white dark:bg-gray-900 border-b p-6 flex items-start justify-between z-10">
-                    <div>
-                      <h2 className="text-lg font-semibold">Time Milestones - Full Data</h2>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Monthly productivity milestones showing months with 2+ cases and 3-month consecutive streaks with 3+ cases per month.
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setIsDrawerOpen(false)} className="-mt-2 -mr-2">
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
-                        <span className="font-semibold">Year:</span>
-                        <span>{yearFilter}</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-3 py-1.5 rounded-full text-xs font-medium">
-                        <span className="font-semibold">Surgeon:</span>
-                        <span>{surgeonFilter === "all" ? "All Surgeons" : surgeonFilter}</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
-                        <span className="font-semibold">Total Records:</span>
-                        <span>{data.length}</span>
-                      </div>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full text-xs font-medium cursor-help">
-                              <Info className="h-3 w-3" />
-                              <span>How it's calculated</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs z-[110]">
-                            <div className="space-y-2 text-xs">
-                              <p><strong>Months to 2 Cases/Mo:</strong> Time (in months) from first case until surgeon performed 2 cases in a single month</p>
-                              <p><strong>Months to 2 Cases/Mo (3 Consecutive):</strong> Time (in months) from first case until surgeon achieved 2+ cases per month for 3 consecutive months</p>
-                              <p className="text-muted-foreground italic">Example: First case on 8/29, second case on 9/25 (same month) = 0.9 months</p>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="mb-3 flex justify-end">
-                      <Button onClick={exportToExcel} size="sm" variant="outline" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Export Excel
-                      </Button>
-                    </div>
-                    <div className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted">
-                          <tr>
-                            <th className="text-left p-3 font-medium">#</th>
-                            <th className="text-left p-3 font-medium">Surgeon</th>
-                            <th className="text-center p-3 font-medium">Months to 2 Cases/Mo</th>
-                            <th className="text-center p-3 font-medium">Months to 2 Cases/Mo (3 Consecutive)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.map((row, index) => (
-                            <tr key={index} className="border-t hover:bg-muted/50">
-                              <td className="p-3 text-muted-foreground">{index + 1}</td>
-                              <td className="p-3 font-medium">{row.surgeon}</td>
-                              <td className="p-3 text-center">
-                                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
-                                  {row.monthsTo2Cases !== null ? row.monthsTo2Cases : '-'}
-                                </span>
-                              </td>
-                              <td className="p-3 text-center">
-                                <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
-                                  {row.monthsTo3Consecutive !== null ? row.monthsTo3Consecutive : '-'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+            <MultiSelect
+              options={years}
+              selected={selectedYears}
+              onChange={onYearsChange}
+              placeholder="Select Years"
+              className="w-[140px]"
+            />
           </div>
         </div>
       </CardHeader>
@@ -248,8 +154,109 @@ export function TimeMilestonesTable({
               )}
             </tbody>
           </table>
+          {data.length > 10 && (
+            <div className="bg-muted/50 px-2 py-1.5 text-xs text-center border-t">
+              Showing 10 of {data.length} surgeons •{' '}
+              <button
+                onClick={() => setIsDrawerOpen(true)}
+                className="text-primary hover:underline font-medium"
+              >
+                View all {data.length}
+              </button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
+
+    {isDrawerOpen && (
+      <>
+        <div className="fixed inset-0 bg-black/50 z-[100]" onClick={() => setIsDrawerOpen(false)} />
+        <div className="fixed right-0 top-0 h-full w-[90vw] sm:w-[700px] bg-white dark:bg-gray-900 shadow-2xl z-[101] overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b p-6 flex items-start justify-between z-10">
+            <div>
+              <h2 className="text-lg font-semibold">Time Milestones - Full Data</h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                Monthly productivity milestones showing months with 2+ cases and 3-month consecutive streaks with 3+ cases per month.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setIsDrawerOpen(false)} className="-mt-2 -mr-2">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="p-6">
+            <div className="mb-4 flex flex-wrap gap-2">
+              <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
+                <span className="font-semibold">Years:</span>
+                <span>{selectedYears.join(', ')}</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-3 py-1.5 rounded-full text-xs font-medium">
+                <span className="font-semibold">Surgeon:</span>
+                <span>{surgeonFilter === "all" ? "All Surgeons" : surgeonFilter}</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
+                <span className="font-semibold">Total Records:</span>
+                <span>{data.length}</span>
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full text-xs font-medium cursor-help">
+                      <Info className="h-3 w-3" />
+                      <span>How it's calculated</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs z-[110]">
+                    <div className="space-y-2 text-xs">
+                      <p><strong>Months to 2 Cases/Mo:</strong> Time (in months) from first case until surgeon performed 2 cases in a single month</p>
+                      <p><strong>Months to 2 Cases/Mo (3 Consecutive):</strong> Time (in months) from first case until surgeon achieved 2+ cases per month for 3 consecutive months</p>
+                      <p className="text-muted-foreground italic">Example: First case on 8/29, second case on 9/25 (same month) = 0.9 months</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="mb-3 flex justify-end">
+              <Button onClick={exportToExcel} size="sm" variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export Excel
+              </Button>
+            </div>
+            <div className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+              <table className="w-full text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="text-left p-3 font-medium">#</th>
+                    <th className="text-left p-3 font-medium">Surgeon</th>
+                    <th className="text-center p-3 font-medium">Months to 2 Cases/Mo</th>
+                    <th className="text-center p-3 font-medium">Months to 2 Cases/Mo (3 Consecutive)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((row, index) => (
+                    <tr key={index} className="border-t hover:bg-muted/50">
+                      <td className="p-3 text-muted-foreground">{index + 1}</td>
+                      <td className="p-3 font-medium">{row.surgeon}</td>
+                      <td className="p-3 text-center">
+                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold">
+                          {row.monthsTo2Cases !== null ? row.monthsTo2Cases : '-'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
+                          {row.monthsTo3Consecutive !== null ? row.monthsTo3Consecutive : '-'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </>
+    )}
+    </>
   )
 }
