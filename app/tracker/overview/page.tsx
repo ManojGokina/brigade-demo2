@@ -625,7 +625,8 @@ export default function OverviewPage() {
     })
     
     return Object.entries(surgeonData).map(([surgeon, dates]) => {
-      const sorted = dates.sort()
+      const sorted = dates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+      console.log(`Surgeon: ${surgeon}, Sorted Dates:`, sorted);
       const firstCaseDate = new Date(sorted[0])
       
       // Group by month and count
@@ -642,7 +643,8 @@ export default function OverviewPage() {
       const sortedMonths = Object.keys(monthCounts).sort()
       for (const month of sortedMonths) {
         if (monthCounts[month].length >= 2) {
-          const secondCaseDate = new Date(monthCounts[month].sort()[1])
+          const sortedCasesInMonth = monthCounts[month].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+          const secondCaseDate = new Date(sortedCasesInMonth[1])
           const days = Math.floor((secondCaseDate.getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
           monthsTo2Cases = +(days / 30).toFixed(1)
           break
@@ -665,7 +667,8 @@ export default function OverviewPage() {
           const diff2 = (d3.getFullYear() - d2.getFullYear()) * 12 + (d3.getMonth() - d2.getMonth())
           
           if (diff1 === 1 && diff2 === 1) {
-            const secondCaseInMonth3 = monthCounts[m3].sort()[1]
+            const sortedCasesInMonth3 = monthCounts[m3].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+            const secondCaseInMonth3 = sortedCasesInMonth3[1]
             const days = Math.floor((new Date(secondCaseInMonth3).getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
             monthsTo3Consecutive = +(days / 30).toFixed(1)
             break
