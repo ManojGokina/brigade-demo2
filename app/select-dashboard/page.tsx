@@ -42,7 +42,7 @@ const DASHBOARD_COLORS: Record<string, { color: string; bgColor: string }> = {
 // Dashboard route mapping by ID from the database
 // 101 -> Case Tracking, 102 -> Sales, 103 -> Inventory, 104 -> User Management
 const DASHBOARD_ROUTES_BY_ID: Record<number, string> = {
-  101: "/tracker/cases/new",
+  101: "/tracker",
   102: "/sales/overview",
   103: "/inventory/add-inventory",
   104: "/user-management/users",
@@ -92,7 +92,7 @@ export default function SelectDashboardPage() {
         title: "Dashboard selected",
         description: name,
       })
-      const route = DASHBOARD_ROUTES_BY_ID[dashboardId] || "/tracker/cases/new"
+      const route = DASHBOARD_ROUTES_BY_ID[dashboardId] || "/tracker"
       console.log('Modules fetched, navigating to:', route)
       // Use router.push for client-side navigation to avoid page reload
       await router.push(route)
@@ -111,7 +111,7 @@ export default function SelectDashboardPage() {
         router.push('/login')
       } else {
         // For other errors, still navigate to the dashboard
-        const route = DASHBOARD_ROUTES_BY_ID[dashboardId] || "/tracker/cases/new"
+        const route = DASHBOARD_ROUTES_BY_ID[dashboardId] || "/tracker"
         await router.push(route)
       }
     }
