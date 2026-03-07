@@ -160,10 +160,18 @@ export function SurgeonProductivityOverTime({
                 <SelectItem value="VAL">VAL</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setIsDrawerOpen(true)}>
-              <Download className="h-3 w-3 mr-1" />
-              Export
-            </Button>
+            {/* <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8" onClick={() => setIsDrawerOpen(true)}>
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Download in CSV</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider> */}
             
             {/* Side Drawer */}
             {isDrawerOpen && (
@@ -287,6 +295,15 @@ export function SurgeonProductivityOverTime({
             </Area>
           </AreaChart>
         </ChartContainer>
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+          >
+            <Maximize2 className="h-4 w-4" />
+            View Detailed Table
+          </button>
+        </div>
       </CardContent>
     </Card>
   )

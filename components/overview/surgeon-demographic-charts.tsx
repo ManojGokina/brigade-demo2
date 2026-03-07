@@ -7,6 +7,12 @@ import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const COLORS = ["#1d99ac", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"]
 
@@ -36,10 +42,18 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Surgeons by Specialty</CardTitle>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-            <Download className="h-3 w-3 mr-1" />
-            Export
-          </Button>
+          {/* <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
+                  <Download className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download in CSV</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider> */}
         </div>
       </CardHeader>
       <CardContent>
@@ -70,6 +84,15 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
             </PieChart>
           </ResponsiveContainer>
         </ChartContainer>
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+          >
+            <Maximize2 className="h-4 w-4" />
+            View Detailed Table
+          </button>
+        </div>
       </CardContent>
     </Card>
 
@@ -156,10 +179,18 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Surgeons by Case Load</CardTitle>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-            <Download className="h-3 w-3 mr-1" />
-            Export
-          </Button>
+          {/* <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
+                  <Download className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download in CSV</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider> */}
         </div>
       </CardHeader>
       <CardContent>
@@ -190,6 +221,15 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
             </PieChart>
           </ResponsiveContainer>
         </ChartContainer>
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+          >
+            <Maximize2 className="h-4 w-4" />
+            View Detailed Table
+          </button>
+        </div>
       </CardContent>
     </Card>
 

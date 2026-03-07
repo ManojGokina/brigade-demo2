@@ -8,6 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function TimeToSecondCase({ data, sites, selectedSite, onSiteChange }: { 
   data: any[], 
@@ -65,10 +71,7 @@ export function TimeToSecondCase({ data, sites, selectedSite, onSiteChange }: {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-8" onClick={handleExport}>
-              <Download className="h-3 w-3 mr-1" />
-              Export
-            </Button>
+            
           </div>
         </div>
       </CardHeader>
@@ -88,6 +91,15 @@ export function TimeToSecondCase({ data, sites, selectedSite, onSiteChange }: {
             </Bar>
           </BarChart>
         </ChartContainer>
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+          >
+            <Maximize2 className="h-4 w-4" />
+            View Detailed Table
+          </button>
+        </div>
       </CardContent>
     </Card>
 

@@ -137,31 +137,39 @@ export function SecondCaseBooking({
                 <SelectItem value="specialty">By Specialty</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
-            </Button>
+            
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[300px] w-full">
-          <BarChart data={data}>
-            <XAxis 
-              dataKey="category" 
-              tick={{ fontSize: 11 }} 
-              label={{ value: "Category", position: "insideBottom", offset: 0, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-            />
-            <YAxis 
-              tick={{ fontSize: 11 }} 
-              label={{ value: "Percentage (%)", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="percentage" fill="#10b981" radius={[4, 4, 0, 0]}>
-              <LabelList dataKey="percentage" position="top" formatter={(value: number) => `${value}%`} style={{ fontSize: 10, fill: "#10b981" }} />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+        <div className="relative">
+          <ChartContainer config={{}} className="h-[300px] w-full">
+            <BarChart data={data}>
+              <XAxis 
+                dataKey="category" 
+                tick={{ fontSize: 11 }} 
+                label={{ value: "Category", position: "insideBottom", offset: 0, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+              />
+              <YAxis 
+                tick={{ fontSize: 11 }} 
+                label={{ value: "Percentage (%)", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="percentage" fill="#10b981" radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="percentage" position="top" formatter={(value: number) => `${value}%`} style={{ fontSize: 10, fill: "#10b981" }} />
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+          <div className="flex justify-center mt-3">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="text-sm text-primary hover:text-primary/80 hover:underline font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <Maximize2 className="h-4 w-4" />
+              View Detailed Table
+            </button>
+          </div>
+        </div>
       </CardContent>
     </Card>
 

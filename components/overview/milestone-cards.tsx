@@ -5,6 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Users, Calendar, TrendingUp, Maximize2, X, Download } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function GracePeriodCard({ surgeons, surgeonDetails }: { surgeons: string[], surgeonDetails?: { surgeon: string, firstCaseDate: string, daysSince: number }[] }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -38,12 +44,20 @@ export function GracePeriodCard({ surgeons, surgeonDetails }: { surgeons: string
               <Calendar className="h-3.5 w-3.5" />
               <span className="text-sm font-semibold">{surgeons.length} Surgeons</span>
             </div>
-            {surgeons.length > 0 && (
-              <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-                <Download className="h-3 w-3 mr-1" />
-                Export
-              </Button>
-            )}
+            {/* {surgeons.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Download in CSV</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )} */}
           </div>
         </div>
       </CardHeader>
@@ -73,6 +87,17 @@ export function GracePeriodCard({ surgeons, surgeonDetails }: { surgeons: string
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">No surgeons in grace period</p>
             <p className="text-xs text-muted-foreground mt-1">All surgeons have been active for more than 45 days</p>
+          </div>
+        )}
+        {surgeons.length > 0 && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+            >
+              <Maximize2 className="h-4 w-4" />
+              View Detailed Table
+            </button>
           </div>
         )}
       </CardContent>

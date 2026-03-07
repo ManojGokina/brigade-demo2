@@ -7,6 +7,12 @@ import { BarChart, Bar, XAxis, YAxis, LabelList, Legend, ResponsiveContainer } f
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function ProductivityByUserType({ data }: { data: any[] }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -60,15 +66,12 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
             <p className="text-xs text-muted-foreground">Standard vs Excluding First Case by Region</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-              <Maximize2 className="h-3 w-3 mr-1" />
-              See All
-            </Button>
+            
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative">
+        <div className="relative pb-24">
           <ChartContainer config={{}} className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sortedData} margin={{ bottom: 0 }}>
@@ -98,7 +101,8 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
-          <div className="absolute bottom-0 left-0 right-0 h-16 flex items-start" style={{ marginLeft: '60px', marginRight: '20px' }}>
+          <div className="absolute" style={{ bottom: '70px', left: '60px', right: '20px', height: '64px' }}>
+            <div className="flex h-full">
             {Object.entries(groupedData).map(([region, years], regionIdx) => {
               const regionItems = sortedData.filter(d => d.region === region)
               const regionWidth = (regionItems.length / sortedData.length) * 100
@@ -107,13 +111,13 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
               return (
                 <div key={region} className="relative" style={{ width: `${regionWidth}%` }}>
                   {!isLast && (
-                    <div className="absolute right-0 top-0 h-12 border-r-2 border-dashed border-gray-400" />
+                    <div className="absolute right-0 top-0 h-16 border-r-2 border-dashed border-gray-400" />
                   )}
                   <div className="flex">
                     {Object.entries(years).map(([year, quarters]) => {
                       const yearWidth = (quarters.length / regionItems.length) * 100
                       return (
-                        <div key={year} className="text-center" style={{ width: `${yearWidth}%` }}>
+                        <div key={year} className="text-center mt-12" style={{ width: `${yearWidth}%` }}>
                           <div className="text-xs text-gray-600">{year}</div>
                         </div>
                       )
@@ -125,8 +129,12 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
                 </div>
               )
             })}
+            </div>
           </div>
-          <div className="flex gap-4 justify-center mt-[50px]">
+          {/* 
+           */}
+        </div>
+        <div className="flex gap-4 justify-center mt-4">
             <div className="flex items-center gap-1.5">
               <div className="h-2 w-2 rounded-full bg-[#60a5fa]" />
               <span className="text-xs text-muted-foreground">Standard Productivity</span>
@@ -136,7 +144,15 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
               <span className="text-xs text-muted-foreground">Excluding First Case</span>
             </div>
           </div>
-        </div>
+        <div className="flex justify-center mt-3">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+            >
+              <Maximize2 className="h-4 w-4" />
+              View Detailed Table
+            </button>
+          </div>
       </CardContent>
     </Card>
 
