@@ -42,22 +42,10 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Surgeons by Specialty</CardTitle>
-          {/* <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-                  <Download className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Download in CSV</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider> */}
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[300px] w-full">
+        <ChartContainer config={{}} className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -65,9 +53,16 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
                 cx="50%"
                 cy="50%"
                 labelLine={true}
-                label={({ percent }) => `${percent}%`}
-                outerRadius={80}
-                innerRadius={50}
+                label={(props) => {
+                  const { name, percent, index } = props
+                  return (
+                    <text x={props.x} y={props.y} fill={COLORS[index % COLORS.length]} textAnchor={props.textAnchor} dominantBaseline="central" fontWeight="bold" fontSize={12}>
+                      {`${name}: ${percent}%`}
+                    </text>
+                  )
+                }}
+                outerRadius={120}
+                innerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -75,11 +70,6 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Legend 
-                verticalAlign="bottom" 
-                height={36}
-                formatter={(value, entry: any) => `${value} - ${entry.payload.percent}% (${entry.payload.value})`}
-              />
               <ChartTooltip content={<ChartTooltipContent />} />
             </PieChart>
           </ResponsiveContainer>
@@ -179,22 +169,10 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Surgeons by Case Load</CardTitle>
-          {/* <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-                  <Download className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Download in CSV</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider> */}
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[300px] w-full">
+        <ChartContainer config={{}} className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -202,9 +180,16 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
                 cx="50%"
                 cy="50%"
                 labelLine={true}
-                label={({ percent }) => `${percent}%`}
-                outerRadius={80}
-                innerRadius={50}
+                label={(props) => {
+                  const { name, percent, index } = props
+                  return (
+                    <text x={props.x} y={props.y} fill={COLORS[index % COLORS.length]} textAnchor={props.textAnchor} dominantBaseline="central" fontWeight="bold" fontSize={12}>
+                      {`${name}: ${percent}%`}
+                    </text>
+                  )
+                }}
+                outerRadius={120}
+                innerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -212,11 +197,6 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Legend 
-                verticalAlign="bottom" 
-                height={36}
-                formatter={(value, entry: any) => `${value} - ${entry.payload.percent}% (${entry.payload.value})`}
-              />
               <ChartTooltip content={<ChartTooltipContent />} />
             </PieChart>
           </ResponsiveContainer>
