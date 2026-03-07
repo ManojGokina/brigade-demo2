@@ -72,7 +72,7 @@ export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonCha
                 <span className="text-xs text-muted-foreground">Max</span>
               </div>
             </div>
-            <Select value={selectedSurgeon} onValueChange={onSurgeonChange}>
+            {/* <Select value={selectedSurgeon} onValueChange={onSurgeonChange}>
               <SelectTrigger className="w-[140px] h-8 text-xs border-gray-300 focus:border-gray-500">
                 <SelectValue />
               </SelectTrigger>
@@ -81,8 +81,8 @@ export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonCha
                 {surgeons.map((s) => (
                   <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </SelectContent>  
+            </Select> */}
           </div>
         </div>
       </CardHeader>

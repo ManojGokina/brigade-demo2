@@ -169,7 +169,7 @@ export function TimeMilestonesTable({
             <div>
               <h2 className="text-lg font-semibold">Time Milestones - Full Data</h2>
               <p className="text-sm text-muted-foreground mt-2">
-                Monthly productivity milestones showing months with 2+ cases and 3-month consecutive streaks with 3+ cases per month.
+                Monthly productivity milestones showing months with 2+ cases and 3-month consecutive streaks with 2+ cases per month.
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setIsDrawerOpen(false)} className="-mt-2 -mr-2">
