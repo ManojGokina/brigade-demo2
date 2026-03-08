@@ -806,12 +806,7 @@ export default function OverviewPage() {
             surgeonFilter={daysToCaseSurgeon} 
             onSurgeonChange={setDaysToCaseSurgeon} 
           />
-          <DaysBetweenCases 
-            data={daysBetweenCasesData} 
-            surgeons={surgeonsList} 
-            surgeonFilter={daysBetweenCasesSurgeon} 
-            onSurgeonChange={setDaysBetweenCasesSurgeon} 
-          />
+          <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />
         </div>
 
         <TopPerformersTable 
@@ -852,6 +847,12 @@ export default function OverviewPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
+          <DaysBetweenCases 
+            data={daysBetweenCasesData} 
+            surgeons={surgeonsList} 
+            surgeonFilter={daysBetweenCasesSurgeon} 
+            onSurgeonChange={setDaysBetweenCasesSurgeon} 
+          />
           <TimeMilestonesTable 
             data={timeMilestonesData}
             surgeons={surgeonsList}
@@ -861,7 +862,6 @@ export default function OverviewPage() {
             onSurgeonChange={setTimeMilestonesSurgeon}
             onYearsChange={setTimeMilestonesYear}
           />
-          <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />
         </div>
 
         <QoQGrowthProgression data={qoqGrowthData} years={qoqYears} selectedYears={qoqYear} surgeons={surgeonsList} surgeon={qoqSurgeon} onYearsChange={setQoqYear} onSurgeonChange={setQoqSurgeon} />
