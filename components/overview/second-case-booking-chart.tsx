@@ -260,17 +260,23 @@ export function SecondCaseBooking({
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {data.map((item, index) => (
-                  <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
-                    <td className="p-3 text-muted-foreground">{index + 1}</td>
-                    <td className="p-3 font-medium text-gray-900">{item.category}</td>
-                    <td className="p-3 text-right font-medium">
-                      <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
-                        {item.percentage}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {data.map((item, index) => {
+                  const displayPercentage = statusFilter.length === 0 
+                    ? item.percentage
+                    : statusFilter.reduce((sum, status) => sum + (item[status] || 0), 0)
+                  
+                  return (
+                    <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
+                      <td className="p-3 text-muted-foreground">{index + 1}</td>
+                      <td className="p-3 font-medium text-gray-900">{item.category}</td>
+                      <td className="p-3 text-right font-medium">
+                        <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
+                          {displayPercentage}%
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
