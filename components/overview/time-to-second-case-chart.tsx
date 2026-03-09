@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, LabelList, Legend, CartesianGrid, ResponsiveContainer } from "recharts"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
@@ -12,8 +12,8 @@ import { Maximize2, X, Download } from "lucide-react"
 export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonChange }: { 
   data: any[], 
   surgeons: string[], 
-  selectedSurgeon: string, 
-  onSurgeonChange: (value: string) => void 
+  selectedSurgeon: string[], 
+  onSurgeonChange: (value: string[]) => void 
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -72,17 +72,13 @@ export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonCha
                 <span className="text-xs text-muted-foreground">Max</span>
               </div>
             </div>
-            {/* <Select value={selectedSurgeon} onValueChange={onSurgeonChange}>
-              <SelectTrigger className="w-[140px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Surgeons</SelectItem>
-                {surgeons.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>  
-            </Select> */}
+            <MultiSelect
+              options={surgeons}
+              selected={selectedSurgeon}
+              onChange={onSurgeonChange}
+              placeholder="All Surgeons"
+              className="w-[150px] border-gray-300 focus:border-gray-500"
+            />
           </div>
         </div>
       </CardHeader>

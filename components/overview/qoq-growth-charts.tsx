@@ -17,7 +17,7 @@ import {
 
 import { MultiSelect } from "@/components/ui/multi-select"
 
-export function QoQGrowthProgression({ data, years, selectedYears, surgeons, surgeon, onYearsChange, onSurgeonChange }: { data: any[], years: string[], selectedYears: string[], surgeons: string[], surgeon: string, onYearsChange: (values: string[]) => void, onSurgeonChange: (value: string) => void }) {
+export function QoQGrowthProgression({ data, years, selectedYears, surgeons, surgeon, onYearsChange, onSurgeonChange }: { data: any[], years: string[], selectedYears: string[], surgeons: string[], surgeon: string[], onYearsChange: (values: string[]) => void, onSurgeonChange: (value: string[]) => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
@@ -60,17 +60,13 @@ export function QoQGrowthProgression({ data, years, selectedYears, surgeons, sur
                 <span className="text-xs text-muted-foreground">Productivity</span>
               </div>
             </div>
-            <Select value={surgeon} onValueChange={onSurgeonChange}>
-              <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Surgeons</SelectItem>
-                {surgeons.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={surgeons}
+              selected={surgeon}
+              onChange={onSurgeonChange}
+              placeholder="All Surgeons"
+              className="w-[120px] border-gray-300 focus:border-gray-500"
+            />
             <MultiSelect
               options={years}
               selected={selectedYears}
@@ -137,7 +133,7 @@ export function QoQGrowthProgression({ data, years, selectedYears, surgeons, sur
             </div>
             <div className="inline-flex items-center gap-1.5 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-medium">
               <span className="font-semibold">Surgeon:</span>
-              <span>{surgeon === "all" ? "All Surgeons" : surgeon}</span>
+              <span>{surgeon.length === 0 ? "All Surgeons" : surgeon.join(", ")}</span>
             </div>
           </div>
           <div className="mb-3 flex justify-end">

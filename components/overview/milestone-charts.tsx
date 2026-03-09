@@ -233,11 +233,11 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
   )
 }
 
-export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChange }: { data: any[], surgeons: string[], surgeonFilter: string, onSurgeonChange: (value: string) => void }) {
+export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChange }: { data: any[], surgeons: string[], surgeonFilter: string[], onSurgeonChange: (value: string[]) => void }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const exportToExcel = () => {
-    const surgeonLabel = surgeonFilter === "all" ? "All Surgeons" : surgeonFilter
+    const surgeonLabel = surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")
     
     const wb = XLSX.utils.book_new()
     const wsData: any[][] = [
@@ -295,17 +295,13 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
             <p className="text-xs text-muted-foreground">Days between each case for selected surgeon</p>
           </div>
           <div className="flex gap-2 items-center">
-            <Select value={surgeonFilter} onValueChange={onSurgeonChange}>
-              <SelectTrigger className="w-[150px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Surgeons</SelectItem>
-                {surgeons.map((surgeon) => (
-                  <SelectItem key={surgeon} value={surgeon}>{surgeon}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={surgeons}
+              selected={surgeonFilter}
+              onChange={onSurgeonChange}
+              placeholder="All Surgeons"
+              className="w-[150px] border-gray-300 focus:border-gray-500"
+            />
             {/* <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -314,7 +310,7 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
                     size="sm" 
                     className="h-8" 
                     onClick={() => setIsDrawerOpen(true)}
-                    disabled={surgeonFilter === "all" || data.length === 0}
+                    disabled={surgeonFilter.length === 0 || data.length === 0}
                   >
                     <Download className="h-4 w-4" />
                   </Button>
@@ -345,7 +341,7 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
                     <div className="mb-4 flex flex-wrap gap-2">
                       <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
                         <span className="font-semibold">Surgeon:</span>
-                        <span>{surgeonFilter}</span>
+                        <span>{surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")}</span>
                       </div>
                       <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
                         <span className="font-semibold">Total Records:</span>

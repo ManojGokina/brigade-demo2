@@ -35,15 +35,15 @@ export default function OverviewPage() {
   const [secondCaseBreakdown, setSecondCaseBreakdown] = useState<string>("overall")
   const [timeUnit, setTimeUnit] = useState<string>("days")
   const [qoqYear, setQoqYear] = useState<string[]>([new Date().getFullYear().toString()])
-  const [qoqSurgeon, setQoqSurgeon] = useState<string>("all")
+  const [qoqSurgeon, setQoqSurgeon] = useState<string[]>([])
   const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string[]>([])
-  const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string>("all")
-  const [survivalTimeSurgeon, setSurvivalTimeSurgeon] = useState<string>("all")
-  const [survivalTimeSpecialty, setSurvivalTimeSpecialty] = useState<string>("all")
-  const [regionChartRegion, setRegionChartRegion] = useState<string>("all")
+  const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string[]>([])
+  const [survivalTimeSurgeon, setSurvivalTimeSurgeon] = useState<string[]>([])
+  const [survivalTimeSpecialty, setSurvivalTimeSpecialty] = useState<string[]>([])
+  const [regionChartRegion, setRegionChartRegion] = useState<string[]>([])
   const [regionChartView, setRegionChartView] = useState<string>("cases")
-  const [timeToSecondCaseSurgeon, setTimeToSecondCaseSurgeon] = useState<string>("all")
-  const [timeMilestonesSurgeon, setTimeMilestonesSurgeon] = useState<string>("all")
+  const [timeToSecondCaseSurgeon, setTimeToSecondCaseSurgeon] = useState<string[]>([])
+  const [timeMilestonesSurgeon, setTimeMilestonesSurgeon] = useState<string[]>([])
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
 
   // Get unique surgeons, regions, specialties
@@ -99,8 +99,8 @@ export default function OverviewPage() {
 
   const qoqGrowthData = useMemo(() => {
     let filteredCases = filteredCasesData
-    if (qoqSurgeon !== "all") {
-      filteredCases = filteredCases.filter((c: any) => c.surgeon === qoqSurgeon)
+    if (qoqSurgeon.length > 0) {
+      filteredCases = filteredCases.filter((c: any) => qoqSurgeon.includes(c.surgeon))
     }
     
     const quarterlyData: Record<string, { cases: number; surgeons: Set<string> }> = {}
@@ -148,11 +148,11 @@ export default function OverviewPage() {
 
   // Region Time Series Data
   const regionTimeSeriesData = useMemo(() => {
-    if (regionChartRegion === "all") return []
+    if (regionChartRegion.length === 0) return []
     
     const monthlyData: Record<string, { cases: number; surgeons: Set<string> }> = {}
     filteredCasesData.forEach((c: any) => {
-      if (!c.operationDate || c.region !== regionChartRegion) return
+      if (!c.operationDate || !regionChartRegion.includes(c.region)) return
       const date = new Date(c.operationDate)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       if (!monthlyData[monthKey]) monthlyData[monthKey] = { cases: 0, surgeons: new Set() }
@@ -229,7 +229,7 @@ export default function OverviewPage() {
     
     filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
-      if (timeToSecondCaseSurgeon !== "all" && c.surgeon !== timeToSecondCaseSurgeon) return
+      if (timeToSecondCaseSurgeon.length > 0 && !timeToSecondCaseSurgeon.includes(c.surgeon)) return
       
       if (!surgeonCases[c.surgeon]) {
         surgeonCases[c.surgeon] = []
@@ -453,31 +453,53 @@ export default function OverviewPage() {
 
   // Days Between Cases - Sequential for selected surgeon
   const daysBetweenCasesData = useMemo(() => {
-    if (daysBetweenCasesSurgeon === "all") return []
+    if (daysBetweenCasesSurgeon.length === 0) return []
     
-    const surgeonCases = filteredCasesData
-      .filter((c: any) => c.surgeon === daysBetweenCasesSurgeon && c.operationDate)
-      .map((c: any) => c.operationDate)
-      .sort()
+    // Support comparing across multiple surgeons or just the first selected
+    // Since this chart tracks sequential case numbers, it's best to show average days between cases for selected surgeons
     
-    if (surgeonCases.length < 1) return []
-    
-    const result = [
-      {
-        caseNumber: "Case 1",
-        days: 0,
-        date: surgeonCases[0]
+    const surgeonCases: Record<string, string[]> = {}
+    filteredCasesData.forEach((c: any) => {
+      if (!c.surgeon || !c.operationDate) return
+      if (daysBetweenCasesSurgeon.includes(c.surgeon)) {
+        if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
+        surgeonCases[c.surgeon].push(c.operationDate)
       }
-    ]
+    })
     
-    for (let i = 1; i < surgeonCases.length; i++) {
-      const days = Math.floor((new Date(surgeonCases[i]).getTime() - new Date(surgeonCases[i - 1]).getTime()) / (1000 * 60 * 60 * 24))
+    const allSurgeonIntervals: number[][] = []
+    
+    Object.values(surgeonCases).forEach(dates => {
+      const sorted = dates.sort()
+      if (sorted.length < 1) return
+      
+      const intervals = [0] // Case 1 is 0
+      for (let i = 1; i < sorted.length; i++) {
+        intervals.push(Math.floor((new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / (1000 * 60 * 60 * 24)))
+      }
+      allSurgeonIntervals.push(intervals)
+    })
+    
+    if (allSurgeonIntervals.length === 0) return []
+    
+    // Find max length
+    const maxLen = Math.max(...allSurgeonIntervals.map(arr => arr.length))
+    const result = []
+    
+    for (let i = 0; i < maxLen; i++) {
+      const valuesForCase = allSurgeonIntervals.map(arr => arr[i]).filter(val => val !== undefined)
+      const avgDays = Math.round(valuesForCase.reduce((a, b) => a + b, 0) / valuesForCase.length)
+      
       result.push({
         caseNumber: `Case ${i + 1}`,
-        days,
-        date: surgeonCases[i]
+        days: avgDays,
+        // If single surgeon selected, provide the specific date, else undefined
+        date: daysBetweenCasesSurgeon.length === 1 && surgeonCases[daysBetweenCasesSurgeon[0]] && surgeonCases[daysBetweenCasesSurgeon[0]].length > i
+          ? surgeonCases[daysBetweenCasesSurgeon[0]].sort()[i]
+          : undefined
       })
     }
+    
     return result
   }, [daysBetweenCasesSurgeon, filteredCasesData])
 
@@ -632,7 +654,7 @@ export default function OverviewPage() {
     
     casesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
-      if (timeMilestonesSurgeon !== "all" && c.surgeon !== timeMilestonesSurgeon) return
+      if (timeMilestonesSurgeon.length > 0 && !timeMilestonesSurgeon.includes(c.surgeon)) return
       if (!surgeonData[c.surgeon]) surgeonData[c.surgeon] = []
       surgeonData[c.surgeon].push(c.operationDate)
     })
@@ -699,8 +721,8 @@ export default function OverviewPage() {
     return filteredCasesData
       .filter((c: any) => {
         if (!c.operationDate) return false
-        if (survivalTimeSurgeon !== "all" && c.surgeon !== survivalTimeSurgeon) return false
-        if (survivalTimeSpecialty !== "all" && c.specialty !== survivalTimeSpecialty) return false
+        if (survivalTimeSurgeon.length > 0 && !survivalTimeSurgeon.includes(c.surgeon)) return false
+        if (survivalTimeSpecialty.length > 0 && !survivalTimeSpecialty.includes(c.specialty)) return false
         return true
       })
       .map((c: any, index: number) => {

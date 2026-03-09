@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
@@ -11,10 +12,10 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
   data: any[], 
   surgeons: string[],
   specialties: string[],
-  surgeonFilter: string,
-  specialtyFilter: string,
-  onSurgeonChange: (value: string) => void,
-  onSpecialtyChange: (value: string) => void
+  surgeonFilter: string[],
+  specialtyFilter: string[],
+  onSurgeonChange: (value: string[]) => void,
+  onSpecialtyChange: (value: string[]) => void
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const top10Data = data.slice(0, 10)
@@ -43,28 +44,20 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
             <p className="text-xs text-muted-foreground">Days since surgery per case</p>
           </div>
           <div className="flex gap-2">
-            <Select value={surgeonFilter} onValueChange={onSurgeonChange}>
-              <SelectTrigger className="w-[150px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Surgeons</SelectItem>
-                {surgeons.map((surgeon) => (
-                  <SelectItem key={surgeon} value={surgeon}>{surgeon}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={specialtyFilter} onValueChange={onSpecialtyChange}>
-              <SelectTrigger className="w-[150px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Specialties</SelectItem>
-                {specialties.map((specialty) => (
-                  <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={surgeons}
+              selected={surgeonFilter}
+              onChange={onSurgeonChange}
+              placeholder="All Surgeons"
+              className="w-[150px] border-gray-300 focus:border-gray-500"
+            />
+            <MultiSelect
+              options={specialties}
+              selected={specialtyFilter}
+              onChange={onSpecialtyChange}
+              placeholder="All Specialties"
+              className="w-[150px] border-gray-300 focus:border-gray-500"
+            />
           </div>
         </div>
       </CardHeader>

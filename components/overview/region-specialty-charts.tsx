@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList, Label, AreaChart, Area } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
@@ -34,15 +35,15 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
   data: any[], 
   timeSeriesData: any[], 
   regions: string[], 
-  selectedRegion: string, 
+  selectedRegion: string[], 
   viewType: string, 
-  onRegionChange: (value: string) => void, 
+  onRegionChange: (value: string[]) => void, 
   onViewTypeChange: (value: string) => void 
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
-    if (selectedRegion === "all") {
+    if (selectedRegion.length === 0) {
       const headers = ['#', 'Region', 'Cases']
       const rows = data.map((item, index) => [index + 1, item.region, item.cases])
       const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
@@ -66,7 +67,7 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `cases-${selectedRegion}.csv`
+      a.download = `cases-${selectedRegion.join("-")}.csv`
       a.click()
     }
   }
@@ -78,18 +79,14 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Cases per Region</CardTitle>
           <div className="flex gap-2">
-            <Select value={selectedRegion} onValueChange={onRegionChange}>
-              <SelectTrigger className="w-[140px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Regions</SelectItem>
-                {regions.map((r) => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedRegion !== "all" && (
+            <MultiSelect
+              options={regions}
+              selected={selectedRegion}
+              onChange={onRegionChange}
+              placeholder="All Regions"
+              className="w-[140px] border-gray-300 focus:border-gray-500"
+            />
+            {selectedRegion.length > 0 && (
               <Select value={viewType} onValueChange={onViewTypeChange}>
                 <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
                   <SelectValue />
@@ -118,7 +115,7 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
       </CardHeader>
       <CardContent>
         <ChartContainer config={{}} className="h-[250px] w-full">
-          {selectedRegion === "all" ? (
+          {selectedRegion.length === 0 ? (
             <BarChart data={data}>
               <XAxis dataKey="region" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -186,7 +183,7 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
             <div>
               <SheetTitle className="text-lg font-semibold">Cases per Region - Full Data</SheetTitle>
               <p className="text-sm text-muted-foreground mt-2">
-                <strong>Calculation:</strong> {selectedRegion === "all" 
+                <strong>Calculation:</strong> {selectedRegion.length === 0 
                   ? "Cases = Total cases per region. Surgeons = Unique surgeons per region." 
                   : "Time series by month. Cases = Total cases in month. Surgeons = Unique surgeons in month. Productivity = Cases / Surgeons (average cases per surgeon per month)."}
               </p>
@@ -208,9 +205,9 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
               <thead className="bg-muted">
                 <tr>
                   <th className="text-left p-3 font-medium">#</th>
-                  <th className="text-left p-3 font-medium">{selectedRegion === "all" ? "Region" : "Month"}</th>
+                  <th className="text-left p-3 font-medium">{selectedRegion.length === 0 ? "Region" : "Month"}</th>
                   <th className="text-right p-3 font-medium">Cases</th>
-                  {selectedRegion !== "all" && (
+                  {selectedRegion.length > 0 && (
                     <>
                       <th className="text-right p-3 font-medium">Surgeons</th>
                       <th className="text-right p-3 font-medium">Productivity</th>
@@ -219,16 +216,16 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {(selectedRegion === "all" ? data : timeSeriesData).map((item, index) => (
+                {(selectedRegion.length === 0 ? data : timeSeriesData).map((item, index) => (
                   <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
                     <td className="p-3 text-muted-foreground">{index + 1}</td>
-                    <td className="p-3 font-medium text-gray-900">{selectedRegion === "all" ? item.region : item.month}</td>
+                    <td className="p-3 font-medium text-gray-900">{selectedRegion.length === 0 ? item.region : item.month}</td>
                     <td className="p-3 text-right font-medium">
                       <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
                         {item.cases}
                       </span>
                     </td>
-                    {selectedRegion !== "all" && (
+                    {selectedRegion.length > 0 && (
                       <>
                         <td className="p-3 text-right font-medium">
                           <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
