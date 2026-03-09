@@ -24,7 +24,9 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
 
   const colors = [
     "#1d99ac", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899", 
-    "#3b82f6", "#f43f5e", "#84cc16", "#06b6d4", "#a855f7"
+    "#3b82f6", "#f43f5e", "#84cc16", "#06b6d4", "#a855f7",
+    "#ef4444", "#14b8a6", "#f97316", "#22c55e", "#d946ef",
+    "#0ea5e9", "#fb923c", "#4ade80", "#c026d3", "#38bdf8"
   ]
 
   const exportToExcel = () => {
@@ -103,7 +105,7 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
       }, {} as Record<string, any>)
 
   return (
-    <Card className="border-border/50 bg-card">
+    <Card className="border-border/50 bg-card flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
@@ -233,7 +235,7 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         {surgeonFilter.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-4 justify-center">
             {surgeonFilter.map((surgeon, idx) => (
@@ -244,16 +246,18 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
             ))}
           </div>
         )}
-        <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <BarChart data={chartData}>
-            <XAxis 
-              dataKey="milestone" 
-              tick={{ fontSize: 11 }} 
-              label={{ value: "Case Milestone", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-            />
+        <div className="flex-1 pb-8">
+          <ChartContainer config={chartConfig} className="h-full w-full">
+            <BarChart data={chartData} margin={{ bottom: 20 }}>
+              <XAxis 
+                dataKey="milestone" 
+                tick={{ fontSize: 11 }} 
+                label={{ value: "Case Milestone", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+              />
             <YAxis 
               tick={{ fontSize: 11 }} 
               label={{ value: "Days", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+              domain={[0, (dataMax: number) => dataMax + 10]}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             {surgeonFilter.length === 0 ? (
@@ -270,7 +274,8 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
             )}
           </BarChart>
         </ChartContainer>
-        <div className="mt-4 text-center">
+        </div>
+        <div className="text-center pt-2">
           <button
             onClick={() => setIsDrawerOpen(true)}
             className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
@@ -286,6 +291,13 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
 
 export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChange }: { data: any[], surgeons: string[], surgeonFilter: string[], onSurgeonChange: (value: string[]) => void }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+  const colors = [
+    "#1d99ac", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899", 
+    "#3b82f6", "#f43f5e", "#84cc16", "#06b6d4", "#a855f7",
+    "#ef4444", "#14b8a6", "#f97316", "#22c55e", "#d946ef",
+    "#0ea5e9", "#fb923c", "#4ade80", "#c026d3", "#38bdf8"
+  ]
 
   const exportToExcel = () => {
     const surgeonLabel = surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")
@@ -429,8 +441,16 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
                         <thead className="bg-muted">
                           <tr>
                             <th className="text-left p-3 font-medium">Case Number</th>
-                            <th className="text-left p-3 font-medium">Case Date</th>
-                            <th className="text-right p-3 font-medium">Days Since Previous Case</th>
+                            {surgeonFilter.length === 1 ? (
+                              <>
+                                <th className="text-left p-3 font-medium">Case Date</th>
+                                <th className="text-right p-3 font-medium">Days Since Previous Case</th>
+                              </>
+                            ) : (
+                              surgeonFilter.map(surgeon => (
+                                <th key={surgeon} className="text-right p-3 font-medium">{surgeon} (Days)</th>
+                              ))
+                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -440,13 +460,23 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
                                 {row.caseNumber}
                                 {index === 0 && <span className="ml-2 text-xs text-muted-foreground">(First case)</span>}
                               </td>
-                              <td className="p-3">
-                                {new Date(row.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                              </td>
-                              <td className="p-3 text-right font-medium">
-                                {row.days}
-                                {row.days === 0 && index > 0 && <span className="ml-2 text-xs text-muted-foreground">(Same day)</span>}
-                              </td>
+                              {surgeonFilter.length === 1 ? (
+                                <>
+                                  <td className="p-3">
+                                    {row.date ? new Date(row.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                                  </td>
+                                  <td className="p-3 text-right font-medium">
+                                    {row.days}
+                                    {row.days === 0 && index > 0 && <span className="ml-2 text-xs text-muted-foreground">(Same day)</span>}
+                                  </td>
+                                </>
+                              ) : (
+                                surgeonFilter.map(surgeon => (
+                                  <td key={surgeon} className="p-3 text-right font-medium">
+                                    {row[surgeon] !== null && row[surgeon] !== undefined ? row[surgeon] : '-'}
+                                  </td>
+                                ))
+                              )}
                             </tr>
                           ))}
                         </tbody>
@@ -460,7 +490,17 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[250px] w-full">
+        {surgeonFilter.length > 0 && data.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-4 justify-center">
+            {surgeonFilter.map((surgeon, idx) => (
+              <div key={surgeon} className="flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[idx % colors.length] }} />
+                <span className="text-xs text-muted-foreground">{surgeon}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <ChartContainer config={{}} className="h-[350px] w-full">
           {data.length > 0 ? (
             <LineChart data={data}>
               <XAxis 
@@ -470,13 +510,23 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
               />
               <YAxis 
                 tick={{ fontSize: 11 }} 
-                label={{ value: "Days Since Previous Case", angle: -90, position: "insideLeft", offset: 25, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+                label={{ value: "Days Since Previous Case", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
                 domain={[0, (dataMax: number) => Math.ceil(dataMax) + 10]}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Line type="monotone" dataKey="days" stroke="#ec4899" strokeWidth={2} dot={{ fill: "#ec4899", r: 4 }} name="Days">
-                <LabelList dataKey="days" position="top" style={{ fontSize: 10, fill: "#ec4899" }} />
-              </Line>
+              {surgeonFilter.map((surgeon, idx) => (
+                <Line 
+                  key={surgeon} 
+                  type="monotone" 
+                  dataKey={surgeonFilter.length === 1 ? "days" : surgeon}
+                  stroke={colors[idx % colors.length]} 
+                  strokeWidth={2} 
+                  dot={{ fill: colors[idx % colors.length], r: 4 }} 
+                  name={surgeon}
+                >
+                  {/* <LabelList dataKey={surgeonFilter.length === 1 ? "days" : surgeon} position="top" offset={10} style={{ fontSize: 10, fill: colors[idx % colors.length] }} /> */}
+                </Line>
+              ))}
             </LineChart>
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">

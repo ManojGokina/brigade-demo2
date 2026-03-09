@@ -456,9 +456,6 @@ export default function OverviewPage() {
   const daysBetweenCasesData = useMemo(() => {
     if (daysBetweenCasesSurgeon.length === 0) return []
     
-    // Support comparing across multiple surgeons or just the first selected
-    // Since this chart tracks sequential case numbers, it's best to show average days between cases for selected surgeons
-    
     const surgeonCases: Record<string, string[]> = {}
     filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
@@ -468,37 +465,43 @@ export default function OverviewPage() {
       }
     })
     
-    const allSurgeonIntervals: number[][] = []
-    
-    Object.values(surgeonCases).forEach(dates => {
-      const sorted = dates.sort()
-      if (sorted.length < 1) return
+    if (daysBetweenCasesSurgeon.length === 1) {
+      // Single surgeon - show sequential data
+      const surgeon = daysBetweenCasesSurgeon[0]
+      const dates = surgeonCases[surgeon]?.sort() || []
+      if (dates.length === 0) return []
       
-      const intervals = [0] // Case 1 is 0
-      for (let i = 1; i < sorted.length; i++) {
-        intervals.push(Math.floor((new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / (1000 * 60 * 60 * 24)))
+      const result = [{ caseNumber: "Case 1", days: 0, date: dates[0] }]
+      for (let i = 1; i < dates.length; i++) {
+        const days = Math.floor((new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) / (1000 * 60 * 60 * 24))
+        result.push({ caseNumber: `Case ${i + 1}`, days, date: dates[i] })
       }
-      allSurgeonIntervals.push(intervals)
+      return result
+    }
+    
+    // Multiple surgeons - show comparison
+    const surgeonIntervals: Record<string, number[]> = {}
+    daysBetweenCasesSurgeon.forEach(surgeon => {
+      const dates = surgeonCases[surgeon]?.sort() || []
+      if (dates.length === 0) return
+      
+      const intervals = [0]
+      for (let i = 1; i < dates.length; i++) {
+        intervals.push(Math.floor((new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) / (1000 * 60 * 60 * 24)))
+      }
+      surgeonIntervals[surgeon] = intervals
     })
     
-    if (allSurgeonIntervals.length === 0) return []
+    const maxLen = Math.max(...Object.values(surgeonIntervals).map(arr => arr.length), 0)
+    if (maxLen === 0) return []
     
-    // Find max length
-    const maxLen = Math.max(...allSurgeonIntervals.map(arr => arr.length))
     const result = []
-    
     for (let i = 0; i < maxLen; i++) {
-      const valuesForCase = allSurgeonIntervals.map(arr => arr[i]).filter(val => val !== undefined)
-      const avgDays = Math.round(valuesForCase.reduce((a, b) => a + b, 0) / valuesForCase.length)
-      
-      result.push({
-        caseNumber: `Case ${i + 1}`,
-        days: avgDays,
-        // If single surgeon selected, provide the specific date, else undefined
-        date: daysBetweenCasesSurgeon.length === 1 && surgeonCases[daysBetweenCasesSurgeon[0]] && surgeonCases[daysBetweenCasesSurgeon[0]].length > i
-          ? surgeonCases[daysBetweenCasesSurgeon[0]].sort()[i]
-          : undefined
+      const row: any = { caseNumber: `Case ${i + 1}` }
+      daysBetweenCasesSurgeon.forEach(surgeon => {
+        row[surgeon] = surgeonIntervals[surgeon]?.[i] ?? null
       })
+      result.push(row)
     }
     
     return result
@@ -924,7 +927,7 @@ export default function OverviewPage() {
           onStatusChange={setStatusFilter} 
         />
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <DaysToCaseMilestones 
             data={daysToCaseMilestonesData} 
             surgeons={surgeonsList} 
@@ -932,7 +935,33 @@ export default function OverviewPage() {
             onSurgeonChange={setDaysToCaseSurgeon} 
           />
           <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />
+          <TimeMilestonesTable 
+            data={timeMilestonesData}
+            surgeons={surgeonsList}
+            years={timeMilestonesYears}
+            surgeonFilter={timeMilestonesSurgeon}
+            selectedYears={timeMilestonesYear}
+            onSurgeonChange={setTimeMilestonesSurgeon}
+            onYearsChange={setTimeMilestonesYear}
+          />
         </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
+          <TimeNormalized 
+            data={timeNormalizedSurgeon.length > 0 ? timeMetricsData.filter((d: any) => timeNormalizedSurgeon.includes(d.surgeon)) : timeMetricsData}
+            surgeons={surgeonsList}
+            surgeonFilter={timeNormalizedSurgeon}
+            onSurgeonChange={setTimeNormalizedSurgeon}
+          />
+        </div>
+
+        <DaysBetweenCases 
+          data={daysBetweenCasesData} 
+          surgeons={surgeonsList} 
+          surgeonFilter={daysBetweenCasesSurgeon} 
+          onSurgeonChange={setDaysBetweenCasesSurgeon} 
+        />
 
         <TopPerformersTable 
           data={topPerformersTableData} 
@@ -966,33 +995,7 @@ export default function OverviewPage() {
           onSpecialtyChange={setSurvivalTimeSpecialty}
         />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
-          <TimeNormalized 
-            data={timeNormalizedSurgeon.length > 0 ? timeMetricsData.filter((d: any) => timeNormalizedSurgeon.includes(d.surgeon)) : timeMetricsData}
-            surgeons={surgeonsList}
-            surgeonFilter={timeNormalizedSurgeon}
-            onSurgeonChange={setTimeNormalizedSurgeon}
-          />
-        </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <DaysBetweenCases 
-            data={daysBetweenCasesData} 
-            surgeons={surgeonsList} 
-            surgeonFilter={daysBetweenCasesSurgeon} 
-            onSurgeonChange={setDaysBetweenCasesSurgeon} 
-          />
-          <TimeMilestonesTable 
-            data={timeMilestonesData}
-            surgeons={surgeonsList}
-            years={timeMilestonesYears}
-            surgeonFilter={timeMilestonesSurgeon}
-            selectedYears={timeMilestonesYear}
-            onSurgeonChange={setTimeMilestonesSurgeon}
-            onYearsChange={setTimeMilestonesYear}
-          />
-        </div>
 
         <QoQGrowthProgression data={qoqGrowthData} years={qoqYears} selectedYears={qoqYear} surgeons={surgeonsList} surgeon={qoqSurgeon} onYearsChange={setQoqYear} onSurgeonChange={setQoqSurgeon} />
 
