@@ -742,10 +742,12 @@ export default function OverviewPage() {
   // Calculate Surgeon Productivity Over Time from real data
   const surgeonProductivityOverTimeData = useMemo(() => {
     let filteredCases = casesData.filter((c: any) => c.operationDate)
+    let casesWithoutDates = casesData.filter((c: any) => !c.operationDate)
 
     // Apply surgeon filter
     if (surgeonFilter.length > 0) {
       filteredCases = filteredCases.filter((c: any) => surgeonFilter.includes(c.surgeon))
+      casesWithoutDates = casesWithoutDates.filter((c: any) => surgeonFilter.includes(c.surgeon))
     }
 
     // Apply date range filter
@@ -759,6 +761,7 @@ export default function OverviewPage() {
     // Apply user status filter
     if (statusFilter.length > 0) {
       filteredCases = filteredCases.filter((c: any) => statusFilter.includes(c.userStatus))
+      casesWithoutDates = casesWithoutDates.filter((c: any) => statusFilter.includes(c.userStatus))
     }
 
     // Group by month
@@ -791,12 +794,16 @@ export default function OverviewPage() {
       else if (caseFilter.includes("Since 2nd Case")) sliceCount = 1;
       else if (caseFilter.includes("Since 1st Case")) sliceCount = 0;
 
-      if (sortedData.length > sliceCount) {
-        return sortedData.slice(sliceCount);
+      const result = sortedData.length > sliceCount ? sortedData.slice(sliceCount) : sortedData;
+      if (casesWithoutDates.length > 0) {
+        result.push({ month: "", cases: casesWithoutDates.length })
       }
-      return sortedData;
+      return result;
     }
 
+    if (casesWithoutDates.length > 0) {
+      sortedData.push({ month: "", cases: casesWithoutDates.length })
+    }
     return sortedData
   }, [dateRange, caseFilter, statusFilter, surgeonFilter])
 

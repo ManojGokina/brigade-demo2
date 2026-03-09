@@ -244,7 +244,7 @@ export function SurgeonProductivityOverTime({
                           {data.map((row, index) => (
                             <tr key={index} className="border-t hover:bg-muted/50">
                               <td className="p-3 text-muted-foreground">{index + 1}</td>
-                              <td className="p-3">{row.month}</td>
+                              <td className="p-3">{row.month || "No Date"}</td>
                               <td className="p-3 text-right font-medium">{row.cases}</td>
                             </tr>
                           ))}
