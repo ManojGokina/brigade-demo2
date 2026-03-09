@@ -73,6 +73,7 @@ export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange }: { data:
             <YAxis 
               tick={{ fontSize: 11 }} 
               label={{ value: getUnitLabel(), angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+              domain={[0, (dataMax: number) => Math.ceil(dataMax) + (timeUnit === "days" ? 50 : 10)]}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar dataKey="timeActive" fill="#10b981" radius={[4, 4, 0, 0]} name="Active">
