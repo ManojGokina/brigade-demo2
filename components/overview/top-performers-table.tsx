@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Badge } from "@/components/ui/badge"
 import { Download, Info } from "lucide-react"
 import * as XLSX from "xlsx-js-style"
@@ -40,11 +41,11 @@ export function TopPerformersTable({
   regions: string[], 
   specialties: string[], 
   viewType: string, 
-  regionFilter: string, 
-  specialtyFilter: string, 
+  regionFilter: string[], 
+  specialtyFilter: string[], 
   onViewTypeChange: (value: string) => void, 
-  onRegionChange: (value: string) => void, 
-  onSpecialtyChange: (value: string) => void 
+  onRegionChange: (value: string[]) => void, 
+  onSpecialtyChange: (value: string[]) => void 
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -84,8 +85,8 @@ export function TopPerformersTable({
       ["Top Performers Report"],
       [],
       ["View Type:", viewType === "caseLoad" ? "Case Load" : viewType === "neuroma" ? "Neuroma Cases" : "Monthly Productivity"],
-      ["Region Filter:", regionFilter === "all" ? "All Regions" : regionFilter],
-      ["Specialty Filter:", specialtyFilter === "all" ? "All Specialties" : specialtyFilter],
+      ["Region Filter:", regionFilter.length === 0 ? "All Regions" : regionFilter.join(", ")],
+      ["Specialty Filter:", specialtyFilter.length === 0 ? "All Specialties" : specialtyFilter.join(", ")],
       ["Total Records:", sortedData.length.toString()],
       [],
       ["Rank", "Surgeon", "Total Cases", "Neuroma Cases", "Region", "Specialty", "Productivity"]
@@ -169,28 +170,20 @@ export function TopPerformersTable({
               </Select>
               {viewType === "caseLoad" && (
                 <>
-                  <Select value={regionFilter} onValueChange={onRegionChange}>
-                    <SelectTrigger className="w-[110px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Regions</SelectItem>
-                      {regions.map((region) => (
-                        <SelectItem key={region} value={region}>{region}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={specialtyFilter} onValueChange={onSpecialtyChange}>
-                    <SelectTrigger className="w-[110px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Specialties</SelectItem>
-                      {specialties.map((specialty) => (
-                        <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MultiSelect
+                    options={regions}
+                    selected={regionFilter}
+                    onChange={onRegionChange}
+                    placeholder="All Regions"
+                    className="w-[140px] border-gray-300 focus:border-gray-500"
+                  />
+                  <MultiSelect
+                    options={specialties}
+                    selected={specialtyFilter}
+                    onChange={onSpecialtyChange}
+                    placeholder="All Specialties"
+                    className="w-[140px] border-gray-300 focus:border-gray-500"
+                  />
                 </>
               )}
               <Button 
@@ -305,16 +298,16 @@ export function TopPerformersTable({
                 <span className="font-semibold">View:</span>
                 <span>{viewType === "caseLoad" ? "Case Load" : viewType === "neuroma" ? "Neuroma" : "Productivity"}</span>
               </div>
-              {viewType === "caseLoad" && regionFilter !== "all" && (
+              {viewType === "caseLoad" && regionFilter.length > 0 && (
                 <div className="inline-flex items-center gap-1.5 bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-xs font-medium">
                   <span className="font-semibold">Region:</span>
-                  <span>{regionFilter}</span>
+                  <span>{regionFilter.join(", ")}</span>
                 </div>
               )}
-              {viewType === "caseLoad" && specialtyFilter !== "all" && (
+              {viewType === "caseLoad" && specialtyFilter.length > 0 && (
                 <div className="inline-flex items-center gap-1.5 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-medium">
                   <span className="font-semibold">Specialty:</span>
-                  <span>{specialtyFilter}</span>
+                  <span>{specialtyFilter.join(", ")}</span>
                 </div>
               )}
               <div className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full text-xs font-medium">

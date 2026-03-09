@@ -28,10 +28,10 @@ export default function OverviewPage() {
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [surgeonFilter, setSurgeonFilter] = useState<string[]>([])
   const [topPerformersView, setTopPerformersView] = useState<string>("caseLoad")
-  const [topPerformersRegion, setTopPerformersRegion] = useState<string>("all")
-  const [topPerformersSpecialty, setTopPerformersSpecialty] = useState<string>("all")
+  const [topPerformersRegion, setTopPerformersRegion] = useState<string[]>([])
+  const [topPerformersSpecialty, setTopPerformersSpecialty] = useState<string[]>([])
   const [secondCaseExcludeDays, setSecondCaseExcludeDays] = useState<string>("0")
-  const [secondCaseStatus, setSecondCaseStatus] = useState<string>("all")
+  const [secondCaseStatus, setSecondCaseStatus] = useState<string[]>([])
   const [secondCaseBreakdown, setSecondCaseBreakdown] = useState<string>("overall")
   const [timeUnit, setTimeUnit] = useState<string>("days")
   const [qoqYear, setQoqYear] = useState<string[]>([new Date().getFullYear().toString()])
@@ -307,8 +307,8 @@ export default function OverviewPage() {
   // Top 10 by Case Load
   const top10ByCaseLoadData = useMemo(() => {
     let filteredCases = filteredCasesData
-    if (topPerformersRegion !== "all") filteredCases = filteredCases.filter((c: any) => c.region === topPerformersRegion)
-    if (topPerformersSpecialty !== "all") filteredCases = filteredCases.filter((c: any) => c.specialty === topPerformersSpecialty)
+    if (topPerformersRegion.length > 0) filteredCases = filteredCases.filter((c: any) => topPerformersRegion.includes(c.region))
+    if (topPerformersSpecialty.length > 0) filteredCases = filteredCases.filter((c: any) => topPerformersSpecialty.includes(c.specialty))
     
     const surgeonCases: Record<string, number> = {}
     filteredCases.forEach((c: any) => {
@@ -353,8 +353,8 @@ export default function OverviewPage() {
   // Combined Top Performers Data
   const topPerformersTableData = useMemo(() => {
     let filteredCases = filteredCasesData
-    if (topPerformersRegion !== "all") filteredCases = filteredCases.filter((c: any) => c.region === topPerformersRegion)
-    if (topPerformersSpecialty !== "all") filteredCases = filteredCases.filter((c: any) => c.specialty === topPerformersSpecialty)
+    if (topPerformersRegion.length > 0) filteredCases = filteredCases.filter((c: any) => topPerformersRegion.includes(c.region))
+    if (topPerformersSpecialty.length > 0) filteredCases = filteredCases.filter((c: any) => topPerformersSpecialty.includes(c.specialty))
 
     const surgeonStats: Record<string, { totalCases: number; neuromaCases: number; region: string; specialty: string; months: Set<string> }> = {}
     
@@ -490,7 +490,7 @@ export default function OverviewPage() {
     let surgeonCases: Record<string, any[]> = {}
     filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
-      if (secondCaseStatus !== "all" && c.userStatus !== secondCaseStatus) return
+      if (secondCaseStatus.length > 0 && !secondCaseStatus.includes(c.userStatus)) return
       if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
       surgeonCases[c.surgeon].push(c)
     })

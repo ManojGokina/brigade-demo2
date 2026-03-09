@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, Download, X, Info } from "lucide-react"
@@ -27,10 +28,10 @@ export function SecondCaseBooking({
 }: { 
   data: any[], 
   excludeDays: string, 
-  statusFilter: string, 
+  statusFilter: string[], 
   breakdown: string, 
   onExcludeDaysChange: (value: string) => void, 
-  onStatusChange: (value: string) => void, 
+  onStatusChange: (value: string[]) => void, 
   onBreakdownChange: (value: string) => void 
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -40,7 +41,7 @@ export function SecondCaseBooking({
       ["Second Case Booking Report"],
       [],
       ["Exclude Days:", excludeDays === "0" ? "Include All" : `Exclude 1st case < ${excludeDays} days`],
-      ["Status Filter:", statusFilter === "all" ? "All Status" : statusFilter],
+      ["Status Filter:", statusFilter.length === 0 ? "All Status" : statusFilter.join(", ")],
       ["Breakdown:", breakdown === "overall" ? "Overall" : breakdown === "userType" ? "By User Type" : breakdown === "region" ? "By Region" : "By Specialty"],
       ["Total Records:", data.length.toString()],
       [],
@@ -115,17 +116,13 @@ export function SecondCaseBooking({
                 <SelectItem value="90">Exclude 1st case &lt; 90 days</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={onStatusChange}>
-              <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="EST">EST</SelectItem>
-                <SelectItem value="IN">IN</SelectItem>
-                <SelectItem value="VAL">VAL</SelectItem>
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={["EST", "IN", "VAL"]}
+              selected={statusFilter}
+              onChange={onStatusChange}
+              placeholder="All Status"
+              className="w-[120px] border-gray-300 focus:border-gray-500"
+            />
             <Select value={breakdown} onValueChange={onBreakdownChange}>
               <SelectTrigger className="w-[140px] h-8 text-xs border-gray-300 focus:border-gray-500">
                 <SelectValue />
@@ -196,7 +193,7 @@ export function SecondCaseBooking({
             </div>
             <div className="inline-flex items-center gap-1.5 bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-xs font-medium">
               <span className="font-semibold">Status:</span>
-              <span>{statusFilter === "all" ? "All Status" : statusFilter}</span>
+              <span>{statusFilter.length === 0 ? "All Status" : statusFilter.join(", ")}</span>
             </div>
             <div className="inline-flex items-center gap-1.5 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-medium">
               <span className="font-semibold">Breakdown:</span>
