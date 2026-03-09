@@ -14,7 +14,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function ProductivityByUserType({ data }: { data: any[] }) {
+import { MultiSelect } from "@/components/ui/multi-select"
+
+export function ProductivityByUserType({ data, userTypes, userTypeFilter, onUserTypeChange }: { data: any[], userTypes: string[], userTypeFilter: string[], onUserTypeChange: (value: string[]) => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
@@ -66,7 +68,13 @@ export function ProductivityByUserType({ data }: { data: any[] }) {
             <p className="text-xs text-muted-foreground">Standard vs Excluding First Case by Region</p>
           </div>
           <div className="flex items-center gap-2">
-            
+            <MultiSelect
+              options={userTypes}
+              selected={userTypeFilter}
+              onChange={onUserTypeChange}
+              placeholder="All User Types"
+              className="w-[140px] border-gray-300 focus:border-gray-500"
+            />
           </div>
         </div>
       </CardHeader>

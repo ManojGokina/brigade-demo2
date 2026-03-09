@@ -46,6 +46,7 @@ export default function OverviewPage() {
   const [timeToSecondCaseSurgeon, setTimeToSecondCaseSurgeon] = useState<string[]>([])
   const [timeMilestonesSurgeon, setTimeMilestonesSurgeon] = useState<string[]>([])
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
+  const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
   // Get unique surgeons, regions, specialties
   const surgeonsList = useMemo(() => {
@@ -78,6 +79,14 @@ export default function OverviewPage() {
     if (dateRange.to) filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
     const sites = new Set(filteredCases.map((c: any) => c.site).filter(Boolean))
     return Array.from(sites).sort()
+  }, [dateRange])
+
+  const userTypesList = useMemo(() => {
+    let filteredCases = casesData
+    if (dateRange.from) filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
+    if (dateRange.to) filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
+    const userTypes = new Set(filteredCases.map((c: any) => c.userStatus).filter(Boolean))
+    return Array.from(userTypes).sort()
   }, [dateRange])
 
   // Filtered cases data based on date range
@@ -184,6 +193,7 @@ export default function OverviewPage() {
     
     filteredCasesData.forEach((c: any) => {
       if (!c.operationDate || !c.userStatus) return
+      if (productivityUserType.length > 0 && !productivityUserType.includes(c.userStatus)) return
       const date = new Date(c.operationDate)
       const year = date.getFullYear()
       const quarter = Math.floor(date.getMonth() / 3) + 1
@@ -229,7 +239,7 @@ export default function OverviewPage() {
       if (aQ !== bQ) return aQ.localeCompare(bQ)
       return a.region.localeCompare(b.region)
     })
-  }, [filteredCasesData])
+  }, [filteredCasesData, productivityUserType])
 
   // Time to Second Case Data
   const timeToSecondCaseData = useMemo(() => {
@@ -1016,7 +1026,12 @@ export default function OverviewPage() {
           onViewTypeChange={setRegionChartView} 
         />
 
-        <ProductivityByUserType data={productivityByUserTypeData} />
+        <ProductivityByUserType 
+          data={productivityByUserTypeData} 
+          userTypes={userTypesList}
+          userTypeFilter={productivityUserType}
+          onUserTypeChange={setProductivityUserType}
+        />
 
         <TimeToSecondCase 
           data={timeToSecondCaseData} 
