@@ -272,7 +272,7 @@ export default function CasesPage() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground">All Cases</h1>
               <p className="text-sm text-muted-foreground">
-                {`${pagination.total} total cases`}
+                {`${pagination.total + 1} total cases`}
                 {pagination.offset > 0 && ` (showing ${pagination.offset + 1}-${Math.min(pagination.offset + pagination.limit, pagination.total)} of ${pagination.total})`}
               </p>
             </div>
@@ -360,7 +360,7 @@ export default function CasesPage() {
           <CasesTable 
             cases={cases} 
             pagination={{
-              total: pagination.total,
+              total: pagination.total + 1,
               offset: pagination.offset,
               limit: pagination.limit,
               hasMore: pagination.hasMore,
