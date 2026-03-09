@@ -42,6 +42,13 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  const colors = [
+    "#1d99ac", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899", 
+    "#3b82f6", "#f43f5e", "#84cc16", "#06b6d4", "#a855f7",
+    "#ef4444", "#14b8a6", "#f97316", "#22c55e", "#d946ef",
+    "#0ea5e9", "#fb923c", "#4ade80", "#c026d3", "#38bdf8"
+  ]
+
   const handleExport = () => {
     if (selectedRegion.length === 0) {
       const headers = ['#', 'Region', 'Cases']
@@ -78,7 +85,17 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">Cases per Region</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {selectedRegion.length > 0 && (
+              <div className="flex gap-3">
+                {selectedRegion.map((region, idx) => (
+                  <div key={region} className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[idx % colors.length] }} />
+                    <span className="text-xs text-muted-foreground">{region}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <MultiSelect
               options={regions}
               selected={selectedRegion}
@@ -126,41 +143,25 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
             </BarChart>
           ) : (
             <AreaChart data={timeSeriesData}>
-              <defs>
-                <linearGradient id="casesGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.6} />
-                  <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="surgeonsGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.6} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="productivityGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.6} />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Area 
-                type="monotone" 
-                dataKey={viewType} 
-                stroke={viewType === "cases" ? "#1d99ac" : viewType === "surgeons" ? "#10b981" : "#f59e0b"} 
-                strokeWidth={2}
-                fill={viewType === "cases" ? "url(#casesGradient)" : viewType === "surgeons" ? "url(#surgeonsGradient)" : "url(#productivityGradient)"}
-                name={viewType === "cases" ? "Cases" : viewType === "surgeons" ? "Surgeons" : "Productivity"}
-              >
-                <LabelList 
-                  dataKey={viewType} 
-                  position="top" 
-                  style={{ 
-                    fontSize: 10, 
-                    fill: viewType === "cases" ? "#1d99ac" : viewType === "surgeons" ? "#10b981" : "#f59e0b",
-                    fontWeight: "bold"
-                  }} 
-                />
-              </Area>
+              {selectedRegion.map((region, idx) => {
+                const dataKey = `${region}_${viewType}`
+                const color = colors[idx % colors.length]
+                return (
+                  <Area 
+                    key={region}
+                    type="monotone" 
+                    dataKey={dataKey}
+                    stroke={color}
+                    strokeWidth={2}
+                    fill={color}
+                    fillOpacity={0.3}
+                    name={region}
+                  />
+                )
+              })}
             </AreaChart>
           )}
         </ChartContainer>

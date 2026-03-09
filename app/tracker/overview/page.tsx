@@ -151,24 +151,31 @@ export default function OverviewPage() {
   const regionTimeSeriesData = useMemo(() => {
     if (regionChartRegion.length === 0) return []
     
-    const monthlyData: Record<string, { cases: number; surgeons: Set<string> }> = {}
+    const monthlyData: Record<string, Record<string, { cases: number; surgeons: Set<string> }>> = {}
     filteredCasesData.forEach((c: any) => {
       if (!c.operationDate || !regionChartRegion.includes(c.region)) return
       const date = new Date(c.operationDate)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      if (!monthlyData[monthKey]) monthlyData[monthKey] = { cases: 0, surgeons: new Set() }
-      monthlyData[monthKey].cases++
-      if (c.surgeon) monthlyData[monthKey].surgeons.add(c.surgeon)
+      if (!monthlyData[monthKey]) monthlyData[monthKey] = {}
+      if (!monthlyData[monthKey][c.region]) monthlyData[monthKey][c.region] = { cases: 0, surgeons: new Set() }
+      monthlyData[monthKey][c.region].cases++
+      if (c.surgeon) monthlyData[monthKey][c.region].surgeons.add(c.surgeon)
     })
     
     return Object.entries(monthlyData)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([month, data]) => ({
-        month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-        cases: data.cases,
-        surgeons: data.surgeons.size,
-        productivity: data.surgeons.size > 0 ? +(data.cases / data.surgeons.size).toFixed(1) : 0
-      }))
+      .map(([month, regionData]) => {
+        const result: any = {
+          month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+        }
+        regionChartRegion.forEach(region => {
+          const data = regionData[region] || { cases: 0, surgeons: new Set() }
+          result[`${region}_cases`] = data.cases
+          result[`${region}_surgeons`] = data.surgeons.size
+          result[`${region}_productivity`] = data.surgeons.size > 0 ? +(data.cases / data.surgeons.size).toFixed(1) : 0
+        })
+        return result
+      })
   }, [regionChartRegion, filteredCasesData])
 
   // Productivity by User Type Data
