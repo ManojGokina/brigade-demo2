@@ -529,8 +529,21 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
               ))}
             </LineChart>
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              Select a surgeon to view data
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 blur-3xl rounded-full" />
+                <svg className="relative w-24 h-24 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <p className="text-base font-medium text-foreground mb-2">No Surgeon Selected</p>
+              <p className="text-sm text-muted-foreground mb-6 text-center max-w-xs">Choose one or more surgeons from the dropdown above to visualize the days between their consecutive cases</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span>Track case frequency trends</span>
+              </div>
             </div>
           )}
         </ChartContainer>
