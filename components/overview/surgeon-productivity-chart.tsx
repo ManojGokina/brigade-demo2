@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { AreaChart, Area, XAxis, YAxis, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
 import { Maximize2, Download, X, Info } from "lucide-react"
 import * as XLSX from "xlsx-js-style"
@@ -27,19 +28,19 @@ export function SurgeonProductivityOverTime({
 }: { 
   data: any[], 
   surgeons: string[], 
-  surgeonFilter: string, 
-  caseFilter: string, 
-  statusFilter: string, 
-  onSurgeonChange: (value: string) => void, 
-  onCaseFilterChange: (value: string) => void, 
-  onStatusChange: (value: string) => void 
+  surgeonFilter: string[], 
+  caseFilter: string[], 
+  statusFilter: string[], 
+  onSurgeonChange: (value: string[]) => void, 
+  onCaseFilterChange: (value: string[]) => void, 
+  onStatusChange: (value: string[]) => void 
 }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const exportToCSV = () => {
-    const surgeonLabel = surgeonFilter === "all" ? "All Surgeons" : surgeonFilter
-    const caseFilterLabel = caseFilter === "all" ? "All Cases" : caseFilter.replace("since", "Since ").replace("1st", "1st").replace("2nd", "2nd").replace("3rd", "3rd").replace("4th", "4th").replace("5th", "5th").replace("6th", "6th") + " Case"
-    const statusLabel = statusFilter === "all" ? "All Status" : statusFilter
+    const surgeonLabel = surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")
+    const caseFilterLabel = caseFilter.length === 0 ? "All Cases" : caseFilter.join(", ")
+    const statusLabel = statusFilter.length === 0 ? "All Status" : statusFilter.join(", ")
     
     const wb = XLSX.utils.book_new()
     const wsData: any[][] = [
@@ -124,42 +125,34 @@ export function SurgeonProductivityOverTime({
             <p className="text-xs text-muted-foreground">Sliceable by date range, case number, and user status</p>
           </div>
           <div className="flex gap-2 items-center">
-            <Select value={surgeonFilter} onValueChange={onSurgeonChange}>
-              <SelectTrigger className="w-[150px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Surgeons</SelectItem>
-                {surgeons.map((surgeon) => (
-                  <SelectItem key={surgeon} value={surgeon}>{surgeon}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={caseFilter} onValueChange={onCaseFilterChange}>
-              <SelectTrigger className="w-[140px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Cases</SelectItem>
-                <SelectItem value="since1st">Since 1st Case</SelectItem>
-                <SelectItem value="since2nd">Since 2nd Case</SelectItem>
-                <SelectItem value="since3rd">Since 3rd Case</SelectItem>
-                <SelectItem value="since4th">Since 4th Case</SelectItem>
-                <SelectItem value="since5th">Since 5th Case</SelectItem>
-                <SelectItem value="since6th">Since 6th Case</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={onStatusChange}>
-              <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="EST">EST</SelectItem>
-                <SelectItem value="IN">IN</SelectItem>
-                <SelectItem value="VAL">VAL</SelectItem>
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={surgeons}
+              selected={surgeonFilter}
+              onChange={onSurgeonChange}
+              placeholder="All Surgeons"
+              className="w-[150px] border-gray-300 focus:border-gray-500"
+            />
+            <MultiSelect
+              options={[
+                "Since 1st Case",
+                "Since 2nd Case",
+                "Since 3rd Case",
+                "Since 4th Case",
+                "Since 5th Case",
+                "Since 6th Case"
+              ]}
+              selected={caseFilter}
+              onChange={onCaseFilterChange}
+              placeholder="All Cases"
+              className="w-[140px] border-gray-300 focus:border-gray-500"
+            />
+            <MultiSelect
+              options={["EST", "IN", "VAL"]}
+              selected={statusFilter}
+              onChange={onStatusChange}
+              placeholder="All Status"
+              className="w-[120px] border-gray-300 focus:border-gray-500"
+            />
             {/* <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -198,15 +191,15 @@ export function SurgeonProductivityOverTime({
                     <div className="mb-4 flex flex-wrap gap-2">
                       <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
                         <span className="font-semibold">Surgeon:</span>
-                        <span>{surgeonFilter === "all" ? "All Surgeons" : surgeonFilter}</span>
+                        <span>{surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")}</span>
                       </div>
                       <div className="inline-flex items-center gap-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-3 py-1.5 rounded-full text-xs font-medium">
                         <span className="font-semibold">Case Filter:</span>
-                        <span>{caseFilter === "all" ? "All Cases" : caseFilter.replace("since", "Since ").replace("1st", "1st").replace("2nd", "2nd").replace("3rd", "3rd").replace("4th", "4th").replace("5th", "5th").replace("6th", "6th") + " Case"}</span>
+                        <span>{caseFilter.length === 0 ? "All Cases" : caseFilter.join(", ")}</span>
                       </div>
                       <div className="inline-flex items-center gap-1.5 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-3 py-1.5 rounded-full text-xs font-medium">
                         <span className="font-semibold">Status:</span>
-                        <span>{statusFilter === "all" ? "All Status" : statusFilter}</span>
+                        <span>{statusFilter.length === 0 ? "All Status" : statusFilter.join(", ")}</span>
                       </div>
                       <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
                         <span className="font-semibold">Total Records:</span>

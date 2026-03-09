@@ -22,6 +22,23 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true)
+    
+    // Check if redirected due to session expiry
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('expired') === 'true') {
+        toast({
+          variant: "destructive",
+          title: "Session Expired",
+          description: "Your session has expired. Please log in again.",
+        })
+        
+        // Clean up the URL to prevent showing toast again on refresh
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
+
     // Clear any stale errors on mount
     clearError()
   }, [])

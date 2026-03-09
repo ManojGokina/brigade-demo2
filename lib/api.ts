@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/auth.store';
 
 const API_BASE_URL = 'https://tulavi-backend.kindtree-01686ea2.southindia.azurecontainerapps.io/api/v1';
 //const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9000/api/v1';
@@ -47,12 +48,15 @@ api.interceptors.response.use(
       // Only redirect if we have a token and we're not already on login page
       if (token && currentPath !== '/login') {
         console.error('401 Unauthorized - Token may be invalid or expired');
-        localStorage.removeItem('auth_token');
+        
+        // This clears both localStorage 'auth_token' and Zustand state, avoiding redirect loops
+        useAuthStore.getState().sessionExpired();
+        
         // Use a small delay to allow error handling in the calling code
         // and prevent redirect loops
         setTimeout(() => {
           if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
+            window.location.href = '/login?expired=true';
           }
         }, 200);
       }

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronDown } from "lucide-react"
+import { Check, ChevronDown, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 
 interface MultiSelectProps {
   options: string[]
@@ -27,6 +28,13 @@ export function MultiSelect({
   className,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
+
+  const filteredOptions = React.useMemo(() => {
+    return options.filter((option) =>
+      option.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }, [options, searchQuery])
 
   const handleToggle = (value: string) => {
     const newSelected = selected.includes(value)
@@ -57,22 +65,40 @@ export function MultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0" align="start">
+        <div className="p-2 border-b">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pl-8 text-xs bg-muted/50"
+            />
+          </div>
+        </div>
         <div className="max-h-64 overflow-auto p-2">
-          {options.map((option) => (
-            <div
-              key={option}
-              className="flex items-center space-x-2 rounded-sm px-2 py-1.5 hover:bg-accent cursor-pointer"
-              onClick={() => handleToggle(option)}
-            >
-              <Checkbox
-                checked={selected.includes(option)}
-                onCheckedChange={() => handleToggle(option)}
-              />
-              <label className="text-sm cursor-pointer flex-1">
-                {option}
-              </label>
+          {filteredOptions.length === 0 ? (
+            <div className="py-2 text-center text-xs text-muted-foreground">
+              No results found.
             </div>
-          ))}
+          ) : (
+            filteredOptions.map((option) => (
+              <div
+                key={option}
+                className="flex items-center space-x-2 rounded-sm px-2 py-1.5 hover:bg-accent cursor-pointer"
+                onClick={() => handleToggle(option)}
+              >
+                <Checkbox
+                  checked={selected.includes(option)}
+                  onCheckedChange={() => handleToggle(option)}
+                  className="border-slate-400 dark:border-slate-500"
+                />
+                <label className="text-sm cursor-pointer flex-1">
+                  {option}
+                </label>
+              </div>
+            ))
+          )}
         </div>
         {selected.length > 0 && (
           <div className="border-t p-2">

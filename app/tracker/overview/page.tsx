@@ -24,9 +24,9 @@ import { TimeMilestonesTable } from "@/components/overview/time-milestones-table
 
 export default function OverviewPage() {
   const [dateRange, setDateRange] = useState<DateRange>({})
-  const [caseFilter, setCaseFilter] = useState<string>("all")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [surgeonFilter, setSurgeonFilter] = useState<string>("all")
+  const [caseFilter, setCaseFilter] = useState<string[]>([])
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
+  const [surgeonFilter, setSurgeonFilter] = useState<string[]>([])
   const [topPerformersView, setTopPerformersView] = useState<string>("caseLoad")
   const [topPerformersRegion, setTopPerformersRegion] = useState<string>("all")
   const [topPerformersSpecialty, setTopPerformersSpecialty] = useState<string>("all")
@@ -36,7 +36,7 @@ export default function OverviewPage() {
   const [timeUnit, setTimeUnit] = useState<string>("days")
   const [qoqYear, setQoqYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [qoqSurgeon, setQoqSurgeon] = useState<string>("all")
-  const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string>("all")
+  const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string[]>([])
   const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string>("all")
   const [survivalTimeSurgeon, setSurvivalTimeSurgeon] = useState<string>("all")
   const [survivalTimeSpecialty, setSurvivalTimeSpecialty] = useState<string>("all")
@@ -393,33 +393,46 @@ export default function OverviewPage() {
     const surgeonCases: Record<string, string[]> = {}
     filteredCasesData.forEach((c: any) => {
       if (!c.surgeon || !c.operationDate) return
-      if (daysToCaseSurgeon !== "all" && c.surgeon !== daysToCaseSurgeon) return
+      if (daysToCaseSurgeon.length > 0 && !daysToCaseSurgeon.includes(c.surgeon)) return
       if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
       surgeonCases[c.surgeon].push(c.operationDate)
     })
     
-    // If specific surgeon selected, show all their cases
-    if (daysToCaseSurgeon !== "all") {
-      const dates = surgeonCases[daysToCaseSurgeon] || []
-      if (dates.length === 0) return []
-      
-      const sorted = dates.sort()
-      return sorted.map((date, index) => {
-        if (index === 0) {
-          return {
-            milestone: `1st Case`,
-            avg: 0,
-            date: sorted[0]
+    // If specific surgeons selected, calculate averages across those specific surgeons for all cases
+    if (daysToCaseSurgeon.length > 0) {
+      // Find the maximum number of cases any selected surgeon has
+      let maxCases = 0;
+      Object.values(surgeonCases).forEach(dates => {
+        if (dates.length > maxCases) maxCases = dates.length;
+      });
+
+      if (maxCases === 0) return []
+
+      const result = [];
+      for (let caseNum = 1; caseNum <= maxCases; caseNum++) {
+        const days: number[] = [];
+        
+        Object.values(surgeonCases).forEach(dates => {
+          if (dates.length >= caseNum) {
+            const sorted = dates.sort()
+            const daysDiff = Math.floor((new Date(sorted[caseNum - 1]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
+            days.push(daysDiff)
           }
+        });
+
+        if (days.length > 0) {
+          const avg = Math.round(days.reduce((a, b) => a + b, 0) / days.length);
+          result.push({
+            milestone: caseNum === 1 ? '1st Case' : `${caseNum}${caseNum === 2 ? 'nd' : caseNum === 3 ? 'rd' : 'th'} Case`,
+            avg: avg,
+            // Only provide a specific date if exactly one surgeon is selected, otherwise we're showing averages
+            date: daysToCaseSurgeon.length === 1 && surgeonCases[daysToCaseSurgeon[0]] && surgeonCases[daysToCaseSurgeon[0]].length >= caseNum 
+                  ? surgeonCases[daysToCaseSurgeon[0]].sort()[caseNum - 1] 
+                  : undefined
+          });
         }
-        const daysDiff = Math.floor((new Date(sorted[index]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
-        const caseNum = index + 1
-        return {
-          milestone: `${caseNum}${caseNum === 2 ? 'nd' : caseNum === 3 ? 'rd' : 'th'} Case`,
-          avg: daysDiff,
-          date: sorted[index]
-        }
-      })
+      }
+      return result;
     }
     
     // If all surgeons, show milestone averages
@@ -708,8 +721,8 @@ export default function OverviewPage() {
     let filteredCases = casesData.filter((c: any) => c.operationDate)
 
     // Apply surgeon filter
-    if (surgeonFilter !== "all") {
-      filteredCases = filteredCases.filter((c: any) => c.surgeon === surgeonFilter)
+    if (surgeonFilter.length > 0) {
+      filteredCases = filteredCases.filter((c: any) => surgeonFilter.includes(c.surgeon))
     }
 
     // Apply date range filter
@@ -721,8 +734,8 @@ export default function OverviewPage() {
     }
 
     // Apply user status filter
-    if (statusFilter !== "all") {
-      filteredCases = filteredCases.filter((c: any) => c.userStatus === statusFilter)
+    if (statusFilter.length > 0) {
+      filteredCases = filteredCases.filter((c: any) => statusFilter.includes(c.userStatus))
     }
 
     // Group by month
@@ -742,18 +755,23 @@ export default function OverviewPage() {
       }))
 
     // Apply case number filter
-    if (caseFilter === "since1st") {
-      return sortedData
-    } else if (caseFilter === "since2nd" && sortedData.length > 1) {
-      return sortedData.slice(1)
-    } else if (caseFilter === "since3rd" && sortedData.length > 2) {
-      return sortedData.slice(2)
-    } else if (caseFilter === "since4th" && sortedData.length > 3) {
-      return sortedData.slice(3)
-    } else if (caseFilter === "since5th" && sortedData.length > 4) {
-      return sortedData.slice(4)
-    } else if (caseFilter === "since6th" && sortedData.length > 5) {
-      return sortedData.slice(5)
+    if (caseFilter.length > 0) {
+      // Find the maximum sequence selected to know how many cases to slice off
+      // e.g., if ["Since 2nd Case", "Since 4th Case"] is selected, we should respect the most restrictive one (Since 4th Case)
+      // or we can just apply the first one selected for simplicity.
+      // Assuming we apply the highest sequence number selected:
+      let sliceCount = 0;
+      if (caseFilter.includes("Since 6th Case")) sliceCount = 5;
+      else if (caseFilter.includes("Since 5th Case")) sliceCount = 4;
+      else if (caseFilter.includes("Since 4th Case")) sliceCount = 3;
+      else if (caseFilter.includes("Since 3rd Case")) sliceCount = 2;
+      else if (caseFilter.includes("Since 2nd Case")) sliceCount = 1;
+      else if (caseFilter.includes("Since 1st Case")) sliceCount = 0;
+
+      if (sortedData.length > sliceCount) {
+        return sortedData.slice(sliceCount);
+      }
+      return sortedData;
     }
 
     return sortedData

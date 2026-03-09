@@ -52,6 +52,7 @@ interface AuthState {
   _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  sessionExpired: () => void;
   fetchDashboardAccess: () => Promise<void>;
   fetchDashboardModules: (dashboardId: number) => Promise<void>;
   clearError: () => void;
@@ -123,6 +124,18 @@ export const useAuthStore = create<AuthState>()(
           currentDashboardId: null,
           currentDashboardModules: null,
           error: null 
+        });
+      },
+
+      sessionExpired: () => {
+        localStorage.removeItem('auth_token');
+        set({ 
+          user: null, 
+          token: null, 
+          dashboardAccess: null,
+          currentDashboardId: null,
+          currentDashboardModules: null,
+          error: "Session expired. Please log in again." 
         });
       },
 
