@@ -217,31 +217,43 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {(selectedRegion.length === 0 ? data : timeSeriesData).map((item, index) => (
-                  <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
-                    <td className="p-3 text-muted-foreground">{index + 1}</td>
-                    <td className="p-3 font-medium text-gray-900">{selectedRegion.length === 0 ? item.region : item.month}</td>
-                    <td className="p-3 text-right font-medium">
-                      <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
-                        {item.cases}
-                      </span>
-                    </td>
-                    {selectedRegion.length > 0 && (
-                      <>
-                        <td className="p-3 text-right font-medium">
-                          <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
-                            {item.surgeons}
-                          </span>
-                        </td>
-                        <td className="p-3 text-right font-medium">
-                          <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 rounded font-semibold">
-                            {item.productivity}
-                          </span>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))}
+                {(selectedRegion.length === 0 ? data : timeSeriesData).map((item, index) => {
+                  const totalCases = selectedRegion.length > 0 
+                    ? selectedRegion.reduce((sum, region) => sum + (item[`${region}_cases`] || 0), 0)
+                    : item.cases
+                  const totalSurgeons = selectedRegion.length > 0
+                    ? selectedRegion.reduce((sum, region) => sum + (item[`${region}_surgeons`] || 0), 0)
+                    : item.surgeons
+                  const avgProductivity = selectedRegion.length > 0 && totalSurgeons > 0
+                    ? (totalCases / totalSurgeons).toFixed(1)
+                    : item.productivity
+                  
+                  return (
+                    <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
+                      <td className="p-3 text-muted-foreground">{index + 1}</td>
+                      <td className="p-3 font-medium text-gray-900">{selectedRegion.length === 0 ? item.region : item.month}</td>
+                      <td className="p-3 text-right font-medium">
+                        <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
+                          {totalCases}
+                        </span>
+                      </td>
+                      {selectedRegion.length > 0 && (
+                        <>
+                          <td className="p-3 text-right font-medium">
+                            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">
+                              {totalSurgeons}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right font-medium">
+                            <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 rounded font-semibold">
+                              {avgProductivity}
+                            </span>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
