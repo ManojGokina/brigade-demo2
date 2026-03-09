@@ -20,7 +20,8 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
   const [drawerOpen, setDrawerOpen] = useState(false)
   const top10Data = data.slice(0, 10)
   const totalCases = data.length
-  const averageDays = totalCases > 0 ? Math.round(data.reduce((sum, item) => sum + item.daysSinceSurgery, 0) / totalCases) : 0
+  const validCases = data.filter(item => item.daysSinceSurgery !== null)
+  const averageDays = validCases.length > 0 ? Math.round(validCases.reduce((sum, item) => sum + item.daysSinceSurgery, 0) / validCases.length) : 0
 
   const handleExport = () => {
     const headers = ['Case ID', 'Surgeon', 'Specialty', 'Operation Date', 'Days Since Surgery']
@@ -78,13 +79,17 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
               {top10Data.map((item, index) => (
                 <tr key={index} className="border-t hover:bg-muted/50">
                   <td className="p-2">{item.caseId}</td>
-                  <td className="p-2 font-medium">{item.surgeon}</td>
-                  <td className="p-2">{item.specialty}</td>
-                  <td className="p-2 text-right">{new Date(item.operationDate).toLocaleDateString()}</td>
+                  <td className="p-2 font-medium">{item.surgeon || '-'}</td>
+                  <td className="p-2">{item.specialty || '-'}</td>
+                  <td className="p-2 text-right">{item.operationDate ? new Date(item.operationDate).toLocaleDateString() : '-'}</td>
                   <td className="p-2 text-right">
-                    <span className="inline-block px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded text-xs font-semibold">
-                      {item.daysSinceSurgery}
-                    </span>
+                    {item.daysSinceSurgery !== null ? (
+                      <span className="inline-block px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded text-xs font-semibold">
+                        {item.daysSinceSurgery}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -162,13 +167,17 @@ export function SurvivalTime({ data, surgeons, specialties, surgeonFilter, speci
                   <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
                     <td className="p-3 text-muted-foreground">{index + 1}</td>
                     <td className="p-3 font-medium">{item.caseId}</td>
-                    <td className="p-3 font-medium text-gray-900">{item.surgeon}</td>
-                    <td className="p-3">{item.specialty}</td>
-                    <td className="p-3 text-right">{new Date(item.operationDate).toLocaleDateString()}</td>
+                    <td className="p-3 font-medium text-gray-900">{item.surgeon || '-'}</td>
+                    <td className="p-3">{item.specialty || '-'}</td>
+                    <td className="p-3 text-right">{item.operationDate ? new Date(item.operationDate).toLocaleDateString() : '-'}</td>
                     <td className="p-3 text-right">
-                      <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
-                        {item.daysSinceSurgery}
-                      </span>
+                      {item.daysSinceSurgery !== null ? (
+                        <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
+                          {item.daysSinceSurgery}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}

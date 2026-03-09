@@ -818,22 +818,25 @@ export default function OverviewPage() {
     const today = new Date()
     return filteredCasesData
       .filter((c: any) => {
-        if (!c.operationDate) return false
         if (survivalTimeSurgeon.length > 0 && !survivalTimeSurgeon.includes(c.surgeon)) return false
         if (survivalTimeSpecialty.length > 0 && !survivalTimeSpecialty.includes(c.specialty)) return false
         return true
       })
       .map((c: any, index: number) => {
-        const daysSince = Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24))
+        const daysSince = c.operationDate ? Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24)) : null
         return {
           caseId: c.caseNumber || `Case-${index + 1}`,
-          surgeon: c.surgeon,
-          specialty: c.specialty || 'Unknown',
-          operationDate: c.operationDate,
+          surgeon: c.surgeon || '',
+          specialty: c.specialty || '',
+          operationDate: c.operationDate || null,
           daysSinceSurgery: daysSince
         }
       })
-      .sort((a, b) => b.daysSinceSurgery - a.daysSinceSurgery)
+      .sort((a, b) => {
+        if (a.daysSinceSurgery === null) return 1
+        if (b.daysSinceSurgery === null) return -1
+        return b.daysSinceSurgery - a.daysSinceSurgery
+      })
   }, [filteredCasesData, survivalTimeSurgeon, survivalTimeSpecialty])
 
   // Calculate Surgeon Productivity Over Time from real data
