@@ -510,54 +510,131 @@ export default function OverviewPage() {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - excludeDays)
     
-    let surgeonCases: Record<string, any[]> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (secondCaseStatus.length > 0 && !secondCaseStatus.includes(c.userStatus)) return
-      if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
-      surgeonCases[c.surgeon].push(c)
+    if (secondCaseStatus.length === 0) {
+      // No status filter - show overall data
+      let surgeonCases: Record<string, any[]> = {}
+      filteredCasesData.forEach((c: any) => {
+        if (!c.surgeon || !c.operationDate) return
+        if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
+        surgeonCases[c.surgeon].push(c)
+      })
+      
+      const eligibleSurgeons = Object.entries(surgeonCases).filter(([surgeon, cases]) => {
+        const sorted = cases.sort((a, b) => a.operationDate.localeCompare(b.operationDate))
+        return excludeDays === 0 || new Date(sorted[0].operationDate) < cutoffDate
+      })
+      
+      if (secondCaseBreakdown === "overall") {
+        const maxCases = Math.max(...eligibleSurgeons.map(([, cases]) => cases.length))
+        const result = []
+        
+        for (let i = 2; i <= Math.min(maxCases, 10); i++) {
+          const surgeonsWithCase = eligibleSurgeons.filter(([, cases]) => cases.length >= i).length
+          const percentage = eligibleSurgeons.length > 0 ? Math.round((surgeonsWithCase / eligibleSurgeons.length) * 100) : 0
+          result.push({
+            category: `${i}${i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Case`,
+            percentage
+          })
+        }
+        return result
+      }
+      
+      const groupKey = secondCaseBreakdown === "userType" ? "userStatus" : secondCaseBreakdown === "region" ? "region" : "specialty"
+      const grouped: Record<string, Record<string, any[]>> = {}
+      
+      eligibleSurgeons.forEach(([surgeon, cases]) => {
+        cases.forEach(c => {
+          const key = c[groupKey] || "Unknown"
+          if (!grouped[key]) grouped[key] = {}
+          if (!grouped[key][surgeon]) grouped[key][surgeon] = []
+          grouped[key][surgeon].push(c)
+        })
+      })
+      
+      return Object.entries(grouped).map(([category, surgeons]) => {
+        let total = Object.keys(surgeons).length
+        let withSecond = Object.values(surgeons).filter(cases => cases.length >= 2).length
+        return { category, percentage: total > 0 ? Math.round((withSecond / total) * 100) : 0 }
+      }).sort((a, b) => b.percentage - a.percentage)
+    }
+    
+    // Multiple status filters - calculate for each status
+    const statusData: Record<string, Record<string, any[]>> = {}
+    secondCaseStatus.forEach(status => {
+      statusData[status] = {}
     })
     
-    // Filter surgeons based on exclude days
-    const eligibleSurgeons = Object.entries(surgeonCases).filter(([surgeon, cases]) => {
-      const sorted = cases.sort((a, b) => a.operationDate.localeCompare(b.operationDate))
-      return excludeDays === 0 || new Date(sorted[0].operationDate) < cutoffDate
+    filteredCasesData.forEach((c: any) => {
+      if (!c.surgeon || !c.operationDate || !c.userStatus) return
+      if (!secondCaseStatus.includes(c.userStatus)) return
+      if (!statusData[c.userStatus][c.surgeon]) statusData[c.userStatus][c.surgeon] = []
+      statusData[c.userStatus][c.surgeon].push(c)
     })
     
     if (secondCaseBreakdown === "overall") {
-      // Sequential: Show % who reached 2nd, 3rd, 4th, etc. case
-      const maxCases = Math.max(...eligibleSurgeons.map(([, cases]) => cases.length))
-      const result = []
+      const result: any[] = []
+      const maxCases = Math.max(...Object.values(statusData).flatMap(surgeons => 
+        Object.values(surgeons).map(cases => cases.length)
+      ), 0)
       
       for (let i = 2; i <= Math.min(maxCases, 10); i++) {
-        const surgeonsWithCase = eligibleSurgeons.filter(([, cases]) => cases.length >= i).length
-        const percentage = eligibleSurgeons.length > 0 ? Math.round((surgeonsWithCase / eligibleSurgeons.length) * 100) : 0
-        result.push({
-          category: `${i}${i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Case`,
-          percentage
+        const row: any = {
+          category: `${i}${i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Case`
+        }
+        
+        secondCaseStatus.forEach(status => {
+          const surgeons = statusData[status]
+          const eligibleSurgeons = Object.entries(surgeons).filter(([surgeon, cases]) => {
+            const sorted = cases.sort((a, b) => a.operationDate.localeCompare(b.operationDate))
+            return excludeDays === 0 || new Date(sorted[0].operationDate) < cutoffDate
+          })
+          
+          const surgeonsWithCase = eligibleSurgeons.filter(([, cases]) => cases.length >= i).length
+          row[status] = eligibleSurgeons.length > 0 ? Math.round((surgeonsWithCase / eligibleSurgeons.length) * 100) : 0
         })
+        
+        result.push(row)
       }
       return result
     }
     
-    // Breakdown by type/region/specialty
     const groupKey = secondCaseBreakdown === "userType" ? "userStatus" : secondCaseBreakdown === "region" ? "region" : "specialty"
-    const grouped: Record<string, Record<string, any[]>> = {}
+    const categories = new Set<string>()
     
-    eligibleSurgeons.forEach(([surgeon, cases]) => {
-      cases.forEach(c => {
-        const key = c[groupKey] || "Unknown"
-        if (!grouped[key]) grouped[key] = {}
-        if (!grouped[key][surgeon]) grouped[key][surgeon] = []
-        grouped[key][surgeon].push(c)
+    Object.values(statusData).forEach(surgeons => {
+      Object.values(surgeons).forEach(cases => {
+        cases.forEach(c => categories.add(c[groupKey] || "Unknown"))
       })
     })
     
-    return Object.entries(grouped).map(([category, surgeons]) => {
-      let total = Object.keys(surgeons).length
-      let withSecond = Object.values(surgeons).filter(cases => cases.length >= 2).length
-      return { category, percentage: total > 0 ? Math.round((withSecond / total) * 100) : 0 }
-    }).sort((a, b) => b.percentage - a.percentage)
+    return Array.from(categories).map(category => {
+      const row: any = { category }
+      
+      secondCaseStatus.forEach(status => {
+        const surgeons = statusData[status]
+        const categorySurgeons: Record<string, any[]> = {}
+        
+        Object.entries(surgeons).forEach(([surgeon, cases]) => {
+          const eligibleCases = cases.filter(c => (c[groupKey] || "Unknown") === category)
+          if (eligibleCases.length > 0) {
+            const sorted = eligibleCases.sort((a, b) => a.operationDate.localeCompare(b.operationDate))
+            if (excludeDays === 0 || new Date(sorted[0].operationDate) < cutoffDate) {
+              categorySurgeons[surgeon] = eligibleCases
+            }
+          }
+        })
+        
+        const total = Object.keys(categorySurgeons).length
+        const withSecond = Object.values(categorySurgeons).filter(cases => cases.length >= 2).length
+        row[status] = total > 0 ? Math.round((withSecond / total) * 100) : 0
+      })
+      
+      return row
+    }).sort((a, b) => {
+      const aTotal = secondCaseStatus.reduce((sum, s) => sum + (a[s] || 0), 0)
+      const bTotal = secondCaseStatus.reduce((sum, s) => sum + (b[s] || 0), 0)
+      return bTotal - aTotal
+    })
   }, [secondCaseExcludeDays, secondCaseStatus, secondCaseBreakdown, filteredCasesData])
 
 

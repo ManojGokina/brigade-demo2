@@ -36,6 +36,12 @@ export function SecondCaseBooking({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  const colors = {
+    "EST": "#1d99ac",
+    "IN": "#8b5cf6",
+    "VAL": "#f59e0b"
+  }
+
   const exportToExcel = () => {
     const ws_data = [
       ["Second Case Booking Report"],
@@ -140,6 +146,16 @@ export function SecondCaseBooking({
       </CardHeader>
       <CardContent>
         <div className="relative">
+          {statusFilter.length > 0 && (
+            <div className="flex flex-wrap gap-3 mb-4 justify-center">
+              {statusFilter.map((status) => (
+                <div key={status} className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[status as keyof typeof colors] }} />
+                  <span className="text-xs text-muted-foreground">{status}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <ChartContainer config={{}} className="h-[300px] w-full">
             <BarChart data={data}>
               <XAxis 
@@ -152,9 +168,15 @@ export function SecondCaseBooking({
                 label={{ value: "Percentage (%)", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="percentage" fill="#10b981" radius={[4, 4, 0, 0]}>
-                <LabelList dataKey="percentage" position="top" formatter={(value: number) => `${value}%`} style={{ fontSize: 10, fill: "#10b981" }} />
-              </Bar>
+              {statusFilter.length === 0 ? (
+                <Bar dataKey="percentage" fill="#10b981" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="percentage" position="top" formatter={(value: number) => `${value}%`} style={{ fontSize: 10, fill: "#10b981" }} />
+                </Bar>
+              ) : (
+                statusFilter.map((status) => (
+                  <Bar key={status} dataKey={status} fill={colors[status as keyof typeof colors]} stackId="a" name={status} />
+                ))
+              )}
             </BarChart>
           </ChartContainer>
           <div className="flex justify-center mt-3">
