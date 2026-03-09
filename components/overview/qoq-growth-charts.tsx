@@ -66,6 +66,7 @@ export function QoQGrowthProgression({ data, years, selectedYears, surgeons, sur
               onChange={onSurgeonChange}
               placeholder="All Surgeons"
               className="w-[120px] border-gray-300 focus:border-gray-500"
+              maxCount={10}
             />
             <MultiSelect
               options={years}

@@ -40,6 +40,7 @@ export default function OverviewPage() {
   const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string[]>([])
   const [survivalTimeSurgeon, setSurvivalTimeSurgeon] = useState<string[]>([])
   const [survivalTimeSpecialty, setSurvivalTimeSpecialty] = useState<string[]>([])
+  const [timeNormalizedSurgeon, setTimeNormalizedSurgeon] = useState<string[]>([])
   const [regionChartRegion, setRegionChartRegion] = useState<string[]>([])
   const [regionChartView, setRegionChartView] = useState<string>("cases")
   const [timeToSecondCaseSurgeon, setTimeToSecondCaseSurgeon] = useState<string[]>([])
@@ -398,7 +399,7 @@ export default function OverviewPage() {
       surgeonCases[c.surgeon].push(c.operationDate)
     })
     
-    // If specific surgeons selected, calculate averages across those specific surgeons for all cases
+    // If specific surgeons selected, show each surgeon's days to reach milestones
     if (daysToCaseSurgeon.length > 0) {
       // Find the maximum number of cases any selected surgeon has
       let maxCases = 0;
@@ -410,26 +411,26 @@ export default function OverviewPage() {
 
       const result = [];
       for (let caseNum = 1; caseNum <= maxCases; caseNum++) {
-        const days: number[] = [];
+        const milestoneData: any = {
+          milestone: caseNum === 1 ? '1st Case' : `${caseNum}${caseNum === 2 ? 'nd' : caseNum === 3 ? 'rd' : 'th'} Case`,
+        };
         
-        Object.values(surgeonCases).forEach(dates => {
-          if (dates.length >= caseNum) {
+        daysToCaseSurgeon.forEach(surgeon => {
+          const dates = surgeonCases[surgeon];
+          if (dates && dates.length >= caseNum) {
             const sorted = dates.sort()
             const daysDiff = Math.floor((new Date(sorted[caseNum - 1]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
-            days.push(daysDiff)
+            milestoneData[surgeon] = daysDiff;
+            
+            // If only one surgeon is selected, we can also provide the specific date
+            if (daysToCaseSurgeon.length === 1) {
+              milestoneData.date = sorted[caseNum - 1];
+            }
           }
         });
 
-        if (days.length > 0) {
-          const avg = Math.round(days.reduce((a, b) => a + b, 0) / days.length);
-          result.push({
-            milestone: caseNum === 1 ? '1st Case' : `${caseNum}${caseNum === 2 ? 'nd' : caseNum === 3 ? 'rd' : 'th'} Case`,
-            avg: avg,
-            // Only provide a specific date if exactly one surgeon is selected, otherwise we're showing averages
-            date: daysToCaseSurgeon.length === 1 && surgeonCases[daysToCaseSurgeon[0]] && surgeonCases[daysToCaseSurgeon[0]].length >= caseNum 
-                  ? surgeonCases[daysToCaseSurgeon[0]].sort()[caseNum - 1] 
-                  : undefined
-          });
+        if (Object.keys(milestoneData).length > 1) { // more than just 'milestone' key
+          result.push(milestoneData);
         }
       }
       return result;
@@ -883,7 +884,12 @@ export default function OverviewPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
-          <TimeNormalized data={timeMetricsData} />
+          <TimeNormalized 
+            data={timeNormalizedSurgeon.length > 0 ? timeMetricsData.filter((d: any) => timeNormalizedSurgeon.includes(d.surgeon)) : timeMetricsData}
+            surgeons={surgeonsList}
+            surgeonFilter={timeNormalizedSurgeon}
+            onSurgeonChange={setTimeNormalizedSurgeon}
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
@@ -36,7 +37,17 @@ export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange }: { data:
             <CardTitle className="text-sm font-medium">Time Active vs Inactive</CardTitle>
             <p className="text-xs text-muted-foreground">From first case and most recent case</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex gap-3">
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full bg-[#10b981]" />
+                <span className="text-xs text-muted-foreground">Active</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full bg-[#f59e0b]" />
+                <span className="text-xs text-muted-foreground">Inactive</span>
+              </div>
+            </div>
             <Select value={timeUnit} onValueChange={onTimeUnitChange}>
               <SelectTrigger className="w-[120px] h-8 text-xs border-gray-300 focus:border-gray-500">
                 <SelectValue />
@@ -147,7 +158,17 @@ export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange }: { data:
   )
 }
 
-export function TimeNormalized({ data }: { data: any[] }) {
+export function TimeNormalized({ 
+  data = [], 
+  surgeons = [], 
+  surgeonFilter = [], 
+  onSurgeonChange = () => {} 
+}: { 
+  data?: any[], 
+  surgeons?: string[], 
+  surgeonFilter?: string[], 
+  onSurgeonChange?: (value: string[]) => void 
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const top10Data = data.slice(0, 10)
 
@@ -178,6 +199,26 @@ export function TimeNormalized({ data }: { data: any[] }) {
           <div>
             <CardTitle className="text-sm font-medium">Time Normalized (Months)</CardTitle>
             <p className="text-xs text-muted-foreground">Months since 1st and 2nd case</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-3">
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full bg-[#1d99ac]" />
+                <span className="text-xs text-muted-foreground">Since 1st Case</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full bg-[#8b5cf6]" />
+                <span className="text-xs text-muted-foreground">Since 2nd Case</span>
+              </div>
+            </div>
+            <MultiSelect
+              options={surgeons}
+              selected={surgeonFilter}
+              onChange={onSurgeonChange}
+              placeholder="All Surgeons"
+              className="w-[150px] border-gray-300 focus:border-gray-500"
+              maxCount={10}
+            />
           </div>
           {/* <TooltipProvider>
             <Tooltip>
@@ -237,6 +278,16 @@ export function TimeNormalized({ data }: { data: any[] }) {
           </div>
         </SheetHeader>
         <div className="px-6 py-6 bg-white">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
+              <span className="font-semibold">Surgeon:</span>
+              <span>{surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")}</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
+              <span className="font-semibold">Total Records:</span>
+              <span>{data.length}</span>
+            </div>
+          </div>
           <div className="mb-3 flex justify-end">
             <Button onClick={handleExport} size="sm" variant="outline" className="gap-2">
               <Download className="h-4 w-4" />

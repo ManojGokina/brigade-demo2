@@ -100,6 +100,7 @@ export function TimeMilestonesTable({
               onChange={onSurgeonChange}
               placeholder="All Surgeons"
               className="w-[150px] border-gray-300 focus:border-gray-500"
+              maxCount={10}
             />
           </div>
         </div>

@@ -22,29 +22,46 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
   // For chart: show only 2nd to 6th case when surgeon is selected
   const chartData = surgeonFilter.length > 0 ? data.slice(1, 6) : data
 
+  const colors = [
+    "#1d99ac", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899", 
+    "#3b82f6", "#f43f5e", "#84cc16", "#06b6d4", "#a855f7"
+  ]
+
   const exportToExcel = () => {
     const surgeonLabel = surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")
-    const hasDate = data[0]?.date
     
     const wb = XLSX.utils.book_new()
+    
+    let headers = ["Case Milestone"];
+    if (surgeonFilter.length === 0) {
+      headers.push("Average Days from 1st Case");
+    } else {
+      headers.push(...surgeonFilter.map(s => `${s} (Days)`));
+    }
+
     const wsData: any[][] = [
-      ["Days to Case Milestones Report", "", ""],
-      ["", "", ""],
-      ["Surgeon", surgeonLabel, ""],
-      ["Export Date", new Date().toLocaleString(), ""],
-      ["", "", ""],
-      hasDate 
-        ? ["Case Milestone", "Case Date", "Days from 1st Case"]
-        : ["Case Milestone", "Days from 1st Case", ""],
-      ...data.map((row) => hasDate 
-        ? [row.milestone, new Date(row.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }), row.avg]
-        : [row.milestone, row.avg, ""]
-      ),
+      ["Days to Case Milestones Report"],
+      [],
+      ["Surgeon", surgeonLabel],
+      ["Export Date", new Date().toLocaleString()],
+      [],
+      headers,
+      ...data.map((row) => {
+        const rowData = [row.milestone];
+        if (surgeonFilter.length === 0) {
+          rowData.push(row.avg);
+        } else {
+          surgeonFilter.forEach(surgeon => {
+            rowData.push(row[surgeon] !== undefined ? row[surgeon] : '-');
+          });
+        }
+        return rowData;
+      }),
     ]
     
     const ws = XLSX.utils.aoa_to_sheet(wsData)
-    ws['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 20 }]
-    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }]
+    ws['!cols'] = [{ wch: 20 }, ...headers.slice(1).map(() => ({ wch: 20 }))]
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }]
     
     const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
     for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -78,6 +95,13 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
     XLSX.writeFile(wb, `days-to-case-milestones-${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
+  const chartConfig = surgeonFilter.length === 0 
+    ? { avg: { label: "Average Days", color: "#1d99ac" } }
+    : surgeonFilter.reduce((acc, surgeon, idx) => {
+        acc[surgeon] = { label: surgeon, color: colors[idx % colors.length] }
+        return acc
+      }, {} as Record<string, any>)
+
   return (
     <Card className="border-border/50 bg-card">
       <CardHeader className="pb-2">
@@ -93,6 +117,7 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
               onChange={onSurgeonChange}
               placeholder="All Surgeons"
               className="w-[150px] border-gray-300 focus:border-gray-500"
+              maxCount={10}
             />
             {/* <TooltipProvider>
               <Tooltip>
@@ -174,20 +199,28 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
                         <thead className="bg-muted">
                           <tr>
                             <th className="text-left p-3 font-medium">Case Milestone</th>
-                            {data[0]?.date && <th className="text-left p-3 font-medium">Case Date</th>}
-                            <th className="text-right p-3 font-medium">Days from 1st Case</th>
+                            {surgeonFilter.length === 0 ? (
+                              <th className="text-right p-3 font-medium">Average Days from 1st Case</th>
+                            ) : (
+                              surgeonFilter.map(surgeon => (
+                                <th key={surgeon} className="text-right p-3 font-medium">{surgeon} (Days)</th>
+                              ))
+                            )}
                           </tr>
                         </thead>
                         <tbody>
                           {data.map((row, index) => (
                             <tr key={index} className="border-t hover:bg-muted/50">
                               <td className="p-3">{row.milestone}</td>
-                              {row.date && (
-                                <td className="p-3">
-                                  {new Date(row.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                </td>
+                              {surgeonFilter.length === 0 ? (
+                                <td className="p-3 text-right font-medium">{row.avg}</td>
+                              ) : (
+                                surgeonFilter.map(surgeon => (
+                                  <td key={surgeon} className="p-3 text-right font-medium">
+                                    {row[surgeon] !== undefined ? row[surgeon] : '-'}
+                                  </td>
+                                ))
                               )}
-                              <td className="p-3 text-right font-medium">{row.avg}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -201,7 +234,17 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[250px] w-full">
+        {surgeonFilter.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-4 justify-center">
+            {surgeonFilter.map((surgeon, idx) => (
+              <div key={surgeon} className="flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[idx % colors.length] }} />
+                <span className="text-xs text-muted-foreground">{surgeon}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <ChartContainer config={chartConfig} className="h-[250px] w-full">
           <BarChart data={chartData}>
             <XAxis 
               dataKey="milestone" 
@@ -211,12 +254,20 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
             <YAxis 
               tick={{ fontSize: 11 }} 
               label={{ value: "Days", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-              domain={[0, (dataMax: number) => Math.ceil(dataMax) + 10]}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Days from 1st Case">
-              <LabelList dataKey="avg" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
-            </Bar>
+            {surgeonFilter.length === 0 ? (
+              <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Days from 1st Case">
+                <LabelList dataKey="avg" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
+              </Bar>
+            ) : (
+              surgeonFilter.map((surgeon, idx) => {
+                return (
+                  <Bar key={surgeon} dataKey={surgeon} fill={colors[idx % colors.length]} stackId="a" name={surgeon}>
+                  </Bar>
+                );
+              })
+            )}
           </BarChart>
         </ChartContainer>
         <div className="mt-4 text-center">
@@ -301,6 +352,7 @@ export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChang
               onChange={onSurgeonChange}
               placeholder="All Surgeons"
               className="w-[150px] border-gray-300 focus:border-gray-500"
+              maxCount={10}
             />
             {/* <TooltipProvider>
               <Tooltip>

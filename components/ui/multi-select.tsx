@@ -18,6 +18,7 @@ interface MultiSelectProps {
   onChange: (values: string[]) => void
   placeholder?: string
   className?: string
+  maxCount?: number
 }
 
 export function MultiSelect({
@@ -26,6 +27,7 @@ export function MultiSelect({
   onChange,
   placeholder = "Select...",
   className,
+  maxCount,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -37,7 +39,11 @@ export function MultiSelect({
   }, [options, searchQuery])
 
   const handleToggle = (value: string) => {
-    const newSelected = selected.includes(value)
+    const isSelected = selected.includes(value)
+    if (!isSelected && maxCount !== undefined && selected.length >= maxCount) {
+      return // limit reached
+    }
+    const newSelected = isSelected
       ? selected.filter((item) => item !== value)
       : [...selected, value]
     onChange(newSelected)
@@ -59,7 +65,9 @@ export function MultiSelect({
           <span className="truncate">
             {selected.length === 0
               ? placeholder
-              : `${selected.length} selected`}
+              : maxCount !== undefined
+                ? `${selected.length}/${maxCount} selected`
+                : `${selected.length} selected`}
           </span>
           <ChevronDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
         </Button>
@@ -82,22 +90,31 @@ export function MultiSelect({
               No results found.
             </div>
           ) : (
-            filteredOptions.map((option) => (
-              <div
-                key={option}
-                className="flex items-center space-x-2 rounded-sm px-2 py-1.5 hover:bg-accent cursor-pointer"
-                onClick={() => handleToggle(option)}
-              >
-                <Checkbox
-                  checked={selected.includes(option)}
-                  onCheckedChange={() => handleToggle(option)}
-                  className="border-slate-400 dark:border-slate-500"
-                />
-                <label className="text-sm cursor-pointer flex-1">
-                  {option}
-                </label>
-              </div>
-            ))
+            filteredOptions.map((option) => {
+              const isSelected = selected.includes(option)
+              const isDisabled = !isSelected && maxCount !== undefined && selected.length >= maxCount
+
+              return (
+                <div
+                  key={option}
+                  className={cn(
+                    "flex items-center space-x-2 rounded-sm px-2 py-1.5",
+                    isDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-accent cursor-pointer"
+                  )}
+                  onClick={() => !isDisabled && handleToggle(option)}
+                >
+                  <Checkbox
+                    checked={isSelected}
+                    disabled={isDisabled}
+                    onCheckedChange={() => !isDisabled && handleToggle(option)}
+                    className="border-slate-400 dark:border-slate-500"
+                  />
+                  <label className={cn("text-sm flex-1", isDisabled ? "cursor-not-allowed" : "cursor-pointer")}>
+                    {option}
+                  </label>
+                </div>
+              )
+            })
           )}
         </div>
         {selected.length > 0 && (
