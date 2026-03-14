@@ -31,7 +31,7 @@ export default function OverviewPage() {
   const [specialtyFilter, setSpecialtyFilter] = useState<string[]>([])
   const [caseTypeFilter, setCaseTypeFilter] = useState<string[]>([])
   const [neuromaFilter, setNeuromaFilter] = useState<string[]>([])
-  const [topPerformersView, setTopPerformersView] = useState<string>("caseLoad")
+  const [topPerformersView, setTopPerformersView] = useState<string>("productivity")
   const [topPerformersRegion, setTopPerformersRegion] = useState<string[]>([])
   const [topPerformersSpecialty, setTopPerformersSpecialty] = useState<string[]>([])
   const [secondCaseExcludeDays, setSecondCaseExcludeDays] = useState<string>("0")
@@ -935,6 +935,18 @@ export default function OverviewPage() {
           onNeuromaChange={setNeuromaFilter}
         />
 
+        <TopPerformersTable 
+          data={topPerformersTableData} 
+          regions={regionsList} 
+          specialties={specialtiesList} 
+          viewType={topPerformersView} 
+          regionFilter={topPerformersRegion} 
+          specialtyFilter={topPerformersSpecialty} 
+          onViewTypeChange={setTopPerformersView} 
+          onRegionChange={setTopPerformersRegion} 
+          onSpecialtyChange={setTopPerformersSpecialty} 
+        />
+
         <div className="grid gap-4 md:grid-cols-3">
           <DaysToCaseMilestones 
             data={daysToCaseMilestonesData} 
@@ -969,18 +981,6 @@ export default function OverviewPage() {
           surgeons={surgeonsList} 
           surgeonFilter={daysBetweenCasesSurgeon} 
           onSurgeonChange={setDaysBetweenCasesSurgeon} 
-        />
-
-        <TopPerformersTable 
-          data={topPerformersTableData} 
-          regions={regionsList} 
-          specialties={specialtiesList} 
-          viewType={topPerformersView} 
-          regionFilter={topPerformersRegion} 
-          specialtyFilter={topPerformersSpecialty} 
-          onViewTypeChange={setTopPerformersView} 
-          onRegionChange={setTopPerformersRegion} 
-          onSpecialtyChange={setTopPerformersSpecialty} 
         />
 
         <SecondCaseBooking 

@@ -168,7 +168,7 @@ export function TopPerformersTable({
                   <SelectItem value="productivity">Productivity</SelectItem>
                 </SelectContent>
               </Select>
-              {viewType === "caseLoad" && (
+              {(
                 <>
                   <MultiSelect
                     options={regions}
@@ -298,13 +298,13 @@ export function TopPerformersTable({
                 <span className="font-semibold">View:</span>
                 <span>{viewType === "caseLoad" ? "Case Load" : viewType === "neuroma" ? "Neuroma" : "Productivity"}</span>
               </div>
-              {viewType === "caseLoad" && regionFilter.length > 0 && (
+              {regionFilter.length > 0 && (
                 <div className="inline-flex items-center gap-1.5 bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-xs font-medium">
                   <span className="font-semibold">Region:</span>
                   <span>{regionFilter.join(", ")}</span>
                 </div>
               )}
-              {viewType === "caseLoad" && specialtyFilter.length > 0 && (
+              {specialtyFilter.length > 0 && (
                 <div className="inline-flex items-center gap-1.5 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-xs font-medium">
                   <span className="font-semibold">Specialty:</span>
                   <span>{specialtyFilter.join(", ")}</span>
