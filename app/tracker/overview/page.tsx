@@ -990,6 +990,7 @@ export default function OverviewPage() {
             data={timeNormalizedSurgeon.length > 0 ? timeMetricsData.filter((d: any) => timeNormalizedSurgeon.includes(d.surgeon)) : timeMetricsData}
             surgeons={surgeonsList}
             surgeonFilter={timeNormalizedSurgeon}
+            rawCases={filteredCasesData}
             onSurgeonChange={setTimeNormalizedSurgeon}
           />
         </div>

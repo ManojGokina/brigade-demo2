@@ -163,15 +163,49 @@ export function TimeNormalized({
   data = [], 
   surgeons = [], 
   surgeonFilter = [], 
+  rawCases = [],
   onSurgeonChange = () => {} 
 }: { 
   data?: any[], 
   surgeons?: string[], 
   surgeonFilter?: string[], 
+  rawCases?: any[],
   onSurgeonChange?: (value: string[]) => void 
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const top10Data = data.slice(0, 10)
+  const [viewMode, setViewMode] = useState<'time' | 'productivity'>('time')
+
+  // Per-surgeon productivity: overall vs since 2nd case
+  const productivityData = (() => {
+    const surgeonCases: Record<string, string[]> = {}
+    const source = surgeonFilter.length > 0
+      ? rawCases.filter((c: any) => surgeonFilter.includes(c.surgeon))
+      : rawCases
+    source.forEach((c: any) => {
+      if (!c.surgeon || !c.operationDate) return
+      if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
+      surgeonCases[c.surgeon].push(c.operationDate)
+    })
+    return Object.entries(surgeonCases).map(([surgeon, dates]) => {
+      const sorted = [...dates].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+      // Overall: cases / unique months
+      const allMonths = new Set(sorted.map(d => d.substring(0, 7)))
+      const overallProductivity = +(sorted.length / allMonths.size).toFixed(1)
+      // Since 2nd case: exclude first case, recalculate from 2nd case date
+      let since2ndProductivity: number | null = null
+      if (sorted.length >= 2) {
+        const since2nd = sorted.slice(1)
+        const months2nd = new Set(since2nd.map(d => d.substring(0, 7)))
+        since2ndProductivity = +(since2nd.length / months2nd.size).toFixed(1)
+      }
+      const gap = sorted.length >= 2
+        ? Math.round((new Date(sorted[1]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
+        : null
+      return { surgeon, overallProductivity, since2ndProductivity, firstToSecondGap: gap, totalCases: sorted.length }
+    }).sort((a, b) => b.overallProductivity - a.overallProductivity)
+  })()
+
+  const top10Data = viewMode === 'time' ? data.slice(0, 10) : productivityData.slice(0, 10)
 
   const handleExport = () => {
     const headers = ['#', 'Surgeon', '1st Case Date', 'Months Since 1st', '2nd Case Date', 'Months Since 2nd']
@@ -199,19 +233,35 @@ export function TimeNormalized({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-sm font-medium">Time Normalized (Months)</CardTitle>
-            <p className="text-xs text-muted-foreground">Months since 1st and 2nd case</p>
+            <p className="text-xs text-muted-foreground">
+              {viewMode === 'time' ? 'Months since 1st and 2nd case' : 'Overall vs since-2nd-case productivity per surgeon'}
+            </p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex gap-3">
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-[#1d99ac]" />
-                <span className="text-xs text-muted-foreground">Since 1st Case</span>
+          <div className="flex items-center gap-2">
+            {viewMode === 'time' && (
+              <div className="flex gap-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-[#1d99ac]" />
+                  <span className="text-xs text-muted-foreground">Since 1st</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-[#8b5cf6]" />
+                  <span className="text-xs text-muted-foreground">Since 2nd</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-[#8b5cf6]" />
-                <span className="text-xs text-muted-foreground">Since 2nd Case</span>
+            )}
+            {viewMode === 'productivity' && (
+              <div className="flex gap-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-[#1d99ac]" />
+                  <span className="text-xs text-muted-foreground">Overall</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-[#f59e0b]" />
+                  <span className="text-xs text-muted-foreground">Since 2nd Case</span>
+                </div>
               </div>
-            </div>
+            )}
             <MultiSelect
               options={surgeons}
               selected={surgeonFilter}
@@ -220,35 +270,48 @@ export function TimeNormalized({
               className="w-[150px] border-gray-300 focus:border-gray-500"
               maxCount={10}
             />
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'time' | 'productivity')}>
+              <SelectTrigger className="w-[160px] h-8 text-xs border-gray-300">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="time">Time Normalized</SelectItem>
+                <SelectItem value="productivity">Productivity Milestones</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {/* <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8" onClick={() => setDrawerOpen(true)}>
-                  <Download className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Download in CSV</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider> */}
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[250px] w-full">
-          <BarChart data={top10Data}>
-            <XAxis dataKey="surgeon" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 11 }} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="monthsSince1st" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Since 1st Case">
-              <LabelList dataKey="monthsSince1st" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
-            </Bar>
-            <Bar dataKey="monthsSince2nd" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Since 2nd Case">
-              <LabelList dataKey="monthsSince2nd" position="top" style={{ fontSize: 10, fill: "#8b5cf6" }} />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+        {viewMode === 'time' ? (
+          <ChartContainer config={{}} className="h-[250px] w-full">
+            <BarChart data={top10Data}>
+              <XAxis dataKey="surgeon" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="monthsSince1st" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Since 1st Case">
+                <LabelList dataKey="monthsSince1st" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
+              </Bar>
+              <Bar dataKey="monthsSince2nd" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Since 2nd Case">
+                <LabelList dataKey="monthsSince2nd" position="top" style={{ fontSize: 10, fill: "#8b5cf6" }} />
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+        ) : (
+          <ChartContainer config={{}} className="h-[250px] w-full">
+            <BarChart data={top10Data} barCategoryGap="20%" barGap={4}>
+              <XAxis dataKey="surgeon" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 11 }} label={{ value: "Cases/Mo", angle: -90, position: "insideLeft", style: { fontSize: 11, fill: "#000" } }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="overallProductivity" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Overall">
+                <LabelList dataKey="overallProductivity" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
+              </Bar>
+              <Bar dataKey="since2ndProductivity" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Since 2nd Case">
+                <LabelList dataKey="since2ndProductivity" position="top" style={{ fontSize: 10, fill: "#f59e0b" }} />
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+        )}
         <div className="mt-4 text-center">
           <button
             onClick={() => setDrawerOpen(true)}
@@ -266,11 +329,13 @@ export function TimeNormalized({
         <SheetHeader className="px-6 py-4 border-b bg-white sticky top-0 z-10">
           <div className="flex items-start justify-between">
             <div>
-              <SheetTitle className="text-lg font-semibold">Time Normalized - Full Data</SheetTitle>
+              <SheetTitle className="text-lg font-semibold">
+                {viewMode === 'time' ? 'Time Normalized - Full Data' : 'Productivity Milestones - Full Data'}
+              </SheetTitle>
               <p className="text-sm text-muted-foreground mt-2">
-                <strong>Calculation:</strong> Months Since 1st Case = (Today - First Case Date) / 30 days. 
-                Months Since 2nd Case = (Today - Second Case Date) / 30 days. 
-                Shows time elapsed since surgeon's first and second cases.
+                {viewMode === 'time'
+                  ? 'Months since first and second case per surgeon.'
+                  : 'Overall productivity (all cases ÷ active months) vs productivity since 2nd case (excluding the first case). A higher since-2nd value vs overall suggests the first case was an outlier gap.'}
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setDrawerOpen(false)} className="-mt-2 -mr-2">
@@ -280,13 +345,13 @@ export function TimeNormalized({
         </SheetHeader>
         <div className="px-6 py-6 bg-white">
           <div className="flex flex-wrap gap-2 mb-4">
-            <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
+            <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-xs font-medium">
               <span className="font-semibold">Surgeon:</span>
-              <span>{surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")}</span>
+              <span>{surgeonFilter.length === 0 ? 'All Surgeons' : surgeonFilter.join(', ')}</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
-              <span className="font-semibold">Total Records:</span>
-              <span>{data.length}</span>
+            <div className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full text-xs font-medium">
+              <span className="font-semibold">Records:</span>
+              <span>{viewMode === 'time' ? data.length : productivityData.length}</span>
             </div>
           </div>
           <div className="mb-3 flex justify-end">
@@ -295,40 +360,86 @@ export function TimeNormalized({
               Export CSV
             </Button>
           </div>
-          <div className="border rounded-lg overflow-hidden shadow-lg bg-white">
-            <table className="w-full text-sm bg-white">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="text-left p-3 font-medium">#</th>
-                  <th className="text-left p-3 font-medium">Surgeon</th>
-                  <th className="text-right p-3 font-medium">1st Case Date</th>
-                  <th className="text-right p-3 font-medium">Months Since 1st</th>
-                  <th className="text-right p-3 font-medium">2nd Case Date</th>
-                  <th className="text-right p-3 font-medium">Months Since 2nd</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white">
-                {data.map((item, index) => (
-                  <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
-                    <td className="p-3 text-muted-foreground">{index + 1}</td>
-                    <td className="p-3 font-medium text-gray-900">{item.surgeon}</td>
-                    <td className="p-3 text-right text-sm text-gray-600">{item.firstCaseDate || 'N/A'}</td>
-                    <td className="p-3 text-right font-medium">
-                      <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">
-                        {item.monthsSince1st}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right text-sm text-gray-600">{item.secondCaseDate || 'N/A'}</td>
-                    <td className="p-3 text-right font-medium">
-                      <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded font-semibold">
-                        {item.monthsSince2nd || 'N/A'}
-                      </span>
-                    </td>
+          {viewMode === 'time' ? (
+            <div className="border rounded-lg overflow-hidden shadow-lg bg-white">
+              <table className="w-full text-sm bg-white">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="text-left p-3 font-medium">#</th>
+                    <th className="text-left p-3 font-medium">Surgeon</th>
+                    <th className="text-right p-3 font-medium">1st Case Date</th>
+                    <th className="text-right p-3 font-medium">Months Since 1st</th>
+                    <th className="text-right p-3 font-medium">2nd Case Date</th>
+                    <th className="text-right p-3 font-medium">Months Since 2nd</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white">
+                  {data.map((item, index) => (
+                    <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
+                      <td className="p-3 text-muted-foreground">{index + 1}</td>
+                      <td className="p-3 font-medium text-gray-900">{item.surgeon}</td>
+                      <td className="p-3 text-right text-sm text-gray-600">{item.firstCaseDate || 'N/A'}</td>
+                      <td className="p-3 text-right font-medium">
+                        <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">{item.monthsSince1st}</span>
+                      </td>
+                      <td className="p-3 text-right text-sm text-gray-600">{item.secondCaseDate || 'N/A'}</td>
+                      <td className="p-3 text-right font-medium">
+                        <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded font-semibold">{item.monthsSince2nd || 'N/A'}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden shadow-lg bg-white">
+              <table className="w-full text-sm bg-white">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="text-left p-3 font-medium">#</th>
+                    <th className="text-left p-3 font-medium">Surgeon</th>
+                    <th className="text-center p-3 font-medium">Total Cases</th>
+                    <th className="text-center p-3 font-medium">Days: 1st→2nd</th>
+                    <th className="text-center p-3 font-medium">Overall (cases/mo)</th>
+                    <th className="text-center p-3 font-medium">Since 2nd Case (cases/mo)</th>
+                    <th className="text-center p-3 font-medium">Change vs Overall</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {productivityData.map((item, index) => {
+                    const delta = item.since2ndProductivity !== null
+                      ? +(item.since2ndProductivity - item.overallProductivity).toFixed(1)
+                      : null
+                    return (
+                      <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
+                        <td className="p-3 text-muted-foreground">{index + 1}</td>
+                        <td className="p-3 font-medium text-gray-900">{item.surgeon}</td>
+                        <td className="p-3 text-center">{item.totalCases}</td>
+                        <td className="p-3 text-center text-gray-600">{item.firstToSecondGap !== null ? `${item.firstToSecondGap}d` : '—'}</td>
+                        <td className="p-3 text-center">
+                          <span className="inline-block px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-semibold">{item.overallProductivity}</span>
+                        </td>
+                        <td className="p-3 text-center">
+                          {item.since2ndProductivity !== null
+                            ? <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 rounded font-semibold">{item.since2ndProductivity}</span>
+                            : <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="p-3 text-center">
+                          {delta !== null && (
+                            <span className={`inline-block px-2 py-1 rounded font-semibold text-xs ${
+                              delta > 0 ? 'bg-green-100 text-green-800' : delta < 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {delta > 0 ? '+' : ''}{delta}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
