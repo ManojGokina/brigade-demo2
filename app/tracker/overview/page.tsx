@@ -984,7 +984,8 @@ export default function OverviewPage() {
         />
 
         <SecondCaseBooking 
-          data={secondCaseBookingData} 
+          data={secondCaseBookingData}
+          rawCases={filteredCasesData}
           excludeDays={secondCaseExcludeDays} 
           statusFilter={secondCaseStatus} 
           breakdown={secondCaseBreakdown} 
