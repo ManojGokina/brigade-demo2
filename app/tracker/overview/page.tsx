@@ -40,6 +40,8 @@ export default function OverviewPage() {
   const [timeUnit, setTimeUnit] = useState<string>("days")
   const [qoqYear, setQoqYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [qoqSurgeon, setQoqSurgeon] = useState<string[]>([])
+  const [qoqRegion, setQoqRegion] = useState<string[]>([])
+  const [qoqSpecialty, setQoqSpecialty] = useState<string[]>([])
   const [daysToCaseSurgeon, setDaysToCaseSurgeon] = useState<string[]>([])
   const [daysBetweenCasesSurgeon, setDaysBetweenCasesSurgeon] = useState<string[]>([])
   const [survivalTimeSurgeon, setSurvivalTimeSurgeon] = useState<string[]>([])
@@ -113,9 +115,9 @@ export default function OverviewPage() {
 
   const qoqGrowthData = useMemo(() => {
     let filteredCases = filteredCasesData
-    if (qoqSurgeon.length > 0) {
-      filteredCases = filteredCases.filter((c: any) => qoqSurgeon.includes(c.surgeon))
-    }
+    if (qoqSurgeon.length > 0) filteredCases = filteredCases.filter((c: any) => qoqSurgeon.includes(c.surgeon))
+    if (qoqRegion.length > 0) filteredCases = filteredCases.filter((c: any) => qoqRegion.includes(c.region))
+    if (qoqSpecialty.length > 0) filteredCases = filteredCases.filter((c: any) => qoqSpecialty.includes(c.specialty))
     
     const quarterlyData: Record<string, { cases: number; surgeons: Set<string> }> = {}
     filteredCases.forEach((c: any) => {
@@ -142,7 +144,7 @@ export default function OverviewPage() {
       surgeons: quarterlyData[quarter]?.surgeons.size || 0,
       productivity: quarterlyData[quarter] ? +(quarterlyData[quarter].cases / quarterlyData[quarter].surgeons.size).toFixed(2) : 0
     }))
-  }, [qoqYear, qoqSurgeon, filteredCasesData])
+  }, [qoqYear, qoqSurgeon, qoqRegion, qoqSpecialty, filteredCasesData])
 
   // Cases by Region
   const casesByRegionData = useMemo(() => {
@@ -966,6 +968,22 @@ export default function OverviewPage() {
           />
         </div>
 
+        <QoQGrowthProgression
+          data={qoqGrowthData}
+          years={qoqYears}
+          selectedYears={qoqYear}
+          surgeons={surgeonsList}
+          surgeon={qoqSurgeon}
+          regions={regionsList}
+          specialties={specialtiesList}
+          regionFilter={qoqRegion}
+          specialtyFilter={qoqSpecialty}
+          onYearsChange={setQoqYear}
+          onSurgeonChange={setQoqSurgeon}
+          onRegionChange={setQoqRegion}
+          onSpecialtyChange={setQoqSpecialty}
+        />
+
         <div className="grid gap-4 md:grid-cols-2">
           <TimeActiveInactive data={timeMetricsData} timeUnit={timeUnit} onTimeUnitChange={setTimeUnit} />
           <TimeNormalized 
@@ -1005,8 +1023,6 @@ export default function OverviewPage() {
         />
 
 
-
-        <QoQGrowthProgression data={qoqGrowthData} years={qoqYears} selectedYears={qoqYear} surgeons={surgeonsList} surgeon={qoqSurgeon} onYearsChange={setQoqYear} onSurgeonChange={setQoqSurgeon} />
 
         <CasesByRegion 
           data={casesByRegionData} 

@@ -17,7 +17,7 @@ import {
 
 import { MultiSelect } from "@/components/ui/multi-select"
 
-export function QoQGrowthProgression({ data, years, selectedYears, surgeons, surgeon, onYearsChange, onSurgeonChange }: { data: any[], years: string[], selectedYears: string[], surgeons: string[], surgeon: string[], onYearsChange: (values: string[]) => void, onSurgeonChange: (value: string[]) => void }) {
+export function QoQGrowthProgression({ data, years, selectedYears, surgeons, surgeon, regions, specialties, regionFilter, specialtyFilter, onYearsChange, onSurgeonChange, onRegionChange, onSpecialtyChange }: { data: any[], years: string[], selectedYears: string[], surgeons: string[], surgeon: string[], regions: string[], specialties: string[], regionFilter: string[], specialtyFilter: string[], onYearsChange: (values: string[]) => void, onSurgeonChange: (value: string[]) => void, onRegionChange: (value: string[]) => void, onSpecialtyChange: (value: string[]) => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
@@ -65,6 +65,22 @@ export function QoQGrowthProgression({ data, years, selectedYears, surgeons, sur
               selected={surgeon}
               onChange={onSurgeonChange}
               placeholder="All Surgeons"
+              className="w-[120px] border-gray-300 focus:border-gray-500"
+              maxCount={10}
+            />
+            <MultiSelect
+              options={regions}
+              selected={regionFilter}
+              onChange={onRegionChange}
+              placeholder="All Regions"
+              className="w-[120px] border-gray-300 focus:border-gray-500"
+              maxCount={10}
+            />
+            <MultiSelect
+              options={specialties}
+              selected={specialtyFilter}
+              onChange={onSpecialtyChange}
+              placeholder="All Specialties"
               className="w-[120px] border-gray-300 focus:border-gray-500"
               maxCount={10}
             />
@@ -136,6 +152,18 @@ export function QoQGrowthProgression({ data, years, selectedYears, surgeons, sur
               <span className="font-semibold">Surgeon:</span>
               <span>{surgeon.length === 0 ? "All Surgeons" : surgeon.join(", ")}</span>
             </div>
+            {regionFilter.length > 0 && (
+              <div className="inline-flex items-center gap-1.5 bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-xs font-medium">
+                <span className="font-semibold">Region:</span>
+                <span>{regionFilter.join(", ")}</span>
+              </div>
+            )}
+            {specialtyFilter.length > 0 && (
+              <div className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full text-xs font-medium">
+                <span className="font-semibold">Specialty:</span>
+                <span>{specialtyFilter.join(", ")}</span>
+              </div>
+            )}
           </div>
           <div className="mb-3 flex justify-end">
             <Button onClick={handleExport} size="sm" variant="outline" className="gap-2">
