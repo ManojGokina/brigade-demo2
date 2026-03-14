@@ -234,7 +234,7 @@ export default function EditCasePage() {
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="caseType" className="text-sm">Case Type <span className="text-destructive">*</span></Label>
-                      <Select value={formData.caseType} onValueChange={(v) => updateField("caseType", v)} disabled={isSubmitting}>
+                      <Select value={formData.caseType || undefined} onValueChange={(v) => updateField("caseType", v)} disabled={isSubmitting}>
                         <SelectTrigger id="caseType" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.caseType ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}><SelectValue placeholder="Select type" /></SelectTrigger>
                         <SelectContent><SelectItem value="Primary">Primary</SelectItem><SelectItem value="Revision">Revision</SelectItem></SelectContent>
                       </Select>
@@ -252,26 +252,12 @@ export default function EditCasePage() {
                       {errors.nervesTreated && <p className="text-xs text-destructive mt-0.5">{errors.nervesTreated}</p>}
                     </div>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="specialty" className="text-sm">Specialty <span className="text-destructive">*</span></Label>
-                      <Input id="specialty" list="specialty-options" value={formData.specialty} onChange={(e) => updateField("specialty", e.target.value)} disabled={isSubmitting} placeholder="Select or type specialty" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.specialty ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`} />
-                      <datalist id="specialty-options">{specialtyOptions.map((s) => <option key={s} value={s} />)}</datalist>
-                      {errors.specialty && <p className="text-xs text-destructive mt-0.5">{errors.specialty}</p>}
-                    </div>
-                    <div className="grid gap-1.5">
                       <Label htmlFor="extremity" className="text-sm">Extremity <span className="text-destructive">*</span></Label>
-                      <Select value={formData.extremity} onValueChange={(v) => updateField("extremity", v)} disabled={isSubmitting}>
+                      <Select value={formData.extremity || undefined} onValueChange={(v) => updateField("extremity", v)} disabled={isSubmitting}>
                         <SelectTrigger id="extremity" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.extremity ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent><SelectItem value="UE">Upper (UE)</SelectItem><SelectItem value="LE">Lower (LE)</SelectItem></SelectContent>
                       </Select>
                       {errors.extremity && <p className="text-xs text-destructive mt-0.5">{errors.extremity}</p>}
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="userStatus" className="text-sm">User Status <span className="text-destructive">*</span></Label>
-                      <Select value={formData.userStatus} onValueChange={(v) => updateField("userStatus", v)} disabled={isSubmitting}>
-                        <SelectTrigger id="userStatus" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.userStatus ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}><SelectValue placeholder="Select status" /></SelectTrigger>
-                        <SelectContent><SelectItem value="EST">EST - Established</SelectItem><SelectItem value="IN">IN - In Progress</SelectItem><SelectItem value="VAL">VAL - Validated</SelectItem></SelectContent>
-                      </Select>
-                      {errors.userStatus && <p className="text-xs text-destructive mt-0.5">{errors.userStatus}</p>}
                     </div>
                   </div>
                 </div>
@@ -306,6 +292,26 @@ export default function EditCasePage() {
                       <datalist id="region-options">{regionOptions.map((r) => <option key={r} value={r} />)}</datalist>
                       {errors.region && <p className="text-xs text-destructive mt-0.5">{errors.region}</p>}
                     </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="specialty" className="text-sm">Specialty <span className="text-destructive">*</span></Label>
+                      <Input id="specialty" list="specialty-options" value={formData.specialty} onChange={(e) => updateField("specialty", e.target.value)} disabled={isSubmitting} placeholder="Select or type specialty" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.specialty ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`} />
+                      <datalist id="specialty-options">{specialtyOptions.map((s) => <option key={s} value={s} />)}</datalist>
+                      {errors.specialty && <p className="text-xs text-destructive mt-0.5">{errors.specialty}</p>}
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="training" className="text-sm">Training <span className="text-destructive">*</span></Label>
+                      <Input id="training" list="training-options" value={formData.training} onChange={(e) => updateField("training", e.target.value)} disabled={isSubmitting} placeholder="Select or type training" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.training ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`} />
+                      <datalist id="training-options">{TRAINING_OPTIONS.map((t) => <option key={t} value={t} />)}</datalist>
+                      {errors.training && <p className="text-xs text-destructive mt-0.5">{errors.training}</p>}
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="userStatus" className="text-sm">User Status <span className="text-destructive">*</span></Label>
+                      <Select value={formData.userStatus || undefined} onValueChange={(v) => updateField("userStatus", v)} disabled={isSubmitting}>
+                        <SelectTrigger id="userStatus" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.userStatus ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}><SelectValue placeholder="Select status" /></SelectTrigger>
+                        <SelectContent><SelectItem value="EST">EST - Established</SelectItem><SelectItem value="IN">IN - In Progress</SelectItem><SelectItem value="VAL">VAL - Validated</SelectItem></SelectContent>
+                      </Select>
+                      {errors.userStatus && <p className="text-xs text-destructive mt-0.5">{errors.userStatus}</p>}
+                    </div>
                   </div>
                 </div>
                 <div className="border-t border-border/60"></div>
@@ -316,14 +322,8 @@ export default function EditCasePage() {
                   </div>
                   <div className="grid gap-4 lg:grid-cols-3">
                     <div className="grid gap-1.5">
-                      <Label htmlFor="training" className="text-sm">Training <span className="text-destructive">*</span></Label>
-                      <Input id="training" list="training-options" value={formData.training} onChange={(e) => updateField("training", e.target.value)} disabled={isSubmitting} placeholder="Select or type training" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.training ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`} />
-                      <datalist id="training-options">{TRAINING_OPTIONS.map((t) => <option key={t} value={t} />)}</datalist>
-                      {errors.training && <p className="text-xs text-destructive mt-0.5">{errors.training}</p>}
-                    </div>
-                    <div className="grid gap-1.5">
                       <Label htmlFor="typeOfSurgery" className="text-sm">Type of Surgery <span className="text-destructive">*</span></Label>
-                      <Input id="typeOfSurgery" list="typeOfSurgery-options" value={formData.typeOfSurgery} onChange={(e) => updateField("typeOfSurgery", e.target.value)} disabled={isSubmitting} placeholder="Select or type type of surgery" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.typeOfSurgery ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`} />
+                      <Input id="typeOfSurgery" list="typeOfSurgery-options" value={formData.typeOfSurgery} onChange={(e) => updateField("typeOfSurgery", e.target.value)} disabled={isSubmitting} placeholder="Select or type surgery type" className={`h-9 w-full bg-white border border-slate-400 text-sm ${errors.typeOfSurgery ? "border-destructive" : ""} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`} />
                       <datalist id="typeOfSurgery-options">{TYPE_OF_SURGERY_OPTIONS.map((t) => <option key={t} value={t} />)}</datalist>
                       {errors.typeOfSurgery && <p className="text-xs text-destructive mt-0.5">{errors.typeOfSurgery}</p>}
                     </div>

@@ -639,29 +639,6 @@ export default function AddCasePage() {
               </div>
 
               <div className="grid gap-1.5">
-                <Label htmlFor="specialty" className="text-sm">
-                  Specialty <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="specialty"
-                  list="specialty-options"
-                  value={formData.specialty}
-                  onChange={(e) => updateField("specialty", e.target.value)}
-                  disabled={isSubmitting}
-                  placeholder="Select or type specialty"
-                  className={`h-9 w-full bg-white border border-slate-400 text-sm ${
-                    errors.specialty ? "border-destructive" : ""
-                  } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
-                />
-                <datalist id="specialty-options">
-                  {specialtyOptions.map((s) => <option key={s} value={s} />)}
-                </datalist>
-                {errors.specialty && (
-                  <p className="text-xs text-destructive mt-0.5">{errors.specialty}</p>
-                )}
-              </div>
-
-              <div className="grid gap-1.5">
                 <Label htmlFor="extremity" className="text-sm">
                   Extremity <span className="text-destructive">*</span>
                 </Label>
@@ -685,34 +662,6 @@ export default function AddCasePage() {
                 </Select>
                 {errors.extremity && (
                   <p className="text-xs text-destructive mt-0.5">{errors.extremity}</p>
-                )}
-              </div>
-
-              <div className="grid gap-1.5">
-                <Label htmlFor="userStatus" className="text-sm">
-                  User Status <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={formData.userStatus}
-                  onValueChange={(v) => updateField("userStatus", v as "EST" | "IN" | "VAL")}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger
-                    id="userStatus"
-                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
-                      errors.userStatus ? "border-destructive" : ""
-                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EST">EST - Established</SelectItem>
-                    <SelectItem value="IN">IN - In Progress</SelectItem>
-                    <SelectItem value="VAL">VAL - Validated</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.userStatus && (
-                  <p className="text-xs text-destructive mt-0.5">{errors.userStatus}</p>
                 )}
               </div>
               </div>
@@ -819,19 +768,30 @@ export default function AddCasePage() {
                   <p className="text-xs text-destructive mt-0.5">{errors.region}</p>
                 )}
               </div>
-              </div>
-            </div>
 
-            {/* Divider */}
-            <div className="border-t border-border/60"></div>
-
-            {/* Status & Flags Section */}
-            <div className="space-y-4">
-              <div className="space-y-0.5">
-                <h2 className="text-lg font-semibold text-foreground">Status & Flags</h2>
-                <p className="text-xs text-muted-foreground">Case classification and tracking flags</p>
+              <div className="grid gap-1.5">
+                <Label htmlFor="specialty" className="text-sm">
+                  Specialty <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="specialty"
+                  list="specialty-options"
+                  value={formData.specialty}
+                  onChange={(e) => updateField("specialty", e.target.value)}
+                  disabled={isSubmitting}
+                  placeholder="Select or type specialty"
+                  className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                    errors.specialty ? "border-destructive" : ""
+                  } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                />
+                <datalist id="specialty-options">
+                  {specialtyOptions.map((s) => <option key={s} value={s} />)}
+                </datalist>
+                {errors.specialty && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.specialty}</p>
+                )}
               </div>
-              <div className="grid gap-4 lg:grid-cols-3">
+
               <div className="grid gap-1.5">
                 <Label htmlFor="training" className="text-sm">
                   Training <span className="text-destructive">*</span>
@@ -855,6 +815,46 @@ export default function AddCasePage() {
                 )}
               </div>
 
+              <div className="grid gap-1.5">
+                <Label htmlFor="userStatus" className="text-sm">
+                  User Status <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.userStatus}
+                  onValueChange={(v) => updateField("userStatus", v as "EST" | "IN" | "VAL")}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger
+                    id="userStatus"
+                    className={`h-9 w-full bg-white border border-slate-400 text-sm ${
+                      errors.userStatus ? "border-destructive" : ""
+                    } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EST">EST - Established</SelectItem>
+                    <SelectItem value="IN">IN - In Progress</SelectItem>
+                    <SelectItem value="VAL">VAL - Validated</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.userStatus && (
+                  <p className="text-xs text-destructive mt-0.5">{errors.userStatus}</p>
+                )}
+              </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-border/60"></div>
+
+            {/* Status & Flags Section */}
+            <div className="space-y-4">
+              <div className="space-y-0.5">
+                <h2 className="text-lg font-semibold text-foreground">Status & Flags</h2>
+                <p className="text-xs text-muted-foreground">Case classification and tracking flags</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="typeOfSurgery" className="text-sm">
                   Type of Surgery <span className="text-destructive">*</span>
