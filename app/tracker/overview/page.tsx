@@ -27,6 +27,10 @@ export default function OverviewPage() {
   const [caseFilter, setCaseFilter] = useState<string[]>([])
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [surgeonFilter, setSurgeonFilter] = useState<string[]>([])
+  const [regionFilter, setRegionFilter] = useState<string[]>([])
+  const [specialtyFilter, setSpecialtyFilter] = useState<string[]>([])
+  const [caseTypeFilter, setCaseTypeFilter] = useState<string[]>([])
+  const [neuromaFilter, setNeuromaFilter] = useState<string[]>([])
   const [topPerformersView, setTopPerformersView] = useState<string>("caseLoad")
   const [topPerformersRegion, setTopPerformersRegion] = useState<string[]>([])
   const [topPerformersSpecialty, setTopPerformersSpecialty] = useState<string[]>([])
@@ -839,32 +843,21 @@ export default function OverviewPage() {
       })
   }, [filteredCasesData, survivalTimeSurgeon, survivalTimeSpecialty])
 
-  // Calculate Surgeon Productivity Over Time from real data
   const surgeonProductivityOverTimeData = useMemo(() => {
     let filteredCases = casesData.filter((c: any) => c.operationDate)
-    let casesWithoutDates = casesData.filter((c: any) => !c.operationDate)
 
-    // Apply surgeon filter
-    if (surgeonFilter.length > 0) {
-      filteredCases = filteredCases.filter((c: any) => surgeonFilter.includes(c.surgeon))
-      casesWithoutDates = casesWithoutDates.filter((c: any) => surgeonFilter.includes(c.surgeon))
+    if (surgeonFilter.length > 0) filteredCases = filteredCases.filter((c: any) => surgeonFilter.includes(c.surgeon))
+    if (dateRange.from) filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
+    if (dateRange.to) filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
+    if (statusFilter.length > 0) filteredCases = filteredCases.filter((c: any) => statusFilter.includes(c.userStatus))
+    if (regionFilter.length > 0) filteredCases = filteredCases.filter((c: any) => regionFilter.includes(c.region))
+    if (specialtyFilter.length > 0) filteredCases = filteredCases.filter((c: any) => specialtyFilter.includes(c.specialty))
+    if (caseTypeFilter.length > 0) filteredCases = filteredCases.filter((c: any) => caseTypeFilter.includes(c.caseType))
+    if (neuromaFilter.length > 0) {
+      if (neuromaFilter.includes("Neuroma") && !neuromaFilter.includes("Non-Neuroma")) filteredCases = filteredCases.filter((c: any) => c.isNeuromaCase)
+      else if (neuromaFilter.includes("Non-Neuroma") && !neuromaFilter.includes("Neuroma")) filteredCases = filteredCases.filter((c: any) => !c.isNeuromaCase)
     }
 
-    // Apply date range filter
-    if (dateRange.from) {
-      filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
-    }
-    if (dateRange.to) {
-      filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
-    }
-
-    // Apply user status filter
-    if (statusFilter.length > 0) {
-      filteredCases = filteredCases.filter((c: any) => statusFilter.includes(c.userStatus))
-      casesWithoutDates = casesWithoutDates.filter((c: any) => statusFilter.includes(c.userStatus))
-    }
-
-    // Group by month
     const monthlyData: Record<string, number> = {}
     filteredCases.forEach((c: any) => {
       const date = new Date(c.operationDate)
@@ -872,7 +865,6 @@ export default function OverviewPage() {
       monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1
     })
 
-    // Convert to array and sort by date
     const sortedData = Object.entries(monthlyData)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, cases]) => ({
@@ -880,32 +872,18 @@ export default function OverviewPage() {
         cases
       }))
 
-    // Apply case number filter
     if (caseFilter.length > 0) {
-      // Find the maximum sequence selected to know how many cases to slice off
-      // e.g., if ["Since 2nd Case", "Since 4th Case"] is selected, we should respect the most restrictive one (Since 4th Case)
-      // or we can just apply the first one selected for simplicity.
-      // Assuming we apply the highest sequence number selected:
-      let sliceCount = 0;
-      if (caseFilter.includes("Since 6th Case")) sliceCount = 5;
-      else if (caseFilter.includes("Since 5th Case")) sliceCount = 4;
-      else if (caseFilter.includes("Since 4th Case")) sliceCount = 3;
-      else if (caseFilter.includes("Since 3rd Case")) sliceCount = 2;
-      else if (caseFilter.includes("Since 2nd Case")) sliceCount = 1;
-      else if (caseFilter.includes("Since 1st Case")) sliceCount = 0;
-
-      const result = sortedData.length > sliceCount ? sortedData.slice(sliceCount) : sortedData;
-      if (casesWithoutDates.length > 0) {
-        result.push({ month: "", cases: casesWithoutDates.length })
-      }
-      return result;
+      let sliceCount = 0
+      if (caseFilter.includes("Since 6th Case")) sliceCount = 5
+      else if (caseFilter.includes("Since 5th Case")) sliceCount = 4
+      else if (caseFilter.includes("Since 4th Case")) sliceCount = 3
+      else if (caseFilter.includes("Since 3rd Case")) sliceCount = 2
+      else if (caseFilter.includes("Since 2nd Case")) sliceCount = 1
+      return sortedData.length > sliceCount ? sortedData.slice(sliceCount) : sortedData
     }
 
-    if (casesWithoutDates.length > 0) {
-      sortedData.push({ month: "", cases: casesWithoutDates.length })
-    }
     return sortedData
-  }, [dateRange, caseFilter, statusFilter, surgeonFilter])
+  }, [dateRange, caseFilter, statusFilter, surgeonFilter, regionFilter, specialtyFilter, caseTypeFilter, neuromaFilter])
 
   return (
     <ProtectedRoute>
@@ -938,13 +916,23 @@ export default function OverviewPage() {
 
         <SurgeonProductivityOverTime 
           data={surgeonProductivityOverTimeData} 
-          surgeons={surgeonsList} 
+          surgeons={surgeonsList}
+          regions={regionsList}
+          specialties={specialtiesList}
           surgeonFilter={surgeonFilter} 
           caseFilter={caseFilter} 
-          statusFilter={statusFilter} 
+          statusFilter={statusFilter}
+          regionFilter={regionFilter}
+          specialtyFilter={specialtyFilter}
+          caseTypeFilter={caseTypeFilter}
+          neuromaFilter={neuromaFilter}
           onSurgeonChange={setSurgeonFilter} 
           onCaseFilterChange={setCaseFilter} 
-          onStatusChange={setStatusFilter} 
+          onStatusChange={setStatusFilter}
+          onRegionChange={setRegionFilter}
+          onSpecialtyChange={setSpecialtyFilter}
+          onCaseTypeChange={setCaseTypeFilter}
+          onNeuromaChange={setNeuromaFilter}
         />
 
         <div className="grid gap-4 md:grid-cols-3">

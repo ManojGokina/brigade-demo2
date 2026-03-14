@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { AreaChart, Area, XAxis, YAxis, LabelList } from "recharts"
+import { AreaChart, Area, XAxis, YAxis, LabelList, Line, ReferenceLine, ComposedChart } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
@@ -18,22 +18,42 @@ import {
 
 export function SurgeonProductivityOverTime({ 
   data, 
-  surgeons, 
+  surgeons,
+  regions,
+  specialties,
   surgeonFilter, 
   caseFilter, 
-  statusFilter, 
+  statusFilter,
+  regionFilter,
+  specialtyFilter,
+  caseTypeFilter,
+  neuromaFilter,
   onSurgeonChange, 
   onCaseFilterChange, 
-  onStatusChange 
+  onStatusChange,
+  onRegionChange,
+  onSpecialtyChange,
+  onCaseTypeChange,
+  onNeuromaChange
 }: { 
   data: any[], 
-  surgeons: string[], 
+  surgeons: string[],
+  regions: string[],
+  specialties: string[],
   surgeonFilter: string[], 
   caseFilter: string[], 
-  statusFilter: string[], 
+  statusFilter: string[],
+  regionFilter: string[],
+  specialtyFilter: string[],
+  caseTypeFilter: string[],
+  neuromaFilter: string[],
   onSurgeonChange: (value: string[]) => void, 
   onCaseFilterChange: (value: string[]) => void, 
-  onStatusChange: (value: string[]) => void 
+  onStatusChange: (value: string[]) => void,
+  onRegionChange: (value: string[]) => void,
+  onSpecialtyChange: (value: string[]) => void,
+  onCaseTypeChange: (value: string[]) => void,
+  onNeuromaChange: (value: string[]) => void
 }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
@@ -124,35 +144,20 @@ export function SurgeonProductivityOverTime({
             <CardTitle className="text-sm font-medium">Cases Performed Over Time</CardTitle>
             <p className="text-xs text-muted-foreground">Sliceable by date range, case number, and user status</p>
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center">
+            <MultiSelect options={surgeons} selected={surgeonFilter} onChange={onSurgeonChange} placeholder="All Surgeons" className="w-[130px]" maxCount={4} />
+            <MultiSelect options={regions} selected={regionFilter} onChange={onRegionChange} placeholder="All Regions" className="w-[120px]" maxCount={4} />
+            <MultiSelect options={specialties} selected={specialtyFilter} onChange={onSpecialtyChange} placeholder="All Specialties" className="w-[130px]" maxCount={4} />
+            <MultiSelect options={["Primary", "Revision"]} selected={caseTypeFilter} onChange={onCaseTypeChange} placeholder="Case Type" className="w-[110px]" maxCount={4} />
+            <MultiSelect options={["Neuroma", "Non-Neuroma"]} selected={neuromaFilter} onChange={onNeuromaChange} placeholder="Neuroma" className="w-[110px]" maxCount={4} />
+            <MultiSelect options={["EST", "IN", "VAL"]} selected={statusFilter} onChange={onStatusChange} placeholder="All Status" className="w-[110px]" maxCount={4} />
             <MultiSelect
-              options={surgeons}
-              selected={surgeonFilter}
-              onChange={onSurgeonChange}
-              placeholder="All Surgeons"
-              className="w-[150px] border-gray-300 focus:border-gray-500"
-              maxCount={10}
-            />
-            <MultiSelect
-              options={[
-                "Since 1st Case",
-                "Since 2nd Case",
-                "Since 3rd Case",
-                "Since 4th Case",
-                "Since 5th Case",
-                "Since 6th Case"
-              ]}
+              options={["Since 1st Case","Since 2nd Case","Since 3rd Case","Since 4th Case","Since 5th Case","Since 6th Case"]}
               selected={caseFilter}
               onChange={onCaseFilterChange}
               placeholder="All Cases"
-              className="w-[140px] border-gray-300 focus:border-gray-500"
-            />
-            <MultiSelect
-              options={["EST", "IN", "VAL"]}
-              selected={statusFilter}
-              onChange={onStatusChange}
-              placeholder="All Status"
-              className="w-[120px] border-gray-300 focus:border-gray-500"
+              className="w-[120px]"
+              maxCount={4}
             />
             {/* <TooltipProvider>
               <Tooltip>
@@ -265,34 +270,62 @@ export function SurgeonProductivityOverTime({
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[300px] w-full">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="productivityAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <XAxis 
-              dataKey="month" 
-              tick={{ fontSize: 11 }} 
-              label={{ value: "Month", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-            />
-            <YAxis 
-              tick={{ fontSize: 11 }} 
-              label={{ value: "Number of Cases", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-              domain={[0, (dataMax: number) => Math.ceil(dataMax) + 10]}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Area type="monotone" dataKey="cases" stroke="#1d99ac" strokeWidth={2} fill="url(#productivityAreaGradient)">
-              <LabelList dataKey="cases" position="top" style={{ fontSize: 10, fill: "#1d99ac", fontWeight: "bold" }} />
-            </Area>
-          </AreaChart>
-        </ChartContainer>
-        <div className="mt-4 text-center">
+        {(() => {
+          const avg = data.length > 0 ? data.reduce((sum, d) => sum + d.cases, 0) / data.length : 0
+          const chartData = data.map(d => ({ ...d, avg: +avg.toFixed(1) }))
+          return (
+            <ChartContainer config={{}} className="h-[300px] w-full">
+              <ComposedChart data={chartData}>
+                <defs>
+                  <linearGradient id="productivityAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1d99ac" stopOpacity={0.6} />
+                    <stop offset="100%" stopColor="#1d99ac" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fontSize: 11 }} 
+                  label={{ value: "Month", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 11 }} 
+                  label={{ value: "Number of Cases", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+                  domain={[0, (dataMax: number) => Math.ceil(dataMax) + 10]}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area type="monotone" dataKey="cases" stroke="#1d99ac" strokeWidth={2} fill="url(#productivityAreaGradient)">
+                  <LabelList dataKey="cases" position="top" style={{ fontSize: 10, fill: "#1d99ac", fontWeight: "bold" }} />
+                </Area>
+                <Line
+                  type="monotone"
+                  dataKey="avg"
+                  stroke="#f97316"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  dot={false}
+                  name="Avg"
+                />
+              </ComposedChart>
+            </ChartContainer>
+          )
+        })()}
+        <div className="relative flex items-center justify-center mt-3">
+          <div className="flex items-center justify-center gap-4 text-xs flex-1">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="inline-block w-6 h-[3px] rounded bg-[#1d99ac]" />
+              Cases
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-6 border-t-2 border-dashed border-[#f97316]" />
+              <span className="text-muted-foreground">Avg</span>
+              <span className="font-bold text-[#f97316] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
+                {data.length > 0 ? (data.reduce((s, d) => s + d.cases, 0) / data.length).toFixed(1) : 0} cases/mo
+              </span>
+            </span>
+          </div>
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80 absolute right-6"
           >
             <Maximize2 className="h-4 w-4" />
             View Detailed Table
