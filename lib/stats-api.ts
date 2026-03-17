@@ -45,6 +45,17 @@ export async function fetchStatsOverview(params: StatsParams = {}): Promise<Stat
   return response.data.data;
 }
 
+export interface GracePeriodSurgeon {
+  surgeon: string;
+  firstCaseDate: string;
+  daysSince: number;
+}
+
+export async function fetchGracePeriodSurgeons(): Promise<GracePeriodSurgeon[]> {
+  const response = await api.get<{ success: boolean; data: GracePeriodSurgeon[] }>('/stats/grace-period-surgeons');
+  return response.data.data;
+}
+
 export interface DaysToMilestonesItem {
   milestone: string;
   avg?: number;

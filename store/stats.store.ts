@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -31,6 +31,11 @@ interface StatsState {
   daysToMilestonesError: string | null;
   fetchDaysToMilestones: (params?: DaysToMilestonesParams) => Promise<void>;
 
+  gracePeriodSurgeons: GracePeriodSurgeon[];
+  gracePeriodLoading: boolean;
+  gracePeriodError: string | null;
+  fetchGracePeriodSurgeons: () => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -50,6 +55,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   daysToMilestones: [],
   daysToMilestonesLoading: false,
   daysToMilestonesError: null,
+
+  gracePeriodSurgeons: [],
+  gracePeriodLoading: false,
+  gracePeriodError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -91,5 +100,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null }),
+  fetchGracePeriodSurgeons: async () => {
+    set({ gracePeriodLoading: true, gracePeriodError: null });
+    try {
+      const gracePeriodSurgeons = await fetchGracePeriodSurgeons();
+      set({ gracePeriodSurgeons, gracePeriodLoading: false });
+    } catch (error: any) {
+      set({ gracePeriodSurgeons: [], gracePeriodLoading: false, gracePeriodError: error.response?.data?.message || 'Failed to fetch grace period surgeons' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null }),
 }));

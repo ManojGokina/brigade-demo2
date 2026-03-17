@@ -55,7 +55,12 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData } = useStatsStore()
+
+  // Fetch grace period surgeons once on mount
+  useEffect(() => {
+    fetchGracePeriodData()
+  }, [])
 
   // Fetch stats on mount and when dateRange changes
   useEffect(() => {
@@ -640,42 +645,8 @@ export default function OverviewPage() {
       })
       .sort((a, b) => b.timeActive - a.timeActive)
   }, [timeUnit, filteredCasesData])
-  const gracePeriodSurgeons = useMemo(() => {
-    const cutoffDate = new Date()
-    cutoffDate.setDate(cutoffDate.getDate() - 45)
-    const surgeonFirstCase: Record<string, string> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (!surgeonFirstCase[c.surgeon] || c.operationDate < surgeonFirstCase[c.surgeon]) {
-        surgeonFirstCase[c.surgeon] = c.operationDate
-      }
-    })
-    return Object.entries(surgeonFirstCase)
-      .filter(([, date]) => new Date(date) >= cutoffDate)
-      .map(([surgeon]) => surgeon)
-      .sort()
-  }, [filteredCasesData])
-
-  const gracePeriodDetails = useMemo(() => {
-    const cutoffDate = new Date()
-    cutoffDate.setDate(cutoffDate.getDate() - 45)
-    const surgeonFirstCase: Record<string, string> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (!surgeonFirstCase[c.surgeon] || c.operationDate < surgeonFirstCase[c.surgeon]) {
-        surgeonFirstCase[c.surgeon] = c.operationDate
-      }
-    })
-    const today = new Date()
-    return Object.entries(surgeonFirstCase)
-      .filter(([, date]) => new Date(date) >= cutoffDate)
-      .map(([surgeon, date]) => ({
-        surgeon,
-        firstCaseDate: date,
-        daysSince: Math.floor((today.getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24))
-      }))
-      .sort((a, b) => a.surgeon.localeCompare(b.surgeon))
-  }, [filteredCasesData])
+  const gracePeriodSurgeons = gracePeriodData.map((d: any) => d.surgeon)
+  const gracePeriodDetails = gracePeriodData
 
   // Time Milestones Years
   const timeMilestonesYears = useMemo(() => {
@@ -870,7 +841,7 @@ export default function OverviewPage() {
           onSpecialtyChange={setTopPerformersSpecialty} 
         />
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <DaysToCaseMilestones 
             data={daysToCaseMilestonesData} 
             surgeons={surgeonsList} 
@@ -878,7 +849,6 @@ export default function OverviewPage() {
             isLoading={daysToMilestonesLoading}
             onSurgeonChange={setDaysToCaseSurgeon} 
           />
-          <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />
           <TimeMilestonesTable 
             data={timeMilestonesData}
             surgeons={surgeonsList}
@@ -889,6 +859,8 @@ export default function OverviewPage() {
             onYearsChange={setTimeMilestonesYear}
           />
         </div>
+
+        <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} isLoading={gracePeriodLoading} />
 
         <QoQGrowthProgression
           data={qoqGrowthData}

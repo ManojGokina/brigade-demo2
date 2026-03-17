@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function GracePeriodCard({ surgeons, surgeonDetails }: { surgeons: string[], surgeonDetails?: { surgeon: string, firstCaseDate: string, daysSince: number }[] }) {
+export function GracePeriodCard({ surgeons, surgeonDetails, isLoading }: { surgeons: string[], surgeonDetails?: { surgeon: string, firstCaseDate: string, daysSince: number }[], isLoading?: boolean }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
@@ -62,9 +62,15 @@ export function GracePeriodCard({ surgeons, surgeonDetails }: { surgeons: string
         </div>
       </CardHeader>
       <CardContent>
-        {surgeons.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3">
-            {surgeons.map((surgeon, index) => (
+        {isLoading ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 animate-pulse">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-14 bg-muted rounded-lg" />
+            ))}
+          </div>
+        ) : surgeons.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            {surgeons.slice(0, surgeons.length > 12 ? 11 : 12).map((surgeon, index) => (
               <div 
                 key={index} 
                 className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 rounded-lg hover:shadow-md transition-shadow"
@@ -81,6 +87,14 @@ export function GracePeriodCard({ surgeons, surgeonDetails }: { surgeons: string
                 </div>
               </div>
             ))}
+            {surgeons.length > 12 && (
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="flex items-center justify-center p-3 bg-cyan-50 border border-cyan-200 border-dashed rounded-lg hover:bg-cyan-100 transition-colors cursor-pointer"
+              >
+                <span className="text-sm font-semibold text-cyan-700">+{surgeons.length - 11} more</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="text-center py-8">
