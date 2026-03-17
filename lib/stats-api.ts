@@ -45,6 +45,32 @@ export async function fetchStatsOverview(params: StatsParams = {}): Promise<Stat
   return response.data.data;
 }
 
+export interface TimeMilestoneItem {
+  surgeon: string;
+  monthsTo2Cases: number;
+  monthsTo3Consecutive: number;
+}
+
+export interface TimeMilestonesParams {
+  startDate?: string;
+  endDate?: string;
+  surgeons?: string[];
+}
+
+export async function fetchTimeMilestones(params: TimeMilestonesParams = {}): Promise<TimeMilestoneItem[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) queryParams.append(key, value.join(','));
+    else if (!Array.isArray(value) && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: TimeMilestoneItem[] }>(
+    `/stats/time-milestones${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface GracePeriodSurgeon {
   surgeon: string;
   firstCaseDate: string;

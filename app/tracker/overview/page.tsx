@@ -55,7 +55,15 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData } = useStatsStore()
+
+  useEffect(() => {
+    fetchTimeMilestonesData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      surgeons: timeMilestonesSurgeon.length > 0 ? timeMilestonesSurgeon : undefined,
+    })
+  }, [dateRange, timeMilestonesSurgeon])
 
   // Fetch grace period surgeons once on mount
   useEffect(() => {
@@ -658,72 +666,8 @@ export default function OverviewPage() {
     return years.reverse()
   }, [])
 
-  // Time Milestones Data
-  const timeMilestonesData = useMemo(() => {
-    const surgeonData: Record<string, string[]> = {}
-    
-    casesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (timeMilestonesSurgeon.length > 0 && !timeMilestonesSurgeon.includes(c.surgeon)) return
-      if (!surgeonData[c.surgeon]) surgeonData[c.surgeon] = []
-      surgeonData[c.surgeon].push(c.operationDate)
-    })
-    
-    return Object.entries(surgeonData).map(([surgeon, dates]) => {
-      const sorted = dates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-      console.log(`Surgeon: ${surgeon}, Sorted Dates:`, sorted);
-      const firstCaseDate = new Date(sorted[0])
-      
-      // Group by month and count
-      const monthCounts: Record<string, string[]> = {}
-      sorted.forEach(date => {
-        const d = new Date(date)
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-        if (!monthCounts[key]) monthCounts[key] = []
-        monthCounts[key].push(date)
-      })
-      
-      // Mo to 2/Mo: Find first month with 2+ cases, use 2nd case date
-      let monthsTo2Cases = 0
-      const sortedMonths = Object.keys(monthCounts).sort()
-      for (const month of sortedMonths) {
-        if (monthCounts[month].length >= 2) {
-          const sortedCasesInMonth = monthCounts[month].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-          const secondCaseDate = new Date(sortedCasesInMonth[1])
-          const days = Math.floor((secondCaseDate.getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
-          monthsTo2Cases = +(days / 30).toFixed(1)
-          break
-        }
-      }
-      
-      // Mo to 3 Consecutive: Find 3 consecutive months with 2+ cases each, use 2nd case of 3rd month
-      let monthsTo3Consecutive = 0
-      for (let i = 0; i <= sortedMonths.length - 3; i++) {
-        const m1 = sortedMonths[i]
-        const m2 = sortedMonths[i + 1]
-        const m3 = sortedMonths[i + 2]
-        
-        if (monthCounts[m1].length >= 2 && monthCounts[m2].length >= 2 && monthCounts[m3].length >= 2) {
-          const d1 = new Date(m1 + '-01')
-          const d2 = new Date(m2 + '-01')
-          const d3 = new Date(m3 + '-01')
-          
-          const diff1 = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth())
-          const diff2 = (d3.getFullYear() - d2.getFullYear()) * 12 + (d3.getMonth() - d2.getMonth())
-          
-          if (diff1 === 1 && diff2 === 1) {
-            const sortedCasesInMonth3 = monthCounts[m3].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-            const secondCaseInMonth3 = sortedCasesInMonth3[1]
-            const days = Math.floor((new Date(secondCaseInMonth3).getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
-            monthsTo3Consecutive = +(days / 30).toFixed(1)
-            break
-          }
-        }
-      }
-      
-      return { surgeon, monthsTo2Cases, monthsTo3Consecutive }
-    }).sort((a, b) => b.monthsTo2Cases - a.monthsTo2Cases)
-  }, [timeMilestonesSurgeon])
+  // Time Milestones (replaced by store)
+  const timeMilestonesData = timeMilestones
 
   // Survival Time Data
   const survivalTimeData = useMemo(() => {
@@ -855,6 +799,7 @@ export default function OverviewPage() {
             years={timeMilestonesYears}
             surgeonFilter={timeMilestonesSurgeon}
             selectedYears={timeMilestonesYear}
+            isLoading={timeMilestonesLoading}
             onSurgeonChange={setTimeMilestonesSurgeon}
             onYearsChange={setTimeMilestonesYear}
           />

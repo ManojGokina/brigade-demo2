@@ -20,6 +20,7 @@ export function TimeMilestonesTable({
   years,
   surgeonFilter, 
   selectedYears,
+  isLoading,
   onSurgeonChange,
   onYearsChange
 }: { 
@@ -28,6 +29,7 @@ export function TimeMilestonesTable({
   years: string[],
   surgeonFilter: string[],
   selectedYears: string[],
+  isLoading?: boolean,
   onSurgeonChange: (value: string[]) => void,
   onYearsChange: (values: string[]) => void
 }) {
@@ -107,6 +109,14 @@ export function TimeMilestonesTable({
       </CardHeader>
       <CardContent>
         <div className="border rounded-lg overflow-hidden">
+          {isLoading ? (
+            <div className="space-y-1 p-2 animate-pulse">
+              <div className="h-7 bg-muted rounded" />
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-8 bg-muted/60 rounded" />
+              ))}
+            </div>
+          ) : (
           <table className="w-full text-xs">
             <thead className="bg-muted">
               <tr>
@@ -143,7 +153,8 @@ export function TimeMilestonesTable({
               )}
             </tbody>
           </table>
-          {data.length > 10 && (
+          )}
+          {!isLoading && data.length > 10 && (
             <div className="bg-muted/50 px-2 py-1.5 text-xs text-center border-t">
               Showing 10 of {data.length} surgeons •{' '}
               <button

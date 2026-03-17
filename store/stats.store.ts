@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -36,6 +36,11 @@ interface StatsState {
   gracePeriodError: string | null;
   fetchGracePeriodSurgeons: () => Promise<void>;
 
+  timeMilestones: TimeMilestoneItem[];
+  timeMilestonesLoading: boolean;
+  timeMilestonesError: string | null;
+  fetchTimeMilestones: (params?: TimeMilestonesParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -59,6 +64,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   gracePeriodSurgeons: [],
   gracePeriodLoading: false,
   gracePeriodError: null,
+
+  timeMilestones: [],
+  timeMilestonesLoading: false,
+  timeMilestonesError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -110,5 +119,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null }),
+  fetchTimeMilestones: async (params = {}) => {
+    set({ timeMilestonesLoading: true, timeMilestonesError: null });
+    try {
+      const timeMilestones = await fetchTimeMilestones(params);
+      set({ timeMilestones, timeMilestonesLoading: false });
+    } catch (error: any) {
+      set({ timeMilestones: [], timeMilestonesLoading: false, timeMilestonesError: error.response?.data?.message || 'Failed to fetch time milestones' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null }),
 }));
