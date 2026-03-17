@@ -205,6 +205,47 @@ export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<
   return response.data.data;
 }
 
+export interface CasesByRegionItem {
+  region: string;
+  cases: number;
+  surgeons: number;
+}
+
+export interface CasesByRegionParams {
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function fetchCasesByRegion(params: CasesByRegionParams = {}): Promise<CasesByRegionItem[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: CasesByRegionItem[] }>(
+    `/stats/cases-by-region${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
+export interface RegionTimeSeriesParams {
+  startDate?: string;
+  endDate?: string;
+  regions: string[];
+}
+
+export async function fetchRegionTimeSeries(params: RegionTimeSeriesParams): Promise<any[]> {
+  const queryParams = new URLSearchParams();
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate)   queryParams.append('endDate', params.endDate);
+  if (params.regions.length > 0) queryParams.append('regions', params.regions.join(','));
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: any[] }>(
+    `/stats/region-time-series${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface SurvivalTimeItem {
   caseId: string;
   surgeon: string;

@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData, casesByRegion, casesByRegionLoading, fetchCasesByRegion: fetchCasesByRegionData, regionTimeSeries, regionTimeSeriesLoading, fetchRegionTimeSeries: fetchRegionTimeSeriesData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -153,51 +153,23 @@ export default function OverviewPage() {
   const qoqGrowthData = qoqGrowth
 
   // Cases by Region
-  const casesByRegionData = useMemo(() => {
-    const regionData: Record<string, { cases: number; surgeons: Set<string> }> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.region) return
-      if (!regionData[c.region]) regionData[c.region] = { cases: 0, surgeons: new Set() }
-      regionData[c.region].cases++
-      if (c.surgeon) regionData[c.region].surgeons.add(c.surgeon)
-    })
-    return Object.entries(regionData).map(([region, data]) => ({
-      region,
-      cases: data.cases,
-      surgeons: data.surgeons.size
-    }))
-  }, [filteredCasesData])
+  // Cases by Region - fetch on dateRange change
+  useEffect(() => {
+    fetchCasesByRegionData({ startDate: dateRange.from, endDate: dateRange.to })
+  }, [dateRange])
 
-  // Region Time Series Data
-  const regionTimeSeriesData = useMemo(() => {
-    if (regionChartRegion.length === 0) return []
-    
-    const monthlyData: Record<string, Record<string, { cases: number; surgeons: Set<string> }>> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.operationDate || !regionChartRegion.includes(c.region)) return
-      const date = new Date(c.operationDate)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      if (!monthlyData[monthKey]) monthlyData[monthKey] = {}
-      if (!monthlyData[monthKey][c.region]) monthlyData[monthKey][c.region] = { cases: 0, surgeons: new Set() }
-      monthlyData[monthKey][c.region].cases++
-      if (c.surgeon) monthlyData[monthKey][c.region].surgeons.add(c.surgeon)
+  // Region Time Series - fetch when region selection or dateRange changes
+  useEffect(() => {
+    if (regionChartRegion.length === 0) return
+    fetchRegionTimeSeriesData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      regions: regionChartRegion,
     })
-    
-    return Object.entries(monthlyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([month, regionData]) => {
-        const result: any = {
-          month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-        }
-        regionChartRegion.forEach(region => {
-          const data = regionData[region] || { cases: 0, surgeons: new Set() }
-          result[`${region}_cases`] = data.cases
-          result[`${region}_surgeons`] = data.surgeons.size
-          result[`${region}_productivity`] = data.surgeons.size > 0 ? +(data.cases / data.surgeons.size).toFixed(1) : 0
-        })
-        return result
-      })
-  }, [regionChartRegion, filteredCasesData])
+  }, [dateRange, regionChartRegion])
+
+  const casesByRegionData = casesByRegion
+  const regionTimeSeriesData = regionChartRegion.length === 0 ? [] : regionTimeSeries
 
   // Productivity by User Type Data
   const productivityByUserTypeData = useMemo(() => {
@@ -658,6 +630,7 @@ export default function OverviewPage() {
           regions={regionsList} 
           selectedRegion={regionChartRegion} 
           viewType={regionChartView} 
+          isLoading={regionChartRegion.length === 0 ? casesByRegionLoading : regionTimeSeriesLoading}
           onRegionChange={setRegionChartRegion} 
           onViewTypeChange={setRegionChartView} 
         />

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, fetchCasesByRegion, fetchRegionTimeSeries, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams, CasesByRegionItem, CasesByRegionParams, RegionTimeSeriesParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -66,6 +66,16 @@ interface StatsState {
   survivalTimeError: string | null;
   fetchSurvivalTime: (params?: SurvivalTimeParams) => Promise<void>;
 
+  casesByRegion: CasesByRegionItem[];
+  casesByRegionLoading: boolean;
+  casesByRegionError: string | null;
+  fetchCasesByRegion: (params?: CasesByRegionParams) => Promise<void>;
+
+  regionTimeSeries: any[];
+  regionTimeSeriesLoading: boolean;
+  regionTimeSeriesError: string | null;
+  fetchRegionTimeSeries: (params: RegionTimeSeriesParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -113,6 +123,14 @@ export const useStatsStore = create<StatsState>((set) => ({
   survivalTime: [],
   survivalTimeLoading: false,
   survivalTimeError: null,
+
+  casesByRegion: [],
+  casesByRegionLoading: false,
+  casesByRegionError: null,
+
+  regionTimeSeries: [],
+  regionTimeSeriesLoading: false,
+  regionTimeSeriesError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -224,5 +242,25 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null }),
+  fetchCasesByRegion: async (params = {}) => {
+    set({ casesByRegionLoading: true, casesByRegionError: null });
+    try {
+      const casesByRegion = await fetchCasesByRegion(params);
+      set({ casesByRegion, casesByRegionLoading: false });
+    } catch (error: any) {
+      set({ casesByRegion: [], casesByRegionLoading: false, casesByRegionError: error.response?.data?.message || 'Failed to fetch cases by region' });
+    }
+  },
+
+  fetchRegionTimeSeries: async (params) => {
+    set({ regionTimeSeriesLoading: true, regionTimeSeriesError: null });
+    try {
+      const regionTimeSeries = await fetchRegionTimeSeries(params);
+      set({ regionTimeSeries, regionTimeSeriesLoading: false });
+    } catch (error: any) {
+      set({ regionTimeSeries: [], regionTimeSeriesLoading: false, regionTimeSeriesError: error.response?.data?.message || 'Failed to fetch region time series' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null, casesByRegionError: null, regionTimeSeriesError: null }),
 }));

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MultiSelect } from "@/components/ui/multi-select"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Maximize2, X, Download } from "lucide-react"
 import {
   Tooltip,
@@ -31,12 +32,13 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   )
 }
 
-export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, viewType, onRegionChange, onViewTypeChange }: { 
+export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, viewType, isLoading, onRegionChange, onViewTypeChange }: { 
   data: any[], 
   timeSeriesData: any[], 
   regions: string[], 
   selectedRegion: string[], 
-  viewType: string, 
+  viewType: string,
+  isLoading?: boolean,
   onRegionChange: (value: string[]) => void, 
   onViewTypeChange: (value: string) => void 
 }) {
@@ -131,6 +133,16 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="space-y-3 py-2">
+            <div className="flex items-end gap-2 h-[250px] px-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="flex-1 rounded-t" style={{ height: `${35 + (i % 3) * 20}%` }} />
+              ))}
+            </div>
+            <Skeleton className="h-3 w-32 mx-auto" />
+          </div>
+        ) : (
         <ChartContainer config={{}} className="h-[250px] w-full">
           {selectedRegion.length === 0 ? (
             <BarChart data={data}>
@@ -165,6 +177,7 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
             </AreaChart>
           )}
         </ChartContainer>
+        )}
         <div className="mt-4 text-center">
           <button
             onClick={() => setDrawerOpen(true)}
@@ -201,6 +214,11 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
               Export CSV
             </Button>
           </div>
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            </div>
+          ) : (
           <div className="border rounded-lg overflow-hidden shadow-lg bg-white">
             <table className="w-full text-sm bg-white">
               <thead className="bg-muted">
@@ -257,6 +275,7 @@ export function CasesByRegion({ data, timeSeriesData, regions, selectedRegion, v
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
