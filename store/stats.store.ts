@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -26,6 +26,11 @@ interface StatsState {
   topPerformersError: string | null;
   fetchTopPerformers: (params?: TopPerformersParams) => Promise<void>;
 
+  daysToMilestones: DaysToMilestonesItem[];
+  daysToMilestonesLoading: boolean;
+  daysToMilestonesError: string | null;
+  fetchDaysToMilestones: (params?: DaysToMilestonesParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -41,6 +46,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   topPerformers: [],
   topPerformersLoading: false,
   topPerformersError: null,
+
+  daysToMilestones: [],
+  daysToMilestonesLoading: false,
+  daysToMilestonesError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -72,5 +81,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null }),
+  fetchDaysToMilestones: async (params = {}) => {
+    set({ daysToMilestonesLoading: true, daysToMilestonesError: null });
+    try {
+      const daysToMilestones = await fetchDaysToMilestones(params);
+      set({ daysToMilestones, daysToMilestonesLoading: false });
+    } catch (error: any) {
+      set({ daysToMilestones: [], daysToMilestonesLoading: false, daysToMilestonesError: error.response?.data?.message || 'Failed to fetch days to milestones' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null }),
 }));

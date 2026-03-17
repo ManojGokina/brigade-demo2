@@ -16,14 +16,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonChange }: { data: any[], surgeons: string[], surgeonFilter: string[], onSurgeonChange: (value: string[]) => void }) {
+export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, isLoading, onSurgeonChange }: { data: any[], surgeons: string[], surgeonFilter: string[], isLoading?: boolean, onSurgeonChange: (value: string[]) => void }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
-  // For chart: show only 2nd to 6th case when surgeon is selected
   const chartData = surgeonFilter.length > 0 ? data.slice(1, 6) : data
 
   const colors = [
-    "#1d99ac", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899", 
+    "#1d99ac", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899",
     "#3b82f6", "#f43f5e", "#84cc16", "#06b6d4", "#a855f7",
     "#ef4444", "#14b8a6", "#f97316", "#22c55e", "#d946ef",
     "#0ea5e9", "#fb923c", "#4ade80", "#c026d3", "#38bdf8"
@@ -31,16 +30,13 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
 
   const exportToExcel = () => {
     const surgeonLabel = surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")
-    
     const wb = XLSX.utils.book_new()
-    
-    let headers = ["Case Milestone"];
+    let headers = ["Case Milestone"]
     if (surgeonFilter.length === 0) {
-      headers.push("Average Days from 1st Case");
+      headers.push("Average Days from 1st Case")
     } else {
-      headers.push(...surgeonFilter.map(s => `${s} (Days)`));
+      headers.push(...surgeonFilter.map(s => `${s} (Days)`))
     }
-
     const wsData: any[][] = [
       ["Days to Case Milestones Report"],
       [],
@@ -49,55 +45,37 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
       [],
       headers,
       ...data.map((row) => {
-        const rowData = [row.milestone];
+        const rowData = [row.milestone]
         if (surgeonFilter.length === 0) {
-          rowData.push(row.avg);
+          rowData.push(row.avg)
         } else {
-          surgeonFilter.forEach(surgeon => {
-            rowData.push(row[surgeon] !== undefined ? row[surgeon] : '-');
-          });
+          surgeonFilter.forEach(surgeon => rowData.push(row[surgeon] !== undefined ? row[surgeon] : '-'))
         }
-        return rowData;
+        return rowData
       }),
     ]
-    
     const ws = XLSX.utils.aoa_to_sheet(wsData)
     ws['!cols'] = [{ wch: 20 }, ...headers.slice(1).map(() => ({ wch: 20 }))]
     ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }]
-    
     const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cellAddress = XLSX.utils.encode_cell({ r: R, c: C })
         if (!ws[cellAddress]) continue
-        
         if (R === 0) {
-          ws[cellAddress].s = {
-            font: { bold: true, sz: 16, color: { rgb: "FFFFFF" } },
-            fill: { fgColor: { rgb: "1d99ac" } },
-            alignment: { horizontal: "center", vertical: "center" }
-          }
+          ws[cellAddress].s = { font: { bold: true, sz: 16, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1d99ac" } }, alignment: { horizontal: "center", vertical: "center" } }
         } else if (R >= 2 && R <= 3) {
-          ws[cellAddress].s = {
-            font: { bold: C === 0, sz: 11 },
-            fill: { fgColor: { rgb: "E3F2FD" } },
-            alignment: { vertical: "center" }
-          }
+          ws[cellAddress].s = { font: { bold: C === 0, sz: 11 }, fill: { fgColor: { rgb: "E3F2FD" } }, alignment: { vertical: "center" } }
         } else if (R === 5) {
-          ws[cellAddress].s = {
-            font: { bold: true, color: { rgb: "FFFFFF" } },
-            fill: { fgColor: { rgb: "1d99ac" } },
-            alignment: { horizontal: "center", vertical: "center" }
-          }
+          ws[cellAddress].s = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1d99ac" } }, alignment: { horizontal: "center", vertical: "center" } }
         }
       }
     }
-    
     XLSX.utils.book_append_sheet(wb, ws, "Days to Case Milestones")
     XLSX.writeFile(wb, `days-to-case-milestones-${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
-  const chartConfig = surgeonFilter.length === 0 
+  const chartConfig = surgeonFilter.length === 0
     ? { avg: { label: "Average Days", color: "#1d99ac" } }
     : surgeonFilter.reduce((acc, surgeon, idx) => {
         acc[surgeon] = { label: surgeon, color: colors[idx % colors.length] }
@@ -112,179 +90,144 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, onSurgeonC
             <CardTitle className="text-sm font-medium">Days to Case Milestones</CardTitle>
             <p className="text-xs text-muted-foreground">Time to reach specific case numbers</p>
           </div>
-          <div className="flex gap-2 items-center">
-            <MultiSelect
-              options={surgeons}
-              selected={surgeonFilter}
-              onChange={onSurgeonChange}
-              placeholder="All Surgeons"
-              className="w-[150px] border-gray-300 focus:border-gray-500"
-              maxCount={10}
-            />
-            {/* <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8" onClick={() => setIsDrawerOpen(true)}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Download in CSV</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider> */}
-
-            {isDrawerOpen && (
-              <>
-                <div className="fixed inset-0 bg-black/50 z-[100]" onClick={() => setIsDrawerOpen(false)} />
-                <div className="fixed right-0 top-0 h-full w-[90vw] sm:w-[700px] bg-white dark:bg-gray-900 shadow-2xl z-[101] overflow-y-auto animate-in slide-in-from-right duration-300">
-                  <div className="sticky top-0 bg-white dark:bg-gray-900 border-b p-6 flex items-start justify-between z-10">
-                    <div>
-                      <h2 className="text-lg font-semibold">Days to Case Milestones - Full Data</h2>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {surgeonFilter.length === 0 
-                          ? "Shows average days from 1st case to reach milestone cases (2nd, 3rd, 6th, 10th). Calculated by averaging days across all surgeons who reached each milestone."
-                          : "Shows days from 1st case to each subsequent case for the selected surgeon(s). Calculated as: (Case Date - 1st Case Date) in days."}
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setIsDrawerOpen(false)} className="-mt-2 -mr-2">
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
-                        <span className="font-semibold">Surgeon:</span>
-                        <span>{surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")}</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
-                        <span className="font-semibold">Total Records:</span>
-                        <span>{data.length}</span>
-                      </div>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full text-xs font-medium cursor-help">
-                              <Info className="h-3 w-3" />
-                              <span>How it's calculated</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs z-[110]">
-                            <div className="space-y-2 text-xs">
-                              {surgeonFilter.length === 0 ? (
-                                <>
-                                  <p><strong>Milestone Averages:</strong> Average days from 1st case to reach 2nd, 3rd, 6th, and 10th cases</p>
-                                  <p><strong>Calculation:</strong> For each milestone, calculate days for all surgeons who reached it, then average</p>
-                                  <p className="text-muted-foreground italic">Example: If 10 surgeons reached 2nd case in 20, 25, 30... days, average is shown</p>
-                                </>
-                              ) : (
-                                <>
-                                  <p><strong>Days from 1st Case:</strong> Calendar days from surgeon's first case to each subsequent case</p>
-                                  <p><strong>Calculation:</strong> For multiple surgeons, calculates the average days across selected surgeons to reach each milestone.</p>
-                                  <p className="text-muted-foreground italic">Example: If 1st case on Jan 1 and 3rd case on Jan 31, shows 30 days</p>
-                                </>
-                              )}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="mb-3 flex justify-end">
-                      <Button onClick={exportToExcel} size="sm" variant="outline" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Export Excel
-                      </Button>
-                    </div>
-                    <div className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted">
-                          <tr>
-                            <th className="text-left p-3 font-medium">Case Milestone</th>
-                            {surgeonFilter.length === 0 ? (
-                              <th className="text-right p-3 font-medium">Average Days from 1st Case</th>
-                            ) : (
-                              surgeonFilter.map(surgeon => (
-                                <th key={surgeon} className="text-right p-3 font-medium">{surgeon} (Days)</th>
-                              ))
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.map((row, index) => (
-                            <tr key={index} className="border-t hover:bg-muted/50">
-                              <td className="p-3">{row.milestone}</td>
-                              {surgeonFilter.length === 0 ? (
-                                <td className="p-3 text-right font-medium">{row.avg}</td>
-                              ) : (
-                                surgeonFilter.map(surgeon => (
-                                  <td key={surgeon} className="p-3 text-right font-medium">
-                                    {row[surgeon] !== undefined ? row[surgeon] : '-'}
-                                  </td>
-                                ))
-                              )}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+          <MultiSelect
+            options={surgeons}
+            selected={surgeonFilter}
+            onChange={onSurgeonChange}
+            placeholder="All Surgeons"
+            className="w-[150px] border-gray-300 focus:border-gray-500"
+            maxCount={10}
+          />
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
-        {surgeonFilter.length > 0 && (
-          <div className="flex flex-wrap gap-3 mb-4 justify-center">
-            {surgeonFilter.map((surgeon, idx) => (
-              <div key={surgeon} className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[idx % colors.length] }} />
-                <span className="text-xs text-muted-foreground">{surgeon}</span>
-              </div>
+        {isLoading ? (
+          <div className="h-[200px] flex items-end gap-3 px-2 animate-pulse">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex-1 bg-muted rounded-t" style={{ height: `${40 + i * 15}%` }} />
             ))}
           </div>
-        )}
-        <div className="flex-1 pb-8">
-          <ChartContainer config={chartConfig} className="h-full w-full">
-            <BarChart data={chartData} margin={{ bottom: 20 }}>
-              <XAxis 
-                dataKey="milestone" 
-                tick={{ fontSize: 11 }} 
-                label={{ value: "Case Milestone", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-              />
-            <YAxis 
-              tick={{ fontSize: 11 }} 
-              label={{ value: "Days", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
-              domain={[0, (dataMax: number) => dataMax + 10]}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            {surgeonFilter.length === 0 ? (
-              <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Days from 1st Case">
-                <LabelList dataKey="avg" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
-              </Bar>
-            ) : (
-              surgeonFilter.map((surgeon, idx) => {
-                return (
-                  <Bar key={surgeon} dataKey={surgeon} fill={colors[idx % colors.length]} stackId="a" name={surgeon}>
-                  </Bar>
-                );
-              })
+        ) : (
+          <>
+            {surgeonFilter.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-4 justify-center">
+                {surgeonFilter.map((surgeon, idx) => (
+                  <div key={surgeon} className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[idx % colors.length] }} />
+                    <span className="text-xs text-muted-foreground">{surgeon}</span>
+                  </div>
+                ))}
+              </div>
             )}
-          </BarChart>
-        </ChartContainer>
-        </div>
-        <div className="text-center pt-2">
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
-          >
-            <Maximize2 className="h-4 w-4" />
-            View Detailed Table
-          </button>
-        </div>
+            <div className="flex-1 pb-8">
+              <ChartContainer config={chartConfig} className="h-full w-full">
+                <BarChart data={chartData} margin={{ bottom: 20 }}>
+                  <XAxis
+                    dataKey="milestone"
+                    tick={{ fontSize: 11 }}
+                    label={{ value: "Case Milestone", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    label={{ value: "Days", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 500, fill: "#000" } }}
+                    domain={[0, (dataMax: number) => dataMax + 10]}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  {surgeonFilter.length === 0 ? (
+                    <Bar dataKey="avg" fill="#1d99ac" radius={[4, 4, 0, 0]} name="Days from 1st Case">
+                      <LabelList dataKey="avg" position="top" style={{ fontSize: 10, fill: "#1d99ac" }} />
+                    </Bar>
+                  ) : (
+                    surgeonFilter.map((surgeon, idx) => (
+                      <Bar key={surgeon} dataKey={surgeon} fill={colors[idx % colors.length]} stackId="a" name={surgeon} />
+                    ))
+                  )}
+                </BarChart>
+              </ChartContainer>
+            </div>
+            <div className="text-center pt-2">
+              <button
+                onClick={() => setIsDrawerOpen(true)}
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-primary underline decoration-dotted cursor-pointer hover:text-primary/80"
+              >
+                <Maximize2 className="h-4 w-4" />
+                View Detailed Table
+              </button>
+            </div>
+          </>
+        )}
       </CardContent>
+
+      {isDrawerOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-[100]" onClick={() => setIsDrawerOpen(false)} />
+          <div className="fixed right-0 top-0 h-full w-[90vw] sm:w-[700px] bg-white dark:bg-gray-900 shadow-2xl z-[101] overflow-y-auto animate-in slide-in-from-right duration-300">
+            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b p-6 flex items-start justify-between z-10">
+              <div>
+                <h2 className="text-lg font-semibold">Days to Case Milestones - Full Data</h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {surgeonFilter.length === 0
+                    ? "Shows average days from 1st case to reach milestone cases (2nd, 3rd, 6th, 10th)."
+                    : "Shows days from 1st case to each subsequent case for the selected surgeon(s)."}
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setIsDrawerOpen(false)} className="-mt-2 -mr-2">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <div className="mb-4 flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-full text-xs font-medium">
+                  <span className="font-semibold">Surgeon:</span>
+                  <span>{surgeonFilter.length === 0 ? "All Surgeons" : surgeonFilter.join(", ")}</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-full text-xs font-medium">
+                  <span className="font-semibold">Total Records:</span>
+                  <span>{data.length}</span>
+                </div>
+              </div>
+              <div className="mb-3 flex justify-end">
+                <Button onClick={exportToExcel} size="sm" variant="outline" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export Excel
+                </Button>
+              </div>
+              <div className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Case Milestone</th>
+                      {surgeonFilter.length === 0 ? (
+                        <th className="text-right p-3 font-medium">Average Days from 1st Case</th>
+                      ) : (
+                        surgeonFilter.map(surgeon => (
+                          <th key={surgeon} className="text-right p-3 font-medium">{surgeon} (Days)</th>
+                        ))
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((row, index) => (
+                      <tr key={index} className="border-t hover:bg-muted/50">
+                        <td className="p-3">{row.milestone}</td>
+                        {surgeonFilter.length === 0 ? (
+                          <td className="p-3 text-right font-medium">{row.avg}</td>
+                        ) : (
+                          surgeonFilter.map(surgeon => (
+                            <td key={surgeon} className="p-3 text-right font-medium">
+                              {row[surgeon] !== undefined ? row[surgeon] : '-'}
+                            </td>
+                          ))
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </Card>
   )
 }

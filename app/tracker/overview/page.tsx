@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData } = useStatsStore()
 
   // Fetch stats on mount and when dateRange changes
   useEffect(() => {
@@ -399,68 +399,16 @@ export default function OverviewPage() {
   // Combined Top Performers Data (kept for fallback, replaced by store)
   const topPerformersTableData = topPerformers
 
-  // Days to Case Milestones
-  const daysToCaseMilestonesData = useMemo(() => {
-    const surgeonCases: Record<string, string[]> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (daysToCaseSurgeon.length > 0 && !daysToCaseSurgeon.includes(c.surgeon)) return
-      if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
-      surgeonCases[c.surgeon].push(c.operationDate)
+  // Days to Case Milestones (replaced by store)
+  const daysToCaseMilestonesData = daysToMilestones
+
+  useEffect(() => {
+    fetchDaysToMilestonesData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      surgeons: daysToCaseSurgeon.length > 0 ? daysToCaseSurgeon : undefined,
     })
-    
-    // If specific surgeons selected, show each surgeon's days to reach milestones
-    if (daysToCaseSurgeon.length > 0) {
-      // Find the maximum number of cases any selected surgeon has
-      let maxCases = 0;
-      Object.values(surgeonCases).forEach(dates => {
-        if (dates.length > maxCases) maxCases = dates.length;
-      });
-
-      if (maxCases === 0) return []
-
-      const result = [];
-      for (let caseNum = 1; caseNum <= maxCases; caseNum++) {
-        const milestoneData: any = {
-          milestone: caseNum === 1 ? '1st Case' : `${caseNum}${caseNum === 2 ? 'nd' : caseNum === 3 ? 'rd' : 'th'} Case`,
-        };
-        
-        daysToCaseSurgeon.forEach(surgeon => {
-          const dates = surgeonCases[surgeon];
-          if (dates && dates.length >= caseNum) {
-            const sorted = dates.sort()
-            const daysDiff = Math.floor((new Date(sorted[caseNum - 1]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
-            milestoneData[surgeon] = daysDiff;
-            
-            // If only one surgeon is selected, we can also provide the specific date
-            if (daysToCaseSurgeon.length === 1) {
-              milestoneData.date = sorted[caseNum - 1];
-            }
-          }
-        });
-
-        if (Object.keys(milestoneData).length > 1) { // more than just 'milestone' key
-          result.push(milestoneData);
-        }
-      }
-      return result;
-    }
-    
-    // If all surgeons, show milestone averages
-    const milestones = [2, 3, 6, 10]
-    return milestones.map(milestone => {
-      const days: number[] = []
-      Object.values(surgeonCases).forEach(dates => {
-        if (dates.length >= milestone) {
-          const sorted = dates.sort()
-          const daysDiff = Math.floor((new Date(sorted[milestone - 1]).getTime() - new Date(sorted[0]).getTime()) / (1000 * 60 * 60 * 24))
-          days.push(daysDiff)
-        }
-      })
-      const avg = days.length > 0 ? Math.round(days.reduce((a, b) => a + b, 0) / days.length) : 0
-      return { milestone: `${milestone}${milestone === 2 ? 'nd' : milestone === 3 ? 'rd' : 'th'} Case`, avg }
-    })
-  }, [daysToCaseSurgeon, filteredCasesData])
+  }, [dateRange, daysToCaseSurgeon])
 
   // Days Between Cases - Sequential for selected surgeon
   const daysBetweenCasesData = useMemo(() => {
@@ -927,6 +875,7 @@ export default function OverviewPage() {
             data={daysToCaseMilestonesData} 
             surgeons={surgeonsList} 
             surgeonFilter={daysToCaseSurgeon} 
+            isLoading={daysToMilestonesLoading}
             onSurgeonChange={setDaysToCaseSurgeon} 
           />
           <GracePeriodCard surgeons={gracePeriodSurgeons} surgeonDetails={gracePeriodDetails} />

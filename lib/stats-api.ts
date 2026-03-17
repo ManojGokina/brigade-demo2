@@ -45,6 +45,35 @@ export async function fetchStatsOverview(params: StatsParams = {}): Promise<Stat
   return response.data.data;
 }
 
+export interface DaysToMilestonesItem {
+  milestone: string;
+  avg?: number;
+  [surgeon: string]: any;
+}
+
+export interface DaysToMilestonesParams {
+  startDate?: string;
+  endDate?: string;
+  surgeons?: string[];
+}
+
+export async function fetchDaysToMilestones(params: DaysToMilestonesParams = {}): Promise<DaysToMilestonesItem[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) {
+      queryParams.append(key, value.join(','));
+    } else if (!Array.isArray(value) && value !== '') {
+      queryParams.append(key, String(value));
+    }
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: DaysToMilestonesItem[] }>(
+    `/stats/days-to-milestones${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface TopPerformerItem {
   surgeon: string;
   totalCases: number;
