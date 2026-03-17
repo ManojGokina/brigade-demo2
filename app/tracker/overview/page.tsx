@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData, casesByRegion, casesByRegionLoading, fetchCasesByRegion: fetchCasesByRegionData, regionTimeSeries, regionTimeSeriesLoading, fetchRegionTimeSeries: fetchRegionTimeSeriesData, productivityByUserType, productivityByUserTypeLoading, fetchProductivityByUserType: fetchProductivityByUserTypeData, timeToSecondCase, timeToSecondCaseLoading, fetchTimeToSecondCase: fetchTimeToSecondCaseData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData, casesByRegion, casesByRegionLoading, fetchCasesByRegion: fetchCasesByRegionData, regionTimeSeries, regionTimeSeriesLoading, fetchRegionTimeSeries: fetchRegionTimeSeriesData, productivityByUserType, productivityByUserTypeLoading, fetchProductivityByUserType: fetchProductivityByUserTypeData, timeToSecondCase, timeToSecondCaseLoading, fetchTimeToSecondCase: fetchTimeToSecondCaseData, surgeonDemographics, surgeonDemographicsLoading, fetchSurgeonDemographics: fetchSurgeonDemographicsData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -193,32 +193,14 @@ export default function OverviewPage() {
 
 
   // Surgeons by Specialty
-  const surgeonsBySpecialtyData = useMemo(() => {
-    const specialtyData: Record<string, Set<string>> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.specialty || !c.surgeon) return
-      if (!specialtyData[c.specialty]) specialtyData[c.specialty] = new Set()
-      specialtyData[c.specialty].add(c.surgeon)
+  useEffect(() => {
+    fetchSurgeonDemographicsData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
     })
-    return Object.entries(specialtyData).map(([name, surgeons]) => ({ name, value: surgeons.size }))
-  }, [filteredCasesData])
+  }, [dateRange])
 
   // Surgeons by Case Load
-  const surgeonsByCaseLoadData = useMemo(() => {
-    const surgeonCases: Record<string, number> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon) return
-      surgeonCases[c.surgeon] = (surgeonCases[c.surgeon] || 0) + 1
-    })
-    const ranges = { "1-5 cases": 0, "6-10 cases": 0, "11-20 cases": 0, "21+ cases": 0 }
-    Object.values(surgeonCases).forEach(count => {
-      if (count <= 5) ranges["1-5 cases"]++
-      else if (count <= 10) ranges["6-10 cases"]++
-      else if (count <= 20) ranges["11-20 cases"]++
-      else ranges["21+ cases"]++
-    })
-    return Object.entries(ranges).map(([name, value]) => ({ name, value }))
-  }, [filteredCasesData])
 
   // Top 10 by Case Load
   const top10ByCaseLoadData = useMemo(() => {
@@ -566,8 +548,8 @@ export default function OverviewPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-2">
-          <SurgeonsBySpecialty data={surgeonsBySpecialtyData} />
-          <SurgeonsByCaseLoad data={surgeonsByCaseLoadData} />
+          <SurgeonsBySpecialty data={surgeonDemographics?.bySpecialty ?? []} isLoading={surgeonDemographicsLoading} />
+          <SurgeonsByCaseLoad data={surgeonDemographics?.byCaseLoad ?? []} isLoading={surgeonDemographicsLoading} />
         </div>
        
       </div>

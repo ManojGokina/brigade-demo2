@@ -205,6 +205,25 @@ export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<
   return response.data.data;
 }
 
+export interface SurgeonsBySpecialtyItem { name: string; value: number; }
+export interface SurgeonsByCaseLoadItem { name: string; value: number; }
+export interface SurgeonDemographicsResult {
+  bySpecialty: SurgeonsBySpecialtyItem[];
+  byCaseLoad: SurgeonsByCaseLoadItem[];
+}
+export interface SurgeonDemographicsParams { startDate?: string; endDate?: string; }
+
+export async function fetchSurgeonDemographics(params: SurgeonDemographicsParams = {}): Promise<SurgeonDemographicsResult> {
+  const queryParams = new URLSearchParams();
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate)   queryParams.append('endDate', params.endDate);
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: SurgeonDemographicsResult }>(
+    `/stats/surgeon-demographics${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface TimeToSecondCaseItem {
   quarter: string;
   avg: number;

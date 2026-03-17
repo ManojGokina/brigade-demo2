@@ -3,20 +3,36 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts"
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const COLORS = ["#1d99ac", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"]
 
-export function SurgeonsBySpecialty({ data }: { data: any[] }) {
+const RADIAN = Math.PI / 180
+const renderLabel = (props: any) => {
+  const { cx, cy, midAngle, outerRadius, name, percent, index } = props
+  const radius = outerRadius + 30
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  return (
+    <text
+      x={x}
+      y={y}
+      fill={COLORS[index % COLORS.length]}
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      fontWeight="bold"
+      fontSize={11}
+    >
+      {`${name}: ${percent}%`}
+    </text>
+  )
+}
+
+export function SurgeonsBySpecialty({ data, isLoading = false }: { data: any[], isLoading?: boolean }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const total = data.reduce((sum, item) => sum + item.value, 0)
   const dataWithPercent = data.map(item => ({
@@ -45,35 +61,37 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[400px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={dataWithPercent}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={(props) => {
-                  const { name, percent, index } = props
-                  return (
-                    <text x={props.x} y={props.y} fill={COLORS[index % COLORS.length]} textAnchor={props.textAnchor} dominantBaseline="central" fontWeight="bold" fontSize={12}>
-                      {`${name}: ${percent}%`}
-                    </text>
-                  )
-                }}
-                outerRadius={120}
-                innerRadius={70}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {dataWithPercent.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+            <Skeleton className="h-48 w-48 rounded-full" />
+            <div className="flex flex-col gap-2 w-40">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-3 w-full" />)}
+            </div>
+          </div>
+        ) : (
+          <ChartContainer config={{}} className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={dataWithPercent}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  label={renderLabel}
+                  outerRadius={100}
+                  innerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {dataWithPercent.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        )}
         <div className="mt-4 text-center">
           <button
             onClick={() => setDrawerOpen(true)}
@@ -118,7 +136,11 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {dataWithPercent.map((item, index) => (
+                {isLoading ? Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t">
+                    {Array.from({ length: 3 }).map((__, j) => <td key={j} className="p-3"><Skeleton className="h-4 w-full" /></td>)}
+                  </tr>
+                )) : dataWithPercent.map((item, index) => (
                   <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
                     <td className="p-3 font-medium text-gray-900">{item.name}</td>
                     <td className="p-3 text-right font-medium">
@@ -143,7 +165,7 @@ export function SurgeonsBySpecialty({ data }: { data: any[] }) {
   )
 }
 
-export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
+export function SurgeonsByCaseLoad({ data, isLoading = false }: { data: any[], isLoading?: boolean }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const total = data.reduce((sum, item) => sum + item.value, 0)
   const dataWithPercent = data.map(item => ({
@@ -172,35 +194,37 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{}} className="h-[400px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={dataWithPercent}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={(props) => {
-                  const { name, percent, index } = props
-                  return (
-                    <text x={props.x} y={props.y} fill={COLORS[index % COLORS.length]} textAnchor={props.textAnchor} dominantBaseline="central" fontWeight="bold" fontSize={12}>
-                      {`${name}: ${percent}%`}
-                    </text>
-                  )
-                }}
-                outerRadius={120}
-                innerRadius={70}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {dataWithPercent.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+            <Skeleton className="h-48 w-48 rounded-full" />
+            <div className="flex flex-col gap-2 w-40">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-3 w-full" />)}
+            </div>
+          </div>
+        ) : (
+          <ChartContainer config={{}} className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={dataWithPercent}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  label={renderLabel}
+                  outerRadius={100}
+                  innerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {dataWithPercent.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        )}
         <div className="mt-4 text-center">
           <button
             onClick={() => setDrawerOpen(true)}
@@ -245,7 +269,11 @@ export function SurgeonsByCaseLoad({ data }: { data: any[] }) {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {dataWithPercent.map((item, index) => (
+                {isLoading ? Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i} className="border-t">
+                    {Array.from({ length: 3 }).map((__, j) => <td key={j} className="p-3"><Skeleton className="h-4 w-full" /></td>)}
+                  </tr>
+                )) : dataWithPercent.map((item, index) => (
                   <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
                     <td className="p-3 font-medium text-gray-900">{item.name}</td>
                     <td className="p-3 text-right font-medium">

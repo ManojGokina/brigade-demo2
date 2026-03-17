@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, fetchCasesByRegion, fetchRegionTimeSeries, fetchProductivityByUserType, fetchTimeToSecondCase, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams, CasesByRegionItem, CasesByRegionParams, RegionTimeSeriesParams, ProductivityByUserTypeItem, ProductivityByUserTypeParams, TimeToSecondCaseItem, TimeToSecondCaseParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, fetchCasesByRegion, fetchRegionTimeSeries, fetchProductivityByUserType, fetchTimeToSecondCase, fetchSurgeonDemographics, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams, CasesByRegionItem, CasesByRegionParams, RegionTimeSeriesParams, ProductivityByUserTypeItem, ProductivityByUserTypeParams, TimeToSecondCaseItem, TimeToSecondCaseParams, SurgeonDemographicsResult, SurgeonDemographicsParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -86,6 +86,11 @@ interface StatsState {
   timeToSecondCaseError: string | null;
   fetchTimeToSecondCase: (params?: TimeToSecondCaseParams) => Promise<void>;
 
+  surgeonDemographics: SurgeonDemographicsResult | null;
+  surgeonDemographicsLoading: boolean;
+  surgeonDemographicsError: string | null;
+  fetchSurgeonDemographics: (params?: SurgeonDemographicsParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -149,6 +154,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   timeToSecondCase: [],
   timeToSecondCaseLoading: false,
   timeToSecondCaseError: null,
+
+  surgeonDemographics: null,
+  surgeonDemographicsLoading: false,
+  surgeonDemographicsError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -300,5 +309,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null, casesByRegionError: null, regionTimeSeriesError: null, productivityByUserTypeError: null, timeToSecondCaseError: null }),
+  fetchSurgeonDemographics: async (params = {}) => {
+    set({ surgeonDemographicsLoading: true, surgeonDemographicsError: null });
+    try {
+      const surgeonDemographics = await fetchSurgeonDemographics(params);
+      set({ surgeonDemographics, surgeonDemographicsLoading: false });
+    } catch (error: any) {
+      set({ surgeonDemographics: null, surgeonDemographicsLoading: false, surgeonDemographicsError: error.response?.data?.message || 'Failed to fetch surgeon demographics' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null, casesByRegionError: null, regionTimeSeriesError: null, productivityByUserTypeError: null, timeToSecondCaseError: null, surgeonDemographicsError: null }),
 }));
