@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -467,30 +467,17 @@ export default function OverviewPage() {
   const timeMilestonesData = timeMilestones
 
   // Survival Time Data
-  const survivalTimeData = useMemo(() => {
-    const today = new Date()
-    return filteredCasesData
-      .filter((c: any) => {
-        if (survivalTimeSurgeon.length > 0 && !survivalTimeSurgeon.includes(c.surgeon)) return false
-        if (survivalTimeSpecialty.length > 0 && !survivalTimeSpecialty.includes(c.specialty)) return false
-        return true
-      })
-      .map((c: any, index: number) => {
-        const daysSince = c.operationDate ? Math.floor((today.getTime() - new Date(c.operationDate).getTime()) / (1000 * 60 * 60 * 24)) : null
-        return {
-          caseId: c.caseNumber || `Case-${index + 1}`,
-          surgeon: c.surgeon || '',
-          specialty: c.specialty || '',
-          operationDate: c.operationDate || null,
-          daysSinceSurgery: daysSince
-        }
-      })
-      .sort((a, b) => {
-        if (a.daysSinceSurgery === null) return 1
-        if (b.daysSinceSurgery === null) return -1
-        return b.daysSinceSurgery - a.daysSinceSurgery
-      })
-  }, [filteredCasesData, survivalTimeSurgeon, survivalTimeSpecialty])
+  // Survival Time - fetch when filters change
+  useEffect(() => {
+    fetchSurvivalTimeData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      surgeons: survivalTimeSurgeon.length > 0 ? survivalTimeSurgeon : undefined,
+      specialties: survivalTimeSpecialty.length > 0 ? survivalTimeSpecialty : undefined,
+    })
+  }, [dateRange, survivalTimeSurgeon, survivalTimeSpecialty])
+
+  const survivalTimeData = survivalTime
 
   useEffect(() => {
     const sinceCaseMap: Record<string, number> = {
@@ -658,6 +645,7 @@ export default function OverviewPage() {
           specialties={specialtiesList}
           surgeonFilter={survivalTimeSurgeon}
           specialtyFilter={survivalTimeSpecialty}
+          isLoading={survivalTimeLoading}
           onSurgeonChange={setSurvivalTimeSurgeon}
           onSpecialtyChange={setSurvivalTimeSpecialty}
         />

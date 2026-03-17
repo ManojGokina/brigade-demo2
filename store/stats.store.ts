@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -61,6 +61,11 @@ interface StatsState {
   secondCaseBookingError: string | null;
   fetchSecondCaseBooking: (params?: SecondCaseBookingParams) => Promise<void>;
 
+  survivalTime: SurvivalTimeItem[];
+  survivalTimeLoading: boolean;
+  survivalTimeError: string | null;
+  fetchSurvivalTime: (params?: SurvivalTimeParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -104,6 +109,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   secondCaseBooking: [],
   secondCaseBookingLoading: false,
   secondCaseBookingError: null,
+
+  survivalTime: [],
+  survivalTimeLoading: false,
+  survivalTimeError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -205,5 +214,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null }),
+  fetchSurvivalTime: async (params = {}) => {
+    set({ survivalTimeLoading: true, survivalTimeError: null });
+    try {
+      const survivalTime = await fetchSurvivalTime(params);
+      set({ survivalTime, survivalTimeLoading: false });
+    } catch (error: any) {
+      set({ survivalTime: [], survivalTimeLoading: false, survivalTimeError: error.response?.data?.message || 'Failed to fetch survival time' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null }),
 }));

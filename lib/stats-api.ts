@@ -205,6 +205,35 @@ export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<
   return response.data.data;
 }
 
+export interface SurvivalTimeItem {
+  caseId: string;
+  surgeon: string;
+  specialty: string;
+  operationDate: string | null;
+  daysSinceSurgery: number | null;
+}
+
+export interface SurvivalTimeParams {
+  startDate?: string;
+  endDate?: string;
+  surgeons?: string[];
+  specialties?: string[];
+}
+
+export async function fetchSurvivalTime(params: SurvivalTimeParams = {}): Promise<SurvivalTimeItem[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) queryParams.append(key, value.join(','));
+    else if (!Array.isArray(value) && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: SurvivalTimeItem[] }>(
+    `/stats/survival-time${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface SecondCaseBookingRow {
   category: string;
   percentage?: number;
