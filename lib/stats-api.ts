@@ -45,6 +45,39 @@ export async function fetchStatsOverview(params: StatsParams = {}): Promise<Stat
   return response.data.data;
 }
 
+export interface TopPerformerItem {
+  surgeon: string;
+  totalCases: number;
+  neuromaCases: number;
+  region: string;
+  specialty: string;
+  productivity: number;
+}
+
+export interface TopPerformersParams {
+  startDate?: string;
+  endDate?: string;
+  regions?: string[];
+  specialties?: string[];
+}
+
+export async function fetchTopPerformers(params: TopPerformersParams = {}): Promise<TopPerformerItem[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) {
+      queryParams.append(key, value.join(','));
+    } else if (!Array.isArray(value) && value !== '') {
+      queryParams.append(key, String(value));
+    }
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: TopPerformerItem[] }>(
+    `/stats/top-performers${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export async function fetchCasesOverTime(params: CasesOverTimeParams = {}): Promise<CasesOverTimeItem[]> {
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

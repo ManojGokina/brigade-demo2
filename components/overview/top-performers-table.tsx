@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/tooltip"
 
 interface TopPerformerData {
-  rank: number
+  rank?: number
   surgeon: string
   totalCases: number
   neuromaCases: number
@@ -33,6 +33,7 @@ export function TopPerformersTable({
   viewType, 
   regionFilter, 
   specialtyFilter, 
+  isLoading,
   onViewTypeChange, 
   onRegionChange, 
   onSpecialtyChange 
@@ -43,6 +44,7 @@ export function TopPerformersTable({
   viewType: string, 
   regionFilter: string[], 
   specialtyFilter: string[], 
+  isLoading?: boolean,
   onViewTypeChange: (value: string) => void, 
   onRegionChange: (value: string[]) => void, 
   onSpecialtyChange: (value: string[]) => void 
@@ -67,6 +69,30 @@ export function TopPerformersTable({
   const sortedData = getSortedData()
   const top5Data = sortedData.slice(0, 5)
   const next5Data = sortedData.slice(5, 10)
+
+  if (isLoading) {
+    return (
+      <Card className="border-border/50 bg-card">
+        <CardHeader className="pb-0">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold">{getTitle()}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-pulse">
+            {[0, 1].map((col) => (
+              <div key={col} className="space-y-2">
+                <div className="h-8 bg-muted rounded" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-10 bg-muted/60 rounded" />
+                ))}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const getValueForView = (item: TopPerformerData) => {
     if (viewType === "caseLoad") return item.totalCases

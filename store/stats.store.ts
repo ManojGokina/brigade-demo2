@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -21,6 +21,11 @@ interface StatsState {
   casesOverTimeError: string | null;
   fetchCasesOverTime: (params?: CasesOverTimeParams) => Promise<void>;
 
+  topPerformers: TopPerformerItem[];
+  topPerformersLoading: boolean;
+  topPerformersError: string | null;
+  fetchTopPerformers: (params?: TopPerformersParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -32,6 +37,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   casesOverTime: [],
   casesOverTimeLoading: false,
   casesOverTimeError: null,
+
+  topPerformers: [],
+  topPerformersLoading: false,
+  topPerformersError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -53,5 +62,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null }),
+  fetchTopPerformers: async (params = {}) => {
+    set({ topPerformersLoading: true, topPerformersError: null });
+    try {
+      const topPerformers = await fetchTopPerformers(params);
+      set({ topPerformers, topPerformersLoading: false });
+    } catch (error: any) {
+      set({ topPerformers: [], topPerformersLoading: false, topPerformersError: error.response?.data?.message || 'Failed to fetch top performers' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null }),
 }));

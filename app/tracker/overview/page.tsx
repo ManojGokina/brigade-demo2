@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData } = useStatsStore()
 
   // Fetch stats on mount and when dateRange changes
   useEffect(() => {
@@ -387,43 +387,17 @@ export default function OverviewPage() {
       .slice(0, 10)
   }, [filteredCasesData])
 
-  // Combined Top Performers Data
-  const topPerformersTableData = useMemo(() => {
-    let filteredCases = filteredCasesData
-    if (topPerformersRegion.length > 0) filteredCases = filteredCases.filter((c: any) => topPerformersRegion.includes(c.region))
-    if (topPerformersSpecialty.length > 0) filteredCases = filteredCases.filter((c: any) => topPerformersSpecialty.includes(c.specialty))
-
-    const surgeonStats: Record<string, { totalCases: number; neuromaCases: number; region: string; specialty: string; months: Set<string> }> = {}
-    
-    filteredCases.forEach((c: any) => {
-      if (!c.surgeon) return
-      if (!surgeonStats[c.surgeon]) {
-        surgeonStats[c.surgeon] = {
-          totalCases: 0,
-          neuromaCases: 0,
-          region: c.region || "Unknown",
-          specialty: c.specialty || "Unknown",
-          months: new Set()
-        }
-      }
-      surgeonStats[c.surgeon].totalCases++
-      if (c.isNeuromaCase) surgeonStats[c.surgeon].neuromaCases++
-      if (c.operationDate) {
-        const monthKey = c.operationDate.substring(0, 7)
-        surgeonStats[c.surgeon].months.add(monthKey)
-      }
+  useEffect(() => {
+    fetchTopPerformersData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      regions: topPerformersRegion.length > 0 ? topPerformersRegion : undefined,
+      specialties: topPerformersSpecialty.length > 0 ? topPerformersSpecialty : undefined,
     })
+  }, [dateRange, topPerformersRegion, topPerformersSpecialty])
 
-    return Object.entries(surgeonStats).map(([surgeon, stats], index) => ({
-      rank: index + 1,
-      surgeon,
-      totalCases: stats.totalCases,
-      neuromaCases: stats.neuromaCases,
-      region: stats.region,
-      specialty: stats.specialty,
-      productivity: stats.months.size > 0 ? +(stats.totalCases / stats.months.size) : 0
-    }))
-  }, [topPerformersRegion, topPerformersSpecialty, filteredCasesData])
+  // Combined Top Performers Data (kept for fallback, replaced by store)
+  const topPerformersTableData = topPerformers
 
   // Days to Case Milestones
   const daysToCaseMilestonesData = useMemo(() => {
@@ -942,6 +916,7 @@ export default function OverviewPage() {
           viewType={topPerformersView} 
           regionFilter={topPerformersRegion} 
           specialtyFilter={topPerformersSpecialty} 
+          isLoading={topPerformersLoading}
           onViewTypeChange={setTopPerformersView} 
           onRegionChange={setTopPerformersRegion} 
           onSpecialtyChange={setTopPerformersSpecialty} 
