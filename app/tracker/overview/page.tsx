@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -139,38 +139,18 @@ export default function OverviewPage() {
     return years
   }, [])
 
-  const qoqGrowthData = useMemo(() => {
-    let filteredCases = filteredCasesData
-    if (qoqSurgeon.length > 0) filteredCases = filteredCases.filter((c: any) => qoqSurgeon.includes(c.surgeon))
-    if (qoqRegion.length > 0) filteredCases = filteredCases.filter((c: any) => qoqRegion.includes(c.region))
-    if (qoqSpecialty.length > 0) filteredCases = filteredCases.filter((c: any) => qoqSpecialty.includes(c.specialty))
-    
-    const quarterlyData: Record<string, { cases: number; surgeons: Set<string> }> = {}
-    filteredCases.forEach((c: any) => {
-      if (!c.operationDate) return
-      const date = new Date(c.operationDate)
-      const year = date.getFullYear()
-      if (!qoqYear.includes(year.toString())) return
-      const quarter = Math.floor(date.getMonth() / 3) + 1
-      const quarterKey = `${year} - ${quarter}`
-      if (!quarterlyData[quarterKey]) quarterlyData[quarterKey] = { cases: 0, surgeons: new Set() }
-      quarterlyData[quarterKey].cases++
-      if (c.surgeon) quarterlyData[quarterKey].surgeons.add(c.surgeon)
+  useEffect(() => {
+    fetchQoQGrowthData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      surgeons: qoqSurgeon.length > 0 ? qoqSurgeon : undefined,
+      regions: qoqRegion.length > 0 ? qoqRegion : undefined,
+      specialties: qoqSpecialty.length > 0 ? qoqSpecialty : undefined,
+      years: qoqYear.length > 0 ? qoqYear : undefined,
     })
-    
-    const allQuarters: string[] = []
-    qoqYear.forEach(year => {
-      for (let q = 1; q <= 4; q++) {
-        allQuarters.push(`${year} - ${q}`)
-      }
-    })
-    return allQuarters.map(quarter => ({
-      quarter,
-      cases: quarterlyData[quarter]?.cases || 0,
-      surgeons: quarterlyData[quarter]?.surgeons.size || 0,
-      productivity: quarterlyData[quarter] ? +(quarterlyData[quarter].cases / quarterlyData[quarter].surgeons.size).toFixed(2) : 0
-    }))
-  }, [qoqYear, qoqSurgeon, qoqRegion, qoqSpecialty, filteredCasesData])
+  }, [dateRange, qoqSurgeon, qoqRegion, qoqSpecialty, qoqYear])
+
+  const qoqGrowthData = qoqGrowth
 
   // Cases by Region
   const casesByRegionData = useMemo(() => {
@@ -809,6 +789,7 @@ export default function OverviewPage() {
 
         <QoQGrowthProgression
           data={qoqGrowthData}
+          isLoading={qoqGrowthLoading}
           years={qoqYears}
           selectedYears={qoqYear}
           surgeons={surgeonsList}

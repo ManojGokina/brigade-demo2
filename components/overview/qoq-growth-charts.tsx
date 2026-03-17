@@ -17,7 +17,7 @@ import {
 
 import { MultiSelect } from "@/components/ui/multi-select"
 
-export function QoQGrowthProgression({ data, years, selectedYears, surgeons, surgeon, regions, specialties, regionFilter, specialtyFilter, onYearsChange, onSurgeonChange, onRegionChange, onSpecialtyChange }: { data: any[], years: string[], selectedYears: string[], surgeons: string[], surgeon: string[], regions: string[], specialties: string[], regionFilter: string[], specialtyFilter: string[], onYearsChange: (values: string[]) => void, onSurgeonChange: (value: string[]) => void, onRegionChange: (value: string[]) => void, onSpecialtyChange: (value: string[]) => void }) {
+export function QoQGrowthProgression({ data, isLoading, years, selectedYears, surgeons, surgeon, regions, specialties, regionFilter, specialtyFilter, onYearsChange, onSurgeonChange, onRegionChange, onSpecialtyChange }: { data: any[], isLoading?: boolean, years: string[], selectedYears: string[], surgeons: string[], surgeon: string[], regions: string[], specialties: string[], regionFilter: string[], specialtyFilter: string[], onYearsChange: (values: string[]) => void, onSurgeonChange: (value: string[]) => void, onRegionChange: (value: string[]) => void, onSpecialtyChange: (value: string[]) => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
@@ -96,6 +96,17 @@ export function QoQGrowthProgression({ data, years, selectedYears, surgeons, sur
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="h-[250px] flex items-end gap-2 px-2 animate-pulse">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex-1 flex flex-col justify-end gap-1">
+                <div className="bg-muted rounded" style={{ height: `${40 + Math.random() * 120}px` }} />
+                <div className="bg-muted rounded" style={{ height: `${20 + Math.random() * 60}px` }} />
+                <div className="bg-muted rounded" style={{ height: `${10 + Math.random() * 40}px` }} />
+              </div>
+            ))}
+          </div>
+        ) : (
         <ChartContainer config={{}} className="h-[250px] w-full">
           <BarChart data={data}>
             <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
@@ -112,6 +123,7 @@ export function QoQGrowthProgression({ data, years, selectedYears, surgeons, sur
             </Bar>
           </BarChart>
         </ChartContainer>
+        )}
         <div className="mt-4 text-center">
           <button
             onClick={() => setDrawerOpen(true)}

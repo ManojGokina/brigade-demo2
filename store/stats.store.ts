@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -41,6 +41,11 @@ interface StatsState {
   timeMilestonesError: string | null;
   fetchTimeMilestones: (params?: TimeMilestonesParams) => Promise<void>;
 
+  qoqGrowth: QoQGrowthItem[];
+  qoqGrowthLoading: boolean;
+  qoqGrowthError: string | null;
+  fetchQoQGrowth: (params?: QoQGrowthParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -68,6 +73,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   timeMilestones: [],
   timeMilestonesLoading: false,
   timeMilestonesError: null,
+
+  qoqGrowth: [],
+  qoqGrowthLoading: false,
+  qoqGrowthError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -129,5 +138,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null }),
+  fetchQoQGrowth: async (params = {}) => {
+    set({ qoqGrowthLoading: true, qoqGrowthError: null });
+    try {
+      const qoqGrowth = await fetchQoQGrowth(params);
+      set({ qoqGrowth, qoqGrowthLoading: false });
+    } catch (error: any) {
+      set({ qoqGrowth: [], qoqGrowthLoading: false, qoqGrowthError: error.response?.data?.message || 'Failed to fetch QoQ growth' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null }),
 }));
