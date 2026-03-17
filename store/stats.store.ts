@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -51,6 +51,11 @@ interface StatsState {
   timeMetricsError: string | null;
   fetchTimeMetrics: (params?: TimeMetricsParams) => Promise<void>;
 
+  daysBetweenCases: DaysBetweenCasesRow[];
+  daysBetweenCasesLoading: boolean;
+  daysBetweenCasesError: string | null;
+  fetchDaysBetweenCases: (params?: DaysBetweenCasesParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -86,6 +91,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   timeMetrics: [],
   timeMetricsLoading: false,
   timeMetricsError: null,
+
+  daysBetweenCases: [],
+  daysBetweenCasesLoading: false,
+  daysBetweenCasesError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -167,5 +176,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null }),
+  fetchDaysBetweenCases: async (params = {}) => {
+    set({ daysBetweenCasesLoading: true, daysBetweenCasesError: null });
+    try {
+      const daysBetweenCases = await fetchDaysBetweenCases(params);
+      set({ daysBetweenCases, daysBetweenCasesLoading: false });
+    } catch (error: any) {
+      set({ daysBetweenCases: [], daysBetweenCasesLoading: false, daysBetweenCasesError: error.response?.data?.message || 'Failed to fetch days between cases' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null }),
 }));

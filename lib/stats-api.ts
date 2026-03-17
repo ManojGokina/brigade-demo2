@@ -205,6 +205,33 @@ export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<
   return response.data.data;
 }
 
+export interface DaysBetweenCasesRow {
+  caseNumber: string;
+  days?: number;
+  date?: string;
+  [surgeon: string]: any;
+}
+
+export interface DaysBetweenCasesParams {
+  startDate?: string;
+  endDate?: string;
+  surgeons?: string[];
+}
+
+export async function fetchDaysBetweenCases(params: DaysBetweenCasesParams = {}): Promise<DaysBetweenCasesRow[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) queryParams.append(key, value.join(','));
+    else if (!Array.isArray(value) && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: DaysBetweenCasesRow[] }>(
+    `/stats/days-between-cases${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export async function fetchCasesOverTime(params: CasesOverTimeParams = {}): Promise<CasesOverTimeItem[]> {
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

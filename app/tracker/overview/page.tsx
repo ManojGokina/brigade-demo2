@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -403,60 +403,17 @@ export default function OverviewPage() {
     })
   }, [dateRange, daysToCaseSurgeon])
 
+  // Days Between Cases - fetch when surgeon filter changes
+  useEffect(() => {
+    fetchDaysBetweenCasesData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      surgeons: daysBetweenCasesSurgeon.length > 0 ? daysBetweenCasesSurgeon : undefined,
+    })
+  }, [dateRange, daysBetweenCasesSurgeon])
+
   // Days Between Cases - Sequential for selected surgeon
-  const daysBetweenCasesData = useMemo(() => {
-    if (daysBetweenCasesSurgeon.length === 0) return []
-    
-    const surgeonCases: Record<string, string[]> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (daysBetweenCasesSurgeon.includes(c.surgeon)) {
-        if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
-        surgeonCases[c.surgeon].push(c.operationDate)
-      }
-    })
-    
-    if (daysBetweenCasesSurgeon.length === 1) {
-      // Single surgeon - show sequential data
-      const surgeon = daysBetweenCasesSurgeon[0]
-      const dates = surgeonCases[surgeon]?.sort() || []
-      if (dates.length === 0) return []
-      
-      const result = [{ caseNumber: "Case 1", days: 0, date: dates[0] }]
-      for (let i = 1; i < dates.length; i++) {
-        const days = Math.floor((new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) / (1000 * 60 * 60 * 24))
-        result.push({ caseNumber: `Case ${i + 1}`, days, date: dates[i] })
-      }
-      return result
-    }
-    
-    // Multiple surgeons - show comparison
-    const surgeonIntervals: Record<string, number[]> = {}
-    daysBetweenCasesSurgeon.forEach(surgeon => {
-      const dates = surgeonCases[surgeon]?.sort() || []
-      if (dates.length === 0) return
-      
-      const intervals = [0]
-      for (let i = 1; i < dates.length; i++) {
-        intervals.push(Math.floor((new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) / (1000 * 60 * 60 * 24)))
-      }
-      surgeonIntervals[surgeon] = intervals
-    })
-    
-    const maxLen = Math.max(...Object.values(surgeonIntervals).map(arr => arr.length), 0)
-    if (maxLen === 0) return []
-    
-    const result = []
-    for (let i = 0; i < maxLen; i++) {
-      const row: any = { caseNumber: `Case ${i + 1}` }
-      daysBetweenCasesSurgeon.forEach(surgeon => {
-        row[surgeon] = surgeonIntervals[surgeon]?.[i] ?? null
-      })
-      result.push(row)
-    }
-    
-    return result
-  }, [daysBetweenCasesSurgeon, filteredCasesData])
+  const daysBetweenCasesData = daysBetweenCases
 
   // Second Case Booking Data - Sequential
   const secondCaseBookingData = useMemo(() => {
