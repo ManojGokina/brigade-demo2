@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -593,46 +593,26 @@ export default function OverviewPage() {
 
 
 
-  // Time Metrics & Milestones
-  const timeMetricsData = useMemo(() => {
-    const surgeonCases: Record<string, string[]> = {}
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (!surgeonCases[c.surgeon]) surgeonCases[c.surgeon] = []
-      surgeonCases[c.surgeon].push(c.operationDate)
+  useEffect(() => {
+    fetchTimeMetricsData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
     })
-    
-    const today = new Date()
+  }, [dateRange])
+
+  // Time Metrics & Milestones - convert days to selected unit
+  const timeMetricsData = useMemo(() => {
     const convertTime = (days: number) => {
       if (timeUnit === "weeks") return Math.round(days / 7)
       if (timeUnit === "months") return Math.round(days / 30)
       return days
     }
-    
-    return Object.entries(surgeonCases)
-      .map(([surgeon, dates]) => {
-        const sortedDates = dates.sort()
-        const firstCaseDate = sortedDates[0]
-        const secondCaseDate = sortedDates.length > 1 ? sortedDates[1] : null
-        const lastCaseDate = sortedDates[sortedDates.length - 1]
-        
-        const timeActiveDays = Math.floor((today.getTime() - new Date(firstCaseDate).getTime()) / (1000 * 60 * 60 * 24))
-        const timeInactiveDays = Math.floor((today.getTime() - new Date(lastCaseDate).getTime()) / (1000 * 60 * 60 * 24))
-        const monthsSince1st = Math.round(timeActiveDays / 30)
-        const monthsSince2nd = secondCaseDate ? Math.round((today.getTime() - new Date(secondCaseDate).getTime()) / (1000 * 60 * 60 * 24) / 30) : 0
-        
-        return {
-          surgeon,
-          timeActive: convertTime(timeActiveDays),
-          timeInactive: convertTime(timeInactiveDays),
-          monthsSince1st,
-          monthsSince2nd,
-          firstCaseDate,
-          secondCaseDate
-        }
-      })
-      .sort((a, b) => b.timeActive - a.timeActive)
-  }, [timeUnit, filteredCasesData])
+    return timeMetrics.map((d) => ({
+      ...d,
+      timeActive: convertTime(d.timeActiveDays),
+      timeInactive: convertTime(d.timeInactiveDays),
+    }))
+  }, [timeMetrics, timeUnit])
   const gracePeriodSurgeons = gracePeriodData.map((d: any) => d.surgeon)
   const gracePeriodDetails = gracePeriodData
 

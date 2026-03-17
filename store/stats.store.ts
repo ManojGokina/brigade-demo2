@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -46,6 +46,11 @@ interface StatsState {
   qoqGrowthError: string | null;
   fetchQoQGrowth: (params?: QoQGrowthParams) => Promise<void>;
 
+  timeMetrics: TimeMetricsItem[];
+  timeMetricsLoading: boolean;
+  timeMetricsError: string | null;
+  fetchTimeMetrics: (params?: TimeMetricsParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -77,6 +82,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   qoqGrowth: [],
   qoqGrowthLoading: false,
   qoqGrowthError: null,
+
+  timeMetrics: [],
+  timeMetricsLoading: false,
+  timeMetricsError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -148,5 +157,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null }),
+  fetchTimeMetrics: async (params = {}) => {
+    set({ timeMetricsLoading: true, timeMetricsError: null });
+    try {
+      const timeMetrics = await fetchTimeMetrics(params);
+      set({ timeMetrics, timeMetricsLoading: false });
+    } catch (error: any) {
+      set({ timeMetrics: [], timeMetricsLoading: false, timeMetricsError: error.response?.data?.message || 'Failed to fetch time metrics' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null }),
 }));

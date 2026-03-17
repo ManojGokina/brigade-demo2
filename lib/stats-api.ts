@@ -174,6 +174,37 @@ export async function fetchQoQGrowth(params: QoQGrowthParams = {}): Promise<QoQG
   return response.data.data;
 }
 
+export interface TimeMetricsItem {
+  surgeon: string;
+  timeActiveDays: number;
+  timeInactiveDays: number;
+  monthsSince1st: number;
+  monthsSince2nd: number;
+  firstCaseDate: string;
+  secondCaseDate: string | null;
+  lastCaseDate: string;
+}
+
+export interface TimeMetricsParams {
+  startDate?: string;
+  endDate?: string;
+  surgeons?: string[];
+}
+
+export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<TimeMetricsItem[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) queryParams.append(key, value.join(','));
+    else if (!Array.isArray(value) && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: TimeMetricsItem[] }>(
+    `/stats/time-metrics${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export async function fetchCasesOverTime(params: CasesOverTimeParams = {}): Promise<CasesOverTimeItem[]> {
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
