@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -16,7 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange }: { data: any[], timeUnit: string, onTimeUnitChange: (value: string) => void }) {
+export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange, isLoading = false }: { data: any[], timeUnit: string, onTimeUnitChange: (value: string) => void, isLoading?: boolean }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const getUnitLabel = () => {
@@ -63,6 +64,14 @@ export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange }: { data:
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="flex items-end gap-1 h-[250px] px-8 py-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Skeleton key={i} className="flex-1 rounded-t" style={{ height: `${25 + (i % 4) * 18}%` }} />
+            ))}
+          </div>
+        ) : (
+        <>
         <ChartContainer config={{}} className="h-[250px] w-full">
           <BarChart data={top10Data}>
             <XAxis 
@@ -93,6 +102,8 @@ export function TimeActiveInactive({ data, timeUnit, onTimeUnitChange }: { data:
             View Detailed Table
           </button>
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
 

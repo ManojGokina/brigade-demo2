@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line, LabelList } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -232,7 +233,7 @@ export function DaysToCaseMilestones({ data, surgeons, surgeonFilter, isLoading,
   )
 }
 
-export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChange }: { data: any[], surgeons: string[], surgeonFilter: string[], onSurgeonChange: (value: string[]) => void }) {
+export function DaysBetweenCases({ data, surgeons, surgeonFilter, onSurgeonChange, isLoading = false }: { data: any[], surgeons: string[], surgeonFilter: string[], onSurgeonChange: (value: string[]) => void, isLoading?: boolean }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const colors = [
