@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, fetchCasesByRegion, fetchRegionTimeSeries, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams, CasesByRegionItem, CasesByRegionParams, RegionTimeSeriesParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, fetchCasesByRegion, fetchRegionTimeSeries, fetchProductivityByUserType, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams, CasesByRegionItem, CasesByRegionParams, RegionTimeSeriesParams, ProductivityByUserTypeItem, ProductivityByUserTypeParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -76,6 +76,11 @@ interface StatsState {
   regionTimeSeriesError: string | null;
   fetchRegionTimeSeries: (params: RegionTimeSeriesParams) => Promise<void>;
 
+  productivityByUserType: ProductivityByUserTypeItem[];
+  productivityByUserTypeLoading: boolean;
+  productivityByUserTypeError: string | null;
+  fetchProductivityByUserType: (params?: ProductivityByUserTypeParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -131,6 +136,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   regionTimeSeries: [],
   regionTimeSeriesLoading: false,
   regionTimeSeriesError: null,
+
+  productivityByUserType: [],
+  productivityByUserTypeLoading: false,
+  productivityByUserTypeError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -262,5 +271,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null, casesByRegionError: null, regionTimeSeriesError: null }),
+  fetchProductivityByUserType: async (params = {}) => {
+    set({ productivityByUserTypeLoading: true, productivityByUserTypeError: null });
+    try {
+      const productivityByUserType = await fetchProductivityByUserType(params);
+      set({ productivityByUserType, productivityByUserTypeLoading: false });
+    } catch (error: any) {
+      set({ productivityByUserType: [], productivityByUserTypeLoading: false, productivityByUserTypeError: error.response?.data?.message || 'Failed to fetch productivity by user type' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null, casesByRegionError: null, regionTimeSeriesError: null, productivityByUserTypeError: null }),
 }));

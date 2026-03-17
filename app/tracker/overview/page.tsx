@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData, casesByRegion, casesByRegionLoading, fetchCasesByRegion: fetchCasesByRegionData, regionTimeSeries, regionTimeSeriesLoading, fetchRegionTimeSeries: fetchRegionTimeSeriesData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData, casesByRegion, casesByRegionLoading, fetchCasesByRegion: fetchCasesByRegionData, regionTimeSeries, regionTimeSeriesLoading, fetchRegionTimeSeries: fetchRegionTimeSeriesData, productivityByUserType, productivityByUserTypeLoading, fetchProductivityByUserType: fetchProductivityByUserTypeData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -171,59 +171,16 @@ export default function OverviewPage() {
   const casesByRegionData = casesByRegion
   const regionTimeSeriesData = regionChartRegion.length === 0 ? [] : regionTimeSeries
 
-  // Productivity by User Type Data
-  const productivityByUserTypeData = useMemo(() => {
-    const quarterlyData: Record<string, Record<string, { cases: number; firstCases: number; months: Set<string>; [key: string]: any }>> = {}
-    
-    filteredCasesData.forEach((c: any) => {
-      if (!c.operationDate || !c.userStatus) return
-      if (productivityUserType.length > 0 && !productivityUserType.includes(c.userStatus)) return
-      const date = new Date(c.operationDate)
-      const year = date.getFullYear()
-      const quarter = Math.floor(date.getMonth() / 3) + 1
-      const quarterKey = `Q${quarter} ${year}`
-      const monthKey = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      
-      if (!quarterlyData[quarterKey]) quarterlyData[quarterKey] = {}
-      if (!quarterlyData[quarterKey][c.userStatus]) {
-        quarterlyData[quarterKey][c.userStatus] = { cases: 0, firstCases: 0, months: new Set() }
-      }
-      
-      quarterlyData[quarterKey][c.userStatus].cases++
-      quarterlyData[quarterKey][c.userStatus].months.add(monthKey)
-      
-      // Track first cases per surgeon
-      const surgeonKey = `${c.surgeon}-${c.userStatus}`
-      if (!quarterlyData[quarterKey][c.userStatus][surgeonKey]) {
-        quarterlyData[quarterKey][c.userStatus][surgeonKey] = true
-        quarterlyData[quarterKey][c.userStatus].firstCases++
-      }
+  // Productivity by User Type - fetch when filters change
+  useEffect(() => {
+    fetchProductivityByUserTypeData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      userTypes: productivityUserType.length > 0 ? productivityUserType : undefined,
     })
-    
-    const result: any[] = []
-    Object.entries(quarterlyData).forEach(([quarter, regions]) => {
-      Object.entries(regions).forEach(([region, data]) => {
-        const monthCount = data.months.size || 1
-        const standard = +(data.cases / monthCount).toFixed(2)
-        const excludingFirst = +((data.cases - data.firstCases) / monthCount).toFixed(2)
-        result.push({
-          quarter,
-          region,
-          label: `${quarter}\n${region}`,
-          standard,
-          excludingFirst
-        })
-      })
-    })
-    
-    return result.sort((a, b) => {
-      const [aQ, aY] = a.quarter.split(' ')
-      const [bQ, bY] = b.quarter.split(' ')
-      if (aY !== bY) return parseInt(aY) - parseInt(bY)
-      if (aQ !== bQ) return aQ.localeCompare(bQ)
-      return a.region.localeCompare(b.region)
-    })
-  }, [filteredCasesData, productivityUserType])
+  }, [dateRange, productivityUserType])
+
+  const productivityByUserTypeData = productivityByUserType
 
   // Time to Second Case Data
   const timeToSecondCaseData = useMemo(() => {
@@ -639,6 +596,7 @@ export default function OverviewPage() {
           data={productivityByUserTypeData} 
           userTypes={userTypesList}
           userTypeFilter={productivityUserType}
+          isLoading={productivityByUserTypeLoading}
           onUserTypeChange={setProductivityUserType}
         />
 

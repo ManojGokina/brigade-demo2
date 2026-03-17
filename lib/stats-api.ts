@@ -205,6 +205,34 @@ export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<
   return response.data.data;
 }
 
+export interface ProductivityByUserTypeItem {
+  quarter: string;
+  region: string;
+  label: string;
+  standard: number;
+  excludingFirst: number;
+}
+
+export interface ProductivityByUserTypeParams {
+  startDate?: string;
+  endDate?: string;
+  userTypes?: string[];
+}
+
+export async function fetchProductivityByUserType(params: ProductivityByUserTypeParams = {}): Promise<ProductivityByUserTypeItem[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) queryParams.append(key, value.join(','));
+    else if (!Array.isArray(value) && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: ProductivityByUserTypeItem[] }>(
+    `/stats/productivity-by-user-type${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface CasesByRegionItem {
   region: string;
   cases: number;

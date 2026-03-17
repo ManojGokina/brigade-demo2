@@ -6,6 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, LabelList, Legend, ResponsiveContainer } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Maximize2, X, Download } from "lucide-react"
 import {
   Tooltip,
@@ -16,7 +17,7 @@ import {
 
 import { MultiSelect } from "@/components/ui/multi-select"
 
-export function ProductivityByUserType({ data, userTypes, userTypeFilter, onUserTypeChange }: { data: any[], userTypes: string[], userTypeFilter: string[], onUserTypeChange: (value: string[]) => void }) {
+export function ProductivityByUserType({ data, userTypes, userTypeFilter, isLoading, onUserTypeChange }: { data: any[], userTypes: string[], userTypeFilter: string[], isLoading?: boolean, onUserTypeChange: (value: string[]) => void }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleExport = () => {
@@ -79,6 +80,19 @@ export function ProductivityByUserType({ data, userTypes, userTypeFilter, onUser
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="space-y-3 py-2">
+            <div className="flex items-end gap-1 h-[350px] px-8">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="flex-1 rounded-t" style={{ height: `${25 + (i % 4) * 18}%` }} />
+              ))}
+            </div>
+            <div className="flex justify-center gap-6 mt-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+          </div>
+        ) : (
         <div className="relative pb-24">
           <ChartContainer config={{}} className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -139,9 +153,8 @@ export function ProductivityByUserType({ data, userTypes, userTypeFilter, onUser
             })}
             </div>
           </div>
-          {/* 
-           */}
         </div>
+        )}
         <div className="flex gap-4 justify-center mt-4">
             <div className="flex items-center gap-1.5">
               <div className="h-2 w-2 rounded-full bg-[#60a5fa]" />
@@ -188,6 +201,11 @@ export function ProductivityByUserType({ data, userTypes, userTypeFilter, onUser
               Export CSV
             </Button>
           </div>
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            </div>
+          ) : (
           <div className="border rounded-lg overflow-hidden shadow-lg bg-white">
             <table className="w-full text-sm bg-white">
               <thead className="bg-muted">
@@ -220,6 +238,7 @@ export function ProductivityByUserType({ data, userTypes, userTypeFilter, onUser
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
