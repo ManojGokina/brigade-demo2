@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData, casesByRegion, casesByRegionLoading, fetchCasesByRegion: fetchCasesByRegionData, regionTimeSeries, regionTimeSeriesLoading, fetchRegionTimeSeries: fetchRegionTimeSeriesData, productivityByUserType, productivityByUserTypeLoading, fetchProductivityByUserType: fetchProductivityByUserTypeData } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData, topPerformers, topPerformersLoading, fetchTopPerformers: fetchTopPerformersData, daysToMilestones, daysToMilestonesLoading, fetchDaysToMilestones: fetchDaysToMilestonesData, gracePeriodSurgeons: gracePeriodData, gracePeriodLoading, fetchGracePeriodSurgeons: fetchGracePeriodData, timeMilestones, timeMilestonesLoading, fetchTimeMilestones: fetchTimeMilestonesData, qoqGrowth, qoqGrowthLoading, fetchQoQGrowth: fetchQoQGrowthData, timeMetrics, timeMetricsLoading, fetchTimeMetrics: fetchTimeMetricsData, daysBetweenCases, daysBetweenCasesLoading, fetchDaysBetweenCases: fetchDaysBetweenCasesData, secondCaseBooking, secondCaseBookingLoading, fetchSecondCaseBooking: fetchSecondCaseBookingData, survivalTime, survivalTimeLoading, fetchSurvivalTime: fetchSurvivalTimeData, casesByRegion, casesByRegionLoading, fetchCasesByRegion: fetchCasesByRegionData, regionTimeSeries, regionTimeSeriesLoading, fetchRegionTimeSeries: fetchRegionTimeSeriesData, productivityByUserType, productivityByUserTypeLoading, fetchProductivityByUserType: fetchProductivityByUserTypeData, timeToSecondCase, timeToSecondCaseLoading, fetchTimeToSecondCase: fetchTimeToSecondCaseData } = useStatsStore()
 
   useEffect(() => {
     fetchTimeMilestonesData({
@@ -183,55 +183,12 @@ export default function OverviewPage() {
   const productivityByUserTypeData = productivityByUserType
 
   // Time to Second Case Data
-  const timeToSecondCaseData = useMemo(() => {
-    const surgeonCases: Record<string, string[]> = {}
-    
-    filteredCasesData.forEach((c: any) => {
-      if (!c.surgeon || !c.operationDate) return
-      if (timeToSecondCaseSurgeon.length > 0 && !timeToSecondCaseSurgeon.includes(c.surgeon)) return
-      
-      if (!surgeonCases[c.surgeon]) {
-        surgeonCases[c.surgeon] = []
-      }
-      surgeonCases[c.surgeon].push(c.operationDate)
+  useEffect(() => {
+    fetchTimeToSecondCaseData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
     })
-    
-    const surgeonTimes = Object.entries(surgeonCases)
-      .filter(([, dates]) => dates.length >= 2)
-      .map(([surgeon, dates]) => {
-        const sorted = dates.sort()
-        const firstCaseDate = new Date(sorted[0])
-        const days = Math.floor((new Date(sorted[1]).getTime() - firstCaseDate.getTime()) / (1000 * 60 * 60 * 24))
-        const year = firstCaseDate.getFullYear()
-        const quarter = Math.floor(firstCaseDate.getMonth() / 3) + 1
-        const quarterKey = `Q${quarter} ${year}`
-        return { surgeon, days, quarterKey, year, quarter }
-      })
-    
-    // Group by quarter
-    const quarterlyData: Record<string, { days: number[] }> = {}
-    surgeonTimes.forEach(({ quarterKey, days }) => {
-      if (!quarterlyData[quarterKey]) quarterlyData[quarterKey] = { days: [] }
-      quarterlyData[quarterKey].days.push(days)
-    })
-    
-    return Object.entries(quarterlyData)
-      .map(([quarter, data]) => {
-        const sorted = data.days.sort((a, b) => a - b)
-        return {
-          quarter,
-          avg: Math.round(data.days.reduce((a, b) => a + b, 0) / data.days.length),
-          median: sorted[Math.floor(sorted.length / 2)],
-          max: Math.max(...data.days)
-        }
-      })
-      .sort((a, b) => {
-        const [qA, yearA] = a.quarter.split(' ')
-        const [qB, yearB] = b.quarter.split(' ')
-        if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB)
-        return qA.localeCompare(qB)
-      })
-  }, [filteredCasesData, timeToSecondCaseSurgeon])
+  }, [dateRange])
 
 
 
@@ -601,10 +558,11 @@ export default function OverviewPage() {
         />
 
         <TimeToSecondCase 
-          data={timeToSecondCaseData} 
+          data={timeToSecondCase} 
           surgeons={surgeonsList} 
           selectedSurgeon={timeToSecondCaseSurgeon} 
-          onSurgeonChange={setTimeToSecondCaseSurgeon} 
+          onSurgeonChange={setTimeToSecondCaseSurgeon}
+          isLoading={timeToSecondCaseLoading}
         />
 
         <div className="grid gap-4 md:grid-cols-2">

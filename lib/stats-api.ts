@@ -205,6 +205,29 @@ export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<
   return response.data.data;
 }
 
+export interface TimeToSecondCaseItem {
+  quarter: string;
+  avg: number;
+  median: number;
+  max: number;
+}
+
+export interface TimeToSecondCaseParams {
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function fetchTimeToSecondCase(params: TimeToSecondCaseParams = {}): Promise<TimeToSecondCaseItem[]> {
+  const queryParams = new URLSearchParams();
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate)   queryParams.append('endDate', params.endDate);
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: TimeToSecondCaseItem[] }>(
+    `/stats/time-to-second-case${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface ProductivityByUserTypeItem {
   quarter: string;
   region: string;

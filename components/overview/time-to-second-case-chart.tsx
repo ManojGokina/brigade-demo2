@@ -9,11 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Maximize2, X, Download } from "lucide-react"
 
-export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonChange }: { 
+import { Skeleton } from "@/components/ui/skeleton"
+
+export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonChange, isLoading = false }: { 
   data: any[], 
   surgeons: string[], 
   selectedSurgeon: string[], 
-  onSurgeonChange: (value: string[]) => void 
+  onSurgeonChange: (value: string[]) => void,
+  isLoading?: boolean
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -84,6 +87,20 @@ export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonCha
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="space-y-3 py-2">
+            <div className="flex items-end gap-1 h-[350px] px-8">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="flex-1 rounded-t" style={{ height: `${30 + (i % 3) * 20}%` }} />
+              ))}
+            </div>
+            <div className="flex justify-center gap-6 mt-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+        ) : (
         <div className="relative pb-8">
           <ChartContainer config={{}} className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -134,6 +151,7 @@ export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonCha
             </div>
           </div>
         </div>
+        )}
         <div className="flex justify-center mt-3">
           <button
             onClick={() => setDrawerOpen(true)}
@@ -181,7 +199,13 @@ export function TimeToSecondCase({ data, surgeons, selectedSurgeon, onSurgeonCha
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {data.map((item, index) => (
+                {isLoading ? Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i} className="border-t">
+                    {Array.from({ length: 5 }).map((__, j) => (
+                      <td key={j} className="p-3"><Skeleton className="h-4 w-full" /></td>
+                    ))}
+                  </tr>
+                )) : data.map((item, index) => (
                   <tr key={index} className="border-t hover:bg-muted/50 transition-colors">
                     <td className="p-3 text-muted-foreground">{index + 1}</td>
                     <td className="p-3 font-medium text-gray-900">{item.quarter}</td>

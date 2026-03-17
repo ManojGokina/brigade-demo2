@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, fetchCasesByRegion, fetchRegionTimeSeries, fetchProductivityByUserType, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams, CasesByRegionItem, CasesByRegionParams, RegionTimeSeriesParams, ProductivityByUserTypeItem, ProductivityByUserTypeParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, fetchSurvivalTime, fetchCasesByRegion, fetchRegionTimeSeries, fetchProductivityByUserType, fetchTimeToSecondCase, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams, SurvivalTimeItem, SurvivalTimeParams, CasesByRegionItem, CasesByRegionParams, RegionTimeSeriesParams, ProductivityByUserTypeItem, ProductivityByUserTypeParams, TimeToSecondCaseItem, TimeToSecondCaseParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -81,6 +81,11 @@ interface StatsState {
   productivityByUserTypeError: string | null;
   fetchProductivityByUserType: (params?: ProductivityByUserTypeParams) => Promise<void>;
 
+  timeToSecondCase: TimeToSecondCaseItem[];
+  timeToSecondCaseLoading: boolean;
+  timeToSecondCaseError: string | null;
+  fetchTimeToSecondCase: (params?: TimeToSecondCaseParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -140,6 +145,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   productivityByUserType: [],
   productivityByUserTypeLoading: false,
   productivityByUserTypeError: null,
+
+  timeToSecondCase: [],
+  timeToSecondCaseLoading: false,
+  timeToSecondCaseError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -281,5 +290,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null, casesByRegionError: null, regionTimeSeriesError: null, productivityByUserTypeError: null }),
+  fetchTimeToSecondCase: async (params = {}) => {
+    set({ timeToSecondCaseLoading: true, timeToSecondCaseError: null });
+    try {
+      const timeToSecondCase = await fetchTimeToSecondCase(params);
+      set({ timeToSecondCase, timeToSecondCaseLoading: false });
+    } catch (error: any) {
+      set({ timeToSecondCase: [], timeToSecondCaseLoading: false, timeToSecondCaseError: error.response?.data?.message || 'Failed to fetch time to second case' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null, survivalTimeError: null, casesByRegionError: null, regionTimeSeriesError: null, productivityByUserTypeError: null, timeToSecondCaseError: null }),
 }));
