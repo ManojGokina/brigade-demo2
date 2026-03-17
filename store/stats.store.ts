@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, fetchTopPerformers, fetchDaysToMilestones, fetchGracePeriodSurgeons, fetchTimeMilestones, fetchQoQGrowth, fetchTimeMetrics, fetchDaysBetweenCases, fetchSecondCaseBooking, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams, TopPerformerItem, TopPerformersParams, DaysToMilestonesItem, DaysToMilestonesParams, GracePeriodSurgeon, TimeMilestoneItem, TimeMilestonesParams, QoQGrowthItem, QoQGrowthParams, TimeMetricsItem, TimeMetricsParams, DaysBetweenCasesRow, DaysBetweenCasesParams, SecondCaseBookingRow, SecondCaseBookingParams } from '../lib/stats-api';
 
 const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
@@ -56,6 +56,11 @@ interface StatsState {
   daysBetweenCasesError: string | null;
   fetchDaysBetweenCases: (params?: DaysBetweenCasesParams) => Promise<void>;
 
+  secondCaseBooking: SecondCaseBookingRow[];
+  secondCaseBookingLoading: boolean;
+  secondCaseBookingError: string | null;
+  fetchSecondCaseBooking: (params?: SecondCaseBookingParams) => Promise<void>;
+
   clearError: () => void;
 }
 
@@ -95,6 +100,10 @@ export const useStatsStore = create<StatsState>((set) => ({
   daysBetweenCases: [],
   daysBetweenCasesLoading: false,
   daysBetweenCasesError: null,
+
+  secondCaseBooking: [],
+  secondCaseBookingLoading: false,
+  secondCaseBookingError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -186,5 +195,15 @@ export const useStatsStore = create<StatsState>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null }),
+  fetchSecondCaseBooking: async (params = {}) => {
+    set({ secondCaseBookingLoading: true, secondCaseBookingError: null });
+    try {
+      const secondCaseBooking = await fetchSecondCaseBooking(params);
+      set({ secondCaseBooking, secondCaseBookingLoading: false });
+    } catch (error: any) {
+      set({ secondCaseBooking: [], secondCaseBookingLoading: false, secondCaseBookingError: error.response?.data?.message || 'Failed to fetch second case booking' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null, topPerformersError: null, daysToMilestonesError: null, gracePeriodError: null, timeMilestonesError: null, qoqGrowthError: null, timeMetricsError: null, daysBetweenCasesError: null, secondCaseBookingError: null }),
 }));

@@ -205,6 +205,69 @@ export async function fetchTimeMetrics(params: TimeMetricsParams = {}): Promise<
   return response.data.data;
 }
 
+export interface SecondCaseBookingRow {
+  category: string;
+  percentage?: number;
+  [status: string]: any;
+}
+
+export interface SecondCaseBookingParams {
+  startDate?: string;
+  endDate?: string;
+  statuses?: string[];
+  breakdown?: 'overall' | 'userType' | 'region' | 'specialty';
+  excludeDays?: number;
+}
+
+export interface DrilldownSurgeon {
+  surgeon: string;
+  totalCases: number;
+  status: string;
+}
+
+export interface SecondCaseBookingDrilldownResult {
+  with: DrilldownSurgeon[];
+  without: DrilldownSurgeon[];
+}
+
+export interface SecondCaseBookingDrilldownParams {
+  startDate?: string;
+  endDate?: string;
+  category: string;
+  status?: string;
+  statuses?: string[];
+  breakdown?: 'overall' | 'userType' | 'region' | 'specialty';
+  excludeDays?: number;
+}
+
+export async function fetchSecondCaseBooking(params: SecondCaseBookingParams = {}): Promise<SecondCaseBookingRow[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) queryParams.append(key, value.join(','));
+    else if (!Array.isArray(value) && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: SecondCaseBookingRow[] }>(
+    `/stats/second-case-booking${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
+export async function fetchSecondCaseBookingDrilldown(params: SecondCaseBookingDrilldownParams): Promise<SecondCaseBookingDrilldownResult> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value) && value.length > 0) queryParams.append(key, value.join(','));
+    else if (!Array.isArray(value) && value !== '') queryParams.append(key, String(value));
+  });
+  const query = queryParams.toString();
+  const response = await api.get<{ success: boolean; data: SecondCaseBookingDrilldownResult }>(
+    `/stats/second-case-booking/drilldown${query ? `?${query}` : ''}`
+  );
+  return response.data.data;
+}
+
 export interface DaysBetweenCasesRow {
   caseNumber: string;
   days?: number;
