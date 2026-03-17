@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ProtectedRoute } from "@/components/protected-route"
@@ -17,6 +17,7 @@ import { SurgeonProductivityOverTime } from "@/components/overview/surgeon-produ
 import { DaysToCaseMilestones, DaysBetweenCases } from "@/components/overview/milestone-charts"
 import { SecondCaseBooking } from "@/components/overview/second-case-booking-chart"
 import { StatsCards } from "@/components/overview/stats-cards"
+import { useStatsStore } from "@/store/stats.store"
 import { TimeActiveInactive, TimeNormalized } from "@/components/overview/time-metrics-charts"
 import { SurvivalTime } from "@/components/overview/survival-time-chart"
 import { GracePeriodCard } from "@/components/overview/milestone-cards"
@@ -54,7 +55,19 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  // Get unique surgeons, regions, specialties
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats } = useStatsStore()
+
+  // Fetch stats on mount and when dateRange changes
+  useEffect(() => {
+    const params: Record<string, string> = {}
+    if (dateRange.from) params.startDate = dateRange.from
+    if (dateRange.to) params.endDate = dateRange.to
+    if (dateRange.from || dateRange.to) {
+      fetchStats({ period: 'custom', ...params })
+    } else {
+      fetchStats()
+    }
+  }, [dateRange])
   const surgeonsList = useMemo(() => {
     let filteredCases = casesData
     if (dateRange.from) filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
@@ -914,7 +927,7 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        <StatsCards data={filteredCasesData} />
+        <StatsCards data={statsData} isLoading={statsLoading} />
 
         <SurgeonProductivityOverTime 
           data={surgeonProductivityOverTimeData} 
