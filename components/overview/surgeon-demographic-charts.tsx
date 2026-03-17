@@ -14,7 +14,8 @@ const COLORS = ["#1d99ac", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"
 const RADIAN = Math.PI / 180
 const renderLabel = (props: any) => {
   const { cx, cy, midAngle, outerRadius, name, percent, index } = props
-  const radius = outerRadius + 30
+  if (percent === 0) return null
+  const radius = outerRadius + 40
   const x = cx + radius * Math.cos(-midAngle * RADIAN)
   const y = cy + radius * Math.sin(-midAngle * RADIAN)
   return (
@@ -56,9 +57,7 @@ export function SurgeonsBySpecialty({ data, isLoading = false }: { data: any[], 
     <>
     <Card className="border-border/50 bg-card">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">Surgeons by Specialty</CardTitle>
-        </div>
+        <CardTitle className="text-sm font-medium">Surgeons by Specialty</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -78,8 +77,8 @@ export function SurgeonsBySpecialty({ data, isLoading = false }: { data: any[], 
                   cy="50%"
                   labelLine={true}
                   label={renderLabel}
-                  outerRadius={100}
-                  innerRadius={60}
+                  outerRadius={90}
+                  innerRadius={55}
                   fill="#8884d8"
                   dataKey="value"
                 >
@@ -189,9 +188,7 @@ export function SurgeonsByCaseLoad({ data, isLoading = false }: { data: any[], i
     <>
     <Card className="border-border/50 bg-card">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">Surgeons by Case Load</CardTitle>
-        </div>
+        <CardTitle className="text-sm font-medium">Surgeons by Case Load</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -211,8 +208,8 @@ export function SurgeonsByCaseLoad({ data, isLoading = false }: { data: any[], i
                   cy="50%"
                   labelLine={true}
                   label={renderLabel}
-                  outerRadius={100}
-                  innerRadius={60}
+                  outerRadius={90}
+                  innerRadius={55}
                   fill="#8884d8"
                   dataKey="value"
                 >
