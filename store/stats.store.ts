@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { fetchStatsOverview, StatsOverview, StatsParams } from '../lib/stats-api';
+import { fetchStatsOverview, fetchCasesOverTime, StatsOverview, StatsParams, CasesOverTimeItem, CasesOverTimeParams } from '../lib/stats-api';
 
-const FALLBACK: StatsOverview = {
+const FALLBACK_OVERVIEW: StatsOverview = {
   totalCases: 0,
   activeSurgeons: 0,
   avgProductivity: 0,
@@ -15,13 +15,23 @@ interface StatsState {
   isLoading: boolean;
   error: string | null;
   fetch: (params?: StatsParams) => Promise<void>;
+
+  casesOverTime: CasesOverTimeItem[];
+  casesOverTimeLoading: boolean;
+  casesOverTimeError: string | null;
+  fetchCasesOverTime: (params?: CasesOverTimeParams) => Promise<void>;
+
   clearError: () => void;
 }
 
 export const useStatsStore = create<StatsState>((set) => ({
-  data: FALLBACK,
+  data: FALLBACK_OVERVIEW,
   isLoading: false,
   error: null,
+
+  casesOverTime: [],
+  casesOverTimeLoading: false,
+  casesOverTimeError: null,
 
   fetch: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -29,10 +39,19 @@ export const useStatsStore = create<StatsState>((set) => ({
       const data = await fetchStatsOverview(params);
       set({ data, isLoading: false });
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch stats';
-      set({ data: FALLBACK, isLoading: false, error: message });
+      set({ data: FALLBACK_OVERVIEW, isLoading: false, error: error.response?.data?.message || 'Failed to fetch stats' });
     }
   },
 
-  clearError: () => set({ error: null }),
+  fetchCasesOverTime: async (params = {}) => {
+    set({ casesOverTimeLoading: true, casesOverTimeError: null });
+    try {
+      const casesOverTime = await fetchCasesOverTime(params);
+      set({ casesOverTime, casesOverTimeLoading: false });
+    } catch (error: any) {
+      set({ casesOverTime: [], casesOverTimeLoading: false, casesOverTimeError: error.response?.data?.message || 'Failed to fetch cases over time' });
+    }
+  },
+
+  clearError: () => set({ error: null, casesOverTimeError: null }),
 }));

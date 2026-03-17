@@ -18,6 +18,7 @@ import {
 
 export function SurgeonProductivityOverTime({ 
   data, 
+  isLoading,
   surgeons,
   regions,
   specialties,
@@ -37,6 +38,7 @@ export function SurgeonProductivityOverTime({
   onNeuromaChange
 }: { 
   data: any[], 
+  isLoading?: boolean,
   surgeons: string[],
   regions: string[],
   specialties: string[],
@@ -270,6 +272,16 @@ export function SurgeonProductivityOverTime({
         </div>
       </CardHeader>
       <CardContent>
+        {isLoading ? (
+          <div className="h-[300px] w-full flex flex-col gap-3 animate-pulse pt-2">
+            <div className="flex items-end gap-2 h-full px-4">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="flex-1 bg-muted rounded-t" style={{ height: `${30 + Math.random() * 60}%` }} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
         {(() => {
           const avg = data.length > 0 ? data.reduce((sum, d) => sum + d.cases, 0) / data.length : 0
           const chartData = data.map(d => ({ ...d, avg: +avg.toFixed(1) }))
@@ -331,6 +343,8 @@ export function SurgeonProductivityOverTime({
             View Detailed Table
           </button>
         </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )

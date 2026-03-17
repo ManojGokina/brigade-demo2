@@ -55,7 +55,7 @@ export default function OverviewPage() {
   const [timeMilestonesYear, setTimeMilestonesYear] = useState<string[]>([new Date().getFullYear().toString()])
   const [productivityUserType, setProductivityUserType] = useState<string[]>([])
 
-  const { data: statsData, isLoading: statsLoading, fetch: fetchStats } = useStatsStore()
+  const { data: statsData, isLoading: statsLoading, fetch: fetchStats, casesOverTime, casesOverTimeLoading, fetchCasesOverTime: fetchCasesOverTimeData } = useStatsStore()
 
   // Fetch stats on mount and when dateRange changes
   useEffect(() => {
@@ -858,47 +858,31 @@ export default function OverviewPage() {
       })
   }, [filteredCasesData, survivalTimeSurgeon, survivalTimeSpecialty])
 
-  const surgeonProductivityOverTimeData = useMemo(() => {
-    let filteredCases = casesData.filter((c: any) => c.operationDate)
-
-    if (surgeonFilter.length > 0) filteredCases = filteredCases.filter((c: any) => surgeonFilter.includes(c.surgeon))
-    if (dateRange.from) filteredCases = filteredCases.filter((c: any) => c.operationDate >= dateRange.from!)
-    if (dateRange.to) filteredCases = filteredCases.filter((c: any) => c.operationDate <= dateRange.to!)
-    if (statusFilter.length > 0) filteredCases = filteredCases.filter((c: any) => statusFilter.includes(c.userStatus))
-    if (regionFilter.length > 0) filteredCases = filteredCases.filter((c: any) => regionFilter.includes(c.region))
-    if (specialtyFilter.length > 0) filteredCases = filteredCases.filter((c: any) => specialtyFilter.includes(c.specialty))
-    if (caseTypeFilter.length > 0) filteredCases = filteredCases.filter((c: any) => caseTypeFilter.includes(c.caseType))
-    if (neuromaFilter.length > 0) {
-      if (neuromaFilter.includes("Neuroma") && !neuromaFilter.includes("Non-Neuroma")) filteredCases = filteredCases.filter((c: any) => c.isNeuromaCase)
-      else if (neuromaFilter.includes("Non-Neuroma") && !neuromaFilter.includes("Neuroma")) filteredCases = filteredCases.filter((c: any) => !c.isNeuromaCase)
+  useEffect(() => {
+    const sinceCaseMap: Record<string, number> = {
+      'Since 2nd Case': 1, 'Since 3rd Case': 2, 'Since 4th Case': 3,
+      'Since 5th Case': 4, 'Since 6th Case': 5,
     }
-
-    const monthlyData: Record<string, number> = {}
-    filteredCases.forEach((c: any) => {
-      const date = new Date(c.operationDate)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1
+    const sinceCase = caseFilter.length > 0
+      ? Math.max(...caseFilter.map((f: string) => sinceCaseMap[f] ?? 0))
+      : undefined
+    const neuromaVal = neuromaFilter.includes('Neuroma') && !neuromaFilter.includes('Non-Neuroma')
+      ? 'neuroma' as const
+      : neuromaFilter.includes('Non-Neuroma') && !neuromaFilter.includes('Neuroma')
+      ? 'non-neuroma' as const
+      : undefined
+    fetchCasesOverTimeData({
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      surgeons: surgeonFilter.length > 0 ? surgeonFilter : undefined,
+      statuses: statusFilter.length > 0 ? statusFilter : undefined,
+      regions: regionFilter.length > 0 ? regionFilter : undefined,
+      specialties: specialtyFilter.length > 0 ? specialtyFilter : undefined,
+      caseTypes: caseTypeFilter.length > 0 ? caseTypeFilter : undefined,
+      neuroma: neuromaVal,
+      sinceCase,
     })
-
-    const sortedData = Object.entries(monthlyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([month, cases]) => ({
-        month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-        cases
-      }))
-
-    if (caseFilter.length > 0) {
-      let sliceCount = 0
-      if (caseFilter.includes("Since 6th Case")) sliceCount = 5
-      else if (caseFilter.includes("Since 5th Case")) sliceCount = 4
-      else if (caseFilter.includes("Since 4th Case")) sliceCount = 3
-      else if (caseFilter.includes("Since 3rd Case")) sliceCount = 2
-      else if (caseFilter.includes("Since 2nd Case")) sliceCount = 1
-      return sortedData.length > sliceCount ? sortedData.slice(sliceCount) : sortedData
-    }
-
-    return sortedData
-  }, [dateRange, caseFilter, statusFilter, surgeonFilter, regionFilter, specialtyFilter, caseTypeFilter, neuromaFilter])
+  }, [dateRange, surgeonFilter, statusFilter, regionFilter, specialtyFilter, caseTypeFilter, neuromaFilter, caseFilter])
 
   return (
     <ProtectedRoute>
@@ -930,7 +914,8 @@ export default function OverviewPage() {
         <StatsCards data={statsData} isLoading={statsLoading} />
 
         <SurgeonProductivityOverTime 
-          data={surgeonProductivityOverTimeData} 
+          data={casesOverTime}
+          isLoading={casesOverTimeLoading} 
           surgeons={surgeonsList}
           regions={regionsList}
           specialties={specialtiesList}
